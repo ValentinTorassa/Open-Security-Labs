@@ -1,0 +1,127 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="Contribuir"
+  description="Cómo agregar un lab, corregir un error o proponer contenido a VT Security Labs."
+  width="prose"
+>
+  <section class="py-12">
+    <p class="rule-label">Contribuir</p>
+    <h1 class="text-base-50 mt-3 text-3xl font-bold sm:text-4xl">
+      Sumá un lab, corregí un error, mejorá el material
+    </h1>
+    <p class="text-base-300 mt-4 text-lg leading-relaxed">
+      Esto es open source y se construye en público. Si encontrás algo que está
+      mal o querés enseñar un tema, tu aporte es bienvenido.
+    </p>
+
+    <div class="lab-prose prose prose-invert mt-10 max-w-none">
+      <h2>Reglas básicas</h2>
+      <ul>
+        <li>Español con voseo, tono directo y técnico. Sin hype.</li>
+        <li>
+          Cada lab termina con <strong>evidencia</strong>: comandos, writeup,
+          diagrama o screenshot.
+        </li>
+        <li>
+          Todo es <strong>defensivo, educativo, reproducible y seguro</strong>.
+          Preferí labs locales, ejemplos de juguete y credenciales falsas.
+        </li>
+        <li>
+          Nada de secretos reales, tokens, IPs privadas, datos de clientes o
+          empleadores, ni account IDs de cloud reales.
+        </li>
+      </ul>
+
+      <h2>Cómo agregar un lab</h2>
+      <p>
+        Un lab es un archivo <code>.mdx</code> dentro de la carpeta de su ruta. Por
+        ejemplo, un lab de Linux va en
+        <code>src/content/labs/linux-real/</code>.
+      </p>
+      <ol>
+        <li>Cloná el repo y corré <code>npm install</code>.</li>
+        <li>
+          Creá <code>src/content/labs/&lt;ruta&gt;/&lt;slug&gt;.mdx</code> con el
+          frontmatter de abajo.
+        </li>
+        <li>
+          Escribí la lección usando los componentes (Callout, TerminalBlock…).
+        </li>
+        <li>
+          Verificá con <code>npm run check</code> y mirá el resultado con
+          <code>npm run dev</code>.
+        </li>
+        <li>Abrí un Pull Request.</li>
+      </ol>
+
+      <h2>Frontmatter de un lab</h2>
+      <pre><code>{`---
+title: "Título del lab"
+description: "Una línea que explica qué se aprende."
+path: "linux-real"            # slug de la ruta
+order: 1                      # orden dentro de la ruta (menor primero)
+level: "beginner"             # beginner | intermediate | advanced
+estimatedMinutes: 30
+prerequisites:
+  - "Una terminal en Linux o WSL"
+objectives:
+  - "Qué vas a poder hacer al terminar"
+evidence:
+  - "El artefacto que deja el lab"
+commands:
+  - "id"
+  - "ls -l"
+challenge: "El enunciado del reto final."
+nextLabs:
+  - "redes-internet/una-request-no-es-magia"
+tags:
+  - "linux"
+---`}</code></pre>
+
+      <h2>Componentes disponibles</h2>
+      <p>
+        Importalos al principio del <code>.mdx</code> y usalos en el cuerpo:
+      </p>
+      <ul>
+        <li>
+          <code>&lt;Callout type="concepto" /&gt;</code> — concepto clave.
+        </li>
+        <li>
+          <code>&lt;Callout type="comando" /&gt;</code> — explicación de un comando.
+        </li>
+        <li><code>&lt;Callout type="error" /&gt;</code> — error común.</li>
+        <li>
+          <code>&lt;TerminalBlock&gt;</code> — bloque de terminal estilizado.
+        </li>
+        <li>
+          <code>&lt;Mermaid code=&#123;`...`&#125; /&gt;</code> — diagrama (flowchart,
+          sequence…).
+        </li>
+        <li>
+          <code>&lt;Quiz questions=&#123;[...]&#125; /&gt;</code> — mini-juego de
+          opción múltiple.
+        </li>
+        <li>
+          <code>&lt;PermissionsGame /&gt;</code> — juego de permisos rwx → octal.
+        </li>
+      </ul>
+      <p>
+        La evidencia, el reto y los labs siguientes se generan desde el
+        frontmatter; no hace falta agregarlos a mano en el cuerpo.
+      </p>
+    </div>
+
+    <div
+      class="border-base-700 bg-base-850/40 text-base-300 mt-10 rounded-xl border p-6 text-sm"
+    >
+      <p>
+        Para detalles completos mirá <code class="mono">CONTRIBUTING.md</code>,
+        <code class="mono">AGENTS.md</code> y
+        <code class="mono">SECURITY.md</code> en el repositorio.
+      </p>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,154 @@
+---
+title: "JWT no es autorización"
+description: "Un token válido te dice quién sos, no qué podés hacer. La diferencia entre autenticación y autorización, y por qué confundirlas produce IDOR."
+path: "backend-arquitectura"
+order: 1
+level: "intermediate"
+estimatedMinutes: 30
+prerequisites:
+  - "Saber qué es una API HTTP y un endpoint"
+  - "Idea básica de qué es un token de sesión"
+objectives:
+  - "Distinguir autenticación (authn) de autorización (authz)"
+  - "Leer el payload de un JWT y entender qué garantiza y qué no"
+  - "Reconocer un IDOR en el diseño de un endpoint"
+  - "Escribir el chequeo de ownership que falta"
+evidence:
+  - "Writeup de 2 párrafos: por qué un token válido no alcanza"
+  - "Pseudocódigo del endpoint vulnerable y del corregido"
+  - "Una tabla chica: por endpoint, qué chequeo de autorización aplica"
+commands:
+  - "echo $JWT | cut -d. -f2 | base64 -d"
+challenge: "Tomá el endpoint vulnerable de abajo y agregá el chequeo de ownership. Escribí en dos líneas qué request maliciosa deja de funcionar después del fix."
+nextLabs:
+  - "ciberseguridad/docker-socket-to-host"
+  - "cloud-produccion/cloudtrail-quien-hizo-que"
+tags:
+  - "backend"
+  - "auth"
+  - "idor"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+Un equipo agrega JWT, mete un middleware de login y da la seguridad por cerrada. El problema es que JWT resuelve **una** pregunta —¿quién sos?— y la gente cree que resolvió **otra** —¿esto lo podés hacer?—. No es lo mismo, y la confusión tiene nombre: IDOR.
+
+<Callout type="concepto">
+  **Autenticación (authn)**: probar quién sos. **Autorización (authz)**: decidir
+  qué te está permitido hacer con un recurso concreto. Un token válido prueba
+  identidad. No prueba, por sí solo, que ese recurso sea tuyo.
+</Callout>
+
+## Qué es (y qué no es) un JWT
+
+Un JWT es un texto con tres partes separadas por puntos: `header.payload.signature`. El payload son **claims** (afirmaciones) en JSON, codificados en base64. La firma garantiza que nadie alteró esos claims.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# El payload de un JWT no está cifrado, solo codificado en base64.
+echo "$JWT" | cut -d '.' -f2 | base64 -d 2>/dev/null
+```
+
+</TerminalBlock>
+
+Vas a ver algo así:
+
+```json
+{
+  "sub": "user_42",
+  "email": "valen@example.com",
+  "role": "user",
+  "exp": 1735689600
+}
+```
+
+<Callout type="error">
+  El payload está **codificado, no cifrado**. Cualquiera con el token puede
+  leerlo. Nunca metas secretos ahí. Y al revés: la firma garantiza que el claim
+  `sub: user_42` es auténtico... pero **no** garantiza que el recurso que está
+  pidiendo sea de `user_42`.
+</Callout>
+
+## El error: confiar en la identidad sin chequear el recurso
+
+Mirá este endpoint. El token es válido, el usuario está autenticado. ¿Está bien?
+
+```text
+GET /api/invoices/{id}
+
+función obtener_factura(request, id):
+    usuario = validar_jwt(request.headers["Authorization"])   # authn ✓
+    si usuario es inválido:
+        responder 401
+
+    factura = db.buscar_factura(id)                           # ← sin authz
+    responder 200, factura
+```
+
+Está roto. El usuario `user_42` tiene un token perfectamente válido para su factura `100`. Pero nada le impide pedir la `101`:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# Mismo token válido, otro id. Si responde 200, es IDOR.
+curl -s -H "Authorization: Bearer $JWT" https://api.example.com/api/invoices/101
+```
+
+</TerminalBlock>
+
+<Callout type="concepto">
+  Esto es un **IDOR** (Insecure Direct Object Reference): el ID del recurso
+  viaja en la URL y el servidor lo sirve sin verificar que pertenezca a quien
+  pregunta. El atacante no rompió la firma del token ni necesitó hacerlo: solo
+  cambió un número.
+</Callout>
+
+## El fix: chequear ownership
+
+El arreglo no es criptografía nueva. Es **una condición** que muchas veces falta:
+
+```text
+GET /api/invoices/{id}
+
+función obtener_factura(request, id):
+    usuario = validar_jwt(request.headers["Authorization"])   # authn ✓
+    si usuario es inválido:
+        responder 401
+
+    factura = db.buscar_factura(id)
+    si factura es nula:
+        responder 404
+
+    si factura.owner_id != usuario.sub:                       # authz ✓
+        responder 404        # 404, no 403: no revelamos que existe
+
+    responder 200, factura
+```
+
+<Callout type="comando">
+  Devolver **404 en vez de 403** cuando el recurso no es tuyo evita filtrar qué
+  IDs existen. Un `403` confirma que la factura `101` existe; un `404` no le
+  dice nada al atacante.
+</Callout>
+
+## El criterio para revisar APIs
+
+JWT, OAuth o sesiones resuelven el transporte de identidad. La autorización es trabajo aparte y va **por endpoint y por recurso**. Una tabla mínima para revisar:
+
+```text
+endpoint              authn   ownership/authz        notas
+GET /invoices/{id}    sí      owner_id == sub        404 si no es tuyo
+POST /invoices        sí      rol puede crear        validar input
+DELETE /invoices/{id} sí      owner o rol admin      log de la acción
+GET /admin/users      sí      rol == admin           rate limit
+```
+
+<Callout type="concepto">
+  La pregunta no es "¿el token es válido?", es "¿esta identidad puede hacer
+  **esta acción** sobre **este recurso**?". Si tu código solo responde la
+  primera, tenés IDORs esperando a que alguien cambie un número.
+</Callout>
+
+Tu API no es segura por usar JWT. Es segura cuando, además de saber quién entra, decide bien qué puede tocar.

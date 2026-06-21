@@ -1,0 +1,51 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import LabCard from "../components/LabCard.astro";
+import { paths } from "../data/paths";
+
+const labs = await getCollection("labs", ({ data }) => !data.draft);
+
+// Orden por ruta (según paths.ts) y luego por duración.
+const pathOrder = new Map(paths.map((p) => [p.slug, p.order]));
+const sorted = [...labs].sort((a, b) => {
+  const pa = pathOrder.get(a.data.path) ?? 99;
+  const pb = pathOrder.get(b.data.path) ?? 99;
+  if (pa !== pb) return pa - pb;
+  return (
+    a.data.order - b.data.order ||
+    a.data.estimatedMinutes - b.data.estimatedMinutes
+  );
+});
+
+const totalMin = labs.reduce((acc, l) => acc + l.data.estimatedMinutes, 0);
+---
+
+<BaseLayout
+  title="Todos los labs"
+  description="Catálogo completo de labs prácticos de VT Security Labs. Comandos reales, evidencia y criterio técnico."
+  width="wide"
+>
+  <section class="py-12">
+    <p class="rule-label">Catálogo</p>
+    <h1 class="text-base-50 mt-3 text-3xl font-bold sm:text-4xl">
+      Todos los labs
+    </h1>
+    <p class="text-base-300 mt-4 max-w-2xl text-lg leading-relaxed">
+      Cada lab es autocontenido: lo corrés en local, completás el reto y dejás
+      evidencia. La evidencia se construye haciendo.
+    </p>
+
+    <div class="text-base-400 mt-6 flex flex-wrap gap-4 font-mono text-xs">
+      <span><span class="text-term-green">{labs.length}</span> labs</span>
+      <span><span class="text-term-green">{paths.length}</span> rutas</span>
+      <span
+        ><span class="text-term-green">~{totalMin}</span> min de práctica</span
+      >
+    </div>
+
+    <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {sorted.map((lab) => <LabCard lab={lab} />)}
+    </div>
+  </section>
+</BaseLayout>

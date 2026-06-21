@@ -1,0 +1,99 @@
+---
+const year = new Date().getFullYear();
+
+const social = [
+  { href: "https://www.youtube.com/@vtcibersecurity", label: "YouTube" },
+  { href: "https://github.com/ValentinTorassa", label: "GitHub" },
+  { href: "https://www.linkedin.com/in/valetorassa/", label: "LinkedIn" },
+  { href: "https://valentorassa.com", label: "Web" },
+];
+
+const nav = [
+  { href: "/rutas", label: "Rutas" },
+  { href: "/labs", label: "Labs" },
+  { href: "/certificaciones", label: "Certificaciones" },
+  { href: "/contribuir", label: "Contribuir" },
+  { href: "/about", label: "Acerca" },
+];
+---
+
+<footer class="border-base-800 mt-24 border-t">
+  <div class="mx-auto max-w-6xl px-5 py-12 sm:px-6">
+    <div class="flex flex-col gap-10 sm:flex-row sm:justify-between">
+      <div class="max-w-sm">
+        <div class="flex items-center gap-3">
+          <img
+            src="/penguin.svg"
+            alt=""
+            width="120"
+            height="132"
+            class="h-11 w-auto"
+            aria-hidden="true"
+          />
+          <span
+            class="border-base-700 bg-base-900 text-term-green flex h-7 w-7 items-center justify-center rounded-md border font-mono text-sm font-bold"
+          >
+            &gt;_
+          </span>
+          <span class="text-base-50 font-mono text-sm font-semibold"
+            >VT Security Labs</span
+          >
+        </div>
+        <p class="text-base-400 mt-4 text-sm leading-relaxed">
+          No podés defender sistemas que no entendés cómo funcionan. Labs
+          prácticos en español para construir criterio y evidencia.
+        </p>
+        <p class="text-base-500 mt-4 font-mono text-xs">
+          Proyecto educativo open source · Apache-2.0
+        </p>
+      </div>
+
+      <div class="flex gap-12">
+        <nav aria-label="Secciones">
+          <p class="rule-label mb-3">Navegar</p>
+          <ul class="space-y-2">
+            {
+              nav.map((l) => (
+                <li>
+                  <a
+                    href={l.href}
+                    class="text-base-300 hover:text-term-green text-sm transition-colors"
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+
+        <nav aria-label="Redes">
+          <p class="rule-label mb-3">VT Security</p>
+          <ul class="space-y-2">
+            {
+              social.map((l) => (
+                <li>
+                  <a
+                    href={l.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-base-300 hover:text-term-green text-sm transition-colors"
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </div>
+    </div>
+
+    <div
+      class="border-base-800 text-base-500 mt-10 border-t pt-6 font-mono text-xs"
+    >
+      <span class="text-term-green">$</span> echo "© {year} VT Security · Hecho en
+      Argentina 🇦🇷 · Aprendé haciendo."
+    </div>
+  </div>
+</footer>

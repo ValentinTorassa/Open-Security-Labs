@@ -1,0 +1,214 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* ===========================================================================
+   VT Security Labs — sistema visual
+   Dark-first. Terminal + cuaderno de ingeniería + mapa de sistemas.
+   Paleta sobria (familia GitHub dark), sin neón cyberpunk.
+   =========================================================================== */
+
+@theme {
+  --font-sans:
+    "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  --font-mono:
+    "JetBrains Mono Variable", ui-monospace, "SF Mono", "Fira Code", "Menlo",
+    monospace;
+
+  /* Base near-black, levemente verdosa/fría */
+  --color-base-950: #07090a;
+  --color-base-900: #0b0f11;
+  --color-base-850: #0f1417;
+  --color-base-800: #12181b;
+  --color-base-700: #1a2228;
+  --color-base-600: #273139;
+  --color-base-500: #3b4750;
+  --color-base-400: #5a6b75;
+  --color-base-300: #8a9aa3;
+  --color-base-200: #b9c4cb;
+  --color-base-100: #dde4e8;
+  --color-base-50: #f1f5f6;
+
+  /* Acentos de terminal */
+  --color-term-green: #56d364;
+  --color-term-cyan: #39c5cf;
+  --color-term-amber: #e3b341;
+  --color-term-red: #ff7b72;
+  --color-term-violet: #bc8cff;
+  --color-term-blue: #58a6ff;
+
+  --color-accent: #56d364;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-base-950);
+    color: var(--color-base-200);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv05", "ss01";
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: color-mix(
+      in srgb,
+      var(--color-term-green) 30%,
+      transparent
+    );
+    color: var(--color-base-50);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--color-base-50);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-term-green);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Scrollbar discreta */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-base-600) transparent;
+  }
+}
+
+@layer components {
+  /* Grid de fondo sutil tipo mapa de sistemas / blueprint */
+  .bg-grid {
+    background-image:
+      linear-gradient(
+        to right,
+        color-mix(in srgb, var(--color-base-500) 9%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--color-base-500) 9%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 44px 44px;
+  }
+
+  /* Resplandor radial muy tenue para el hero */
+  .bg-glow {
+    background: radial-gradient(
+      60% 50% at 50% 0%,
+      color-mix(in srgb, var(--color-term-green) 10%, transparent) 0%,
+      transparent 70%
+    );
+  }
+
+  /* Texto monoespaciado con el prompt de terminal */
+  .prompt::before {
+    content: "$ ";
+    color: var(--color-term-green);
+    user-select: none;
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+  }
+
+  /* Línea divisoria con etiqueta, estilo cuaderno técnico */
+  .rule-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-base-400);
+  }
+
+  /* Card base reutilizable */
+  .card {
+    background-color: color-mix(
+      in srgb,
+      var(--color-base-850) 80%,
+      transparent
+    );
+    border: 1px solid var(--color-base-700);
+    border-radius: 0.75rem;
+    transition:
+      border-color 0.2s ease,
+      transform 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  .card:hover {
+    border-color: var(--color-base-500);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Tipografía de los labs (prose). Ajustamos el tema `invert` a la paleta.
+   --------------------------------------------------------------------------- */
+@layer components {
+  .lab-prose {
+    --tw-prose-body: var(--color-base-200);
+    --tw-prose-headings: var(--color-base-50);
+    --tw-prose-lead: var(--color-base-300);
+    --tw-prose-links: var(--color-term-green);
+    --tw-prose-bold: var(--color-base-50);
+    --tw-prose-counters: var(--color-base-400);
+    --tw-prose-bullets: var(--color-base-600);
+    --tw-prose-hr: var(--color-base-700);
+    --tw-prose-quotes: var(--color-base-100);
+    --tw-prose-quote-borders: var(--color-term-green);
+    --tw-prose-captions: var(--color-base-400);
+    --tw-prose-code: var(--color-base-100);
+    --tw-prose-pre-code: var(--color-base-100);
+    --tw-prose-pre-bg: var(--color-base-900);
+    --tw-prose-th-borders: var(--color-base-600);
+    --tw-prose-td-borders: var(--color-base-700);
+  }
+
+  .lab-prose :where(a):hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Code inline */
+  .lab-prose :where(code):not(pre code) {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background-color: var(--color-base-800);
+    border: 1px solid var(--color-base-700);
+    border-radius: 0.3rem;
+    padding: 0.1rem 0.35rem;
+  }
+
+  .lab-prose :where(code):not(pre code)::before,
+  .lab-prose :where(code):not(pre code)::after {
+    content: "";
+  }
+
+  /* Bloques de código de Shiki */
+  .lab-prose :where(pre) {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    border: 1px solid var(--color-base-700);
+    border-radius: 0.6rem;
+    padding: 1rem 1.1rem;
+  }
+}

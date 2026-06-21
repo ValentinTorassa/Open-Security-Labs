@@ -1,0 +1,36 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PathCard from "../components/PathCard.astro";
+import { paths } from "../data/paths";
+
+const labs = await getCollection("labs", ({ data }) => !data.draft);
+const countFor = (slug: string) =>
+  labs.filter((l) => l.data.path === slug).length;
+---
+
+<BaseLayout
+  title="Rutas de aprendizaje"
+  description="Seis rutas para entender los sistemas de verdad: Linux, redes, backend, cloud, ciberseguridad y DevSecOps con agentes."
+  width="wide"
+>
+  <section class="py-12">
+    <p class="rule-label">Rutas de aprendizaje</p>
+    <h1 class="text-base-50 mt-3 max-w-3xl text-3xl font-bold sm:text-4xl">
+      Seis rutas, una idea: entender el sistema antes de defenderlo.
+    </h1>
+    <p class="text-base-300 mt-4 max-w-2xl text-lg leading-relaxed">
+      No es una escalera de modas. Cada ruta arranca desde abajo, con labs
+      prácticos que terminan en evidencia. Podés empezar por la que te sirva
+      hoy.
+    </p>
+
+    <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        paths.map((path) => (
+          <PathCard path={path} labCount={countFor(path.slug)} />
+        ))
+      }
+    </div>
+  </section>
+</BaseLayout>

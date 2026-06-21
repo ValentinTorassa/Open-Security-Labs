@@ -1,0 +1,347 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PathCard from "../components/PathCard.astro";
+import { paths } from "../data/paths";
+import { certifications } from "../data/certifications";
+import TechStrip from "../components/TechStrip.astro";
+
+const labs = await getCollection("labs", ({ data }) => !data.draft);
+const countFor = (slug: string) =>
+  labs.filter((l) => l.data.path === slug).length;
+
+const audience = [
+  {
+    title: "Estudiantes y juniors",
+    body: "Que quieren entrar a ciberseguridad o IT sin promesas de bootcamp ni timelines de fantasía.",
+  },
+  {
+    title: "Programadores y backend devs",
+    body: "Que escriben código que funciona en localhost pero falla en producción. Localhost enseña código; producción enseña sistemas.",
+  },
+  {
+    title: "Gente de infra, DevOps y cloud",
+    body: "Que quiere dejar de tratar la nube como magia y entender identidad, redes, logs y modos de falla.",
+  },
+  {
+    title: "Curiosos del bajo nivel",
+    body: "Que prefieren entender procesos, permisos y protocolos antes que coleccionar herramientas.",
+  },
+];
+
+const evidenceKinds = [
+  {
+    k: "Comandos",
+    d: "Output real de tu terminal, no capturas de tutoriales.",
+  },
+  { k: "Writeups", d: "Dos párrafos explicando qué pasó y por qué." },
+  {
+    k: "Diagramas",
+    d: "El flujo de una request, un ataque o una arquitectura.",
+  },
+  { k: "Screenshots", d: "Antes y después de un cambio de permisos o config." },
+  { k: "Repos", d: "Código, policies y configs versionadas y públicas." },
+  {
+    k: "Debugging notes",
+    d: "Cómo encontraste el error, no solo la solución.",
+  },
+];
+---
+
+<BaseLayout title="VT Security Labs" width="wide">
+  <!-- ===================== HERO ===================== -->
+  <section class="relative">
+    <div class="bg-grid bg-glow absolute inset-0 -z-10" aria-hidden="true">
+    </div>
+
+    <div class="py-20 sm:py-28">
+      <div
+        class="border-base-700 bg-base-900/60 text-base-300 inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-xs"
+      >
+        <span class="bg-term-green h-1.5 w-1.5 rounded-full"></span>
+        Open source · Español · LatAm
+      </div>
+
+      <h1
+        class="text-base-50 mt-6 max-w-4xl text-4xl leading-[1.1] font-bold sm:text-5xl md:text-6xl"
+      >
+        Aprendé Linux, redes, cloud, arquitectura y ciberseguridad
+        <span class="text-term-green">entendiendo los sistemas de verdad.</span>
+      </h1>
+
+      <p
+        class="text-base-300 mt-6 max-w-2xl text-lg leading-relaxed sm:text-xl"
+      >
+        Labs prácticos en español para construir evidencia: comandos, writeups,
+        diagramas y criterio técnico. Sin hype, sin promesas de bootcamp.
+      </p>
+
+      <div class="mt-9 flex flex-wrap gap-3">
+        <a
+          href="/rutas"
+          class="bg-term-green text-base-950 rounded-lg px-5 py-2.5 font-mono text-sm font-semibold transition-transform hover:-translate-y-0.5"
+        >
+          Ver rutas →
+        </a>
+        <a
+          href="/labs/linux-real/permisos-usuarios-procesos"
+          class="border-base-700 bg-base-900/60 text-base-100 hover:border-term-green/50 hover:text-term-green rounded-lg border px-5 py-2.5 font-mono text-sm font-semibold transition-colors"
+        >
+          Empezar con Linux
+        </a>
+      </div>
+
+      <p
+        class="border-term-green/40 text-base-400 mt-10 max-w-xl border-l-2 pl-4 font-mono text-sm"
+      >
+        No podés defender sistemas que no entendés cómo funcionan.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== TECH STRIP ===================== -->
+  <section class="border-base-800 border-t py-10">
+    <p class="rule-label mb-5">Las herramientas que vas a tocar</p>
+    <TechStrip />
+  </section>
+
+  <!-- ===================== NO ES OTRO CURSO ===================== -->
+  <section class="border-base-800 border-t py-16">
+    <p class="rule-label">El enfoque</p>
+    <h2 class="text-base-50 mt-3 max-w-3xl text-2xl font-bold sm:text-3xl">
+      No es otro curso de herramientas
+    </h2>
+    <p class="text-base-300 mt-4 max-w-2xl text-base leading-relaxed">
+      Las herramientas cambian. Los sistemas que hay debajo, mucho menos. Acá no
+      vas a memorizar flags: vas a entender qué pasa cuando corrés un comando,
+      por qué falla algo en producción y dónde mirar cuando se rompe.
+    </p>
+
+    <div class="mt-8 grid gap-4 sm:grid-cols-3">
+      <div class="card p-5">
+        <p class="text-term-green font-mono text-sm">
+          $ entender &gt; memorizar
+        </p>
+        <p class="text-base-300 mt-3 text-sm leading-relaxed">
+          Cada lab transforma la "magia" en componentes, estado, protocolos,
+          logs, permisos y modos de falla.
+        </p>
+      </div>
+      <div class="card p-5">
+        <p class="text-term-cyan font-mono text-sm">$ practicar &gt; mirar</p>
+        <p class="text-base-300 mt-3 text-sm leading-relaxed">
+          Corrés los comandos en tu máquina. El conocimiento que no pasa por tu
+          terminal, se olvida.
+        </p>
+      </div>
+      <div class="card p-5">
+        <p class="text-term-amber font-mono text-sm">$ criterio &gt; recetas</p>
+        <p class="text-base-300 mt-3 text-sm leading-relaxed">
+          Explicamos el costo de cada decisión, no solo su beneficio. No hay
+          arquitectura gratis.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== RUTAS ===================== -->
+  <section class="border-base-800 border-t py-16">
+    <div class="flex items-end justify-between gap-4">
+      <div>
+        <p class="rule-label">Rutas de aprendizaje</p>
+        <h2 class="text-base-50 mt-3 text-2xl font-bold sm:text-3xl">
+          Elegí por dónde empezar
+        </h2>
+      </div>
+      <a
+        href="/rutas"
+        class="text-base-400 hover:text-term-green hidden font-mono text-sm whitespace-nowrap sm:block"
+      >
+        Ver todas →
+      </a>
+    </div>
+
+    <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        paths.map((path) => (
+          <PathCard path={path} labCount={countFor(path.slug)} />
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- ===================== EVIDENCIA ===================== -->
+  <section class="border-base-800 border-t py-16">
+    <p class="rule-label">El resultado</p>
+    <h2 class="text-base-50 mt-3 max-w-3xl text-2xl font-bold sm:text-3xl">
+      Cada lab termina con evidencia
+    </h2>
+    <p class="text-base-300 mt-4 max-w-2xl text-base leading-relaxed">
+      Estudiar no se ve. La evidencia sí. Cada lab te deja un artefacto que
+      podés mostrar en tu repo, tu portfolio o una entrevista. La evidencia se
+      construye haciendo.
+    </p>
+
+    <div class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        evidenceKinds.map((e) => (
+          <div class="border-base-800 bg-base-850/40 flex gap-3 rounded-lg border p-4">
+            <span class="text-term-violet mt-0.5 font-mono" aria-hidden="true">
+              ✓
+            </span>
+            <div>
+              <p class="text-base-100 font-mono text-sm font-semibold">{e.k}</p>
+              <p class="text-base-400 mt-1 text-sm">{e.d}</p>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- ===================== CERTIFICACIONES ===================== -->
+  <section class="border-base-800 border-t py-16">
+    <div class="flex items-end justify-between gap-4">
+      <div>
+        <p class="rule-label">Certificaciones</p>
+        <h2 class="text-base-50 mt-3 max-w-3xl text-2xl font-bold sm:text-3xl">
+          Y cuando estés listo, rendí
+        </h2>
+        <p class="text-base-300 mt-4 max-w-2xl text-base leading-relaxed">
+          Lo que aprendés en los labs mapea a las certis que piden en los
+          avisos. Cada una trae sus dominios y un examen de práctica con
+          explicaciones.
+        </p>
+      </div>
+      <a
+        href="/certificaciones"
+        class="text-base-400 hover:text-term-green hidden font-mono text-sm whitespace-nowrap sm:block"
+      >
+        Ver todas →
+      </a>
+    </div>
+
+    <div class="mt-8 flex flex-wrap gap-3">
+      {
+        certifications.map((cert) => (
+          <a
+            href={`/certificaciones/${cert.slug}`}
+            class="card group flex items-center gap-3 px-4 py-3 hover:-translate-y-0.5"
+            style={`--accent: ${cert.accent}`}
+          >
+            <span
+              class="flex h-9 w-9 items-center justify-center rounded-md border font-mono text-xs font-bold"
+              style="border-color: color-mix(in srgb, var(--accent) 40%, transparent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent)"
+            >
+              {cert.badge}
+            </span>
+            <span>
+              <span class="text-base-100 block text-sm font-medium group-hover:text-[color:var(--accent)]">
+                {cert.code}
+              </span>
+              <span class="text-base-400 block font-mono text-xs">
+                {cert.level}
+              </span>
+            </span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- ===================== OPEN SOURCE ===================== -->
+  <section class="border-base-800 border-t py-16">
+    <div class="card overflow-hidden">
+      <div class="grid gap-0 md:grid-cols-2">
+        <div class="p-8">
+          <p class="rule-label">Open source</p>
+          <h2 class="text-base-50 mt-3 text-2xl font-bold">
+            Construido a la vista de todos
+          </h2>
+          <p class="text-base-300 mt-4 text-base leading-relaxed">
+            Todo el contenido es abierto y reproducible, bajo licencia
+            Apache-2.0. Podés leer cómo está hecho, corregir un error, proponer
+            un lab nuevo o usar el material para enseñar.
+          </p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <a
+              href="/contribuir"
+              class="border-term-green/40 bg-term-green/10 text-term-green hover:bg-term-green/20 rounded-lg border px-4 py-2 font-mono text-sm transition-colors"
+            >
+              Cómo contribuir
+            </a>
+            <a
+              href="https://github.com/ValentinTorassa"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="border-base-700 text-base-200 hover:border-base-500 rounded-lg border px-4 py-2 font-mono text-sm transition-colors"
+            >
+              GitHub
+            </a>
+          </div>
+        </div>
+        <div
+          class="border-base-800 bg-base-900 border-t p-8 font-mono text-sm md:border-t-0 md:border-l"
+        >
+          <p class="text-base-400"># clonar y correr en local</p>
+          <p class="text-base-100 mt-2">
+            <span class="text-term-green">$</span> git clone vt-security-labs
+          </p>
+          <p class="text-base-100">
+            <span class="text-term-green">$</span> npm install
+          </p>
+          <p class="text-base-100">
+            <span class="text-term-green">$</span> npm run dev
+          </p>
+          <p class="text-base-400 mt-3"># agregar un lab</p>
+          <p class="text-base-100">
+            <span class="text-term-green">$</span> nuevo .mdx en src/content/labs/
+          </p>
+          <p class="text-base-500 mt-3">
+            → sin backend, sin login, sin base de datos.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PARA QUIÉN ===================== -->
+  <section class="border-base-800 border-t py-16">
+    <p class="rule-label">Para quién es</p>
+    <h2 class="text-base-50 mt-3 text-2xl font-bold sm:text-3xl">
+      Si trabajás con sistemas, es para vos
+    </h2>
+
+    <div class="mt-8 grid gap-4 sm:grid-cols-2">
+      {
+        audience.map((a) => (
+          <div class="card p-5">
+            <h3 class="text-base-50 font-semibold">{a.title}</h3>
+            <p class="text-base-300 mt-2 text-sm leading-relaxed">{a.body}</p>
+          </div>
+        ))
+      }
+    </div>
+
+    <div
+      class="border-base-700 bg-base-850/40 mt-12 rounded-xl border p-8 text-center"
+    >
+      <img
+        src="/penguin.svg"
+        alt="Mascota pingüino de VT Security"
+        width="120"
+        height="132"
+        class="mx-auto mb-5 h-20 w-auto drop-shadow-[0_8px_24px_rgba(63,185,80,0.18)]"
+      />
+      <p class="text-base-400 font-mono text-sm">
+        No entrás cuando estás listo. Te volvés bueno cuando entrás.
+      </p>
+      <a
+        href="/rutas"
+        class="bg-term-green text-base-950 mt-5 inline-block rounded-lg px-5 py-2.5 font-mono text-sm font-semibold transition-transform hover:-translate-y-0.5"
+      >
+        Empezar ahora →
+      </a>
+    </div>
+  </section>
+</BaseLayout>

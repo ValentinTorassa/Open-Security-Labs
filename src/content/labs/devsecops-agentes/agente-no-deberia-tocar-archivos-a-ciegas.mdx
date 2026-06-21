@@ -1,0 +1,147 @@
+---
+title: "Un agente no debería tocar archivos a ciegas"
+description: "Si tu agente de IA tiene herramientas, tiene permisos, y los permisos son superficie de ataque. Allowlists, rutas denegadas, auditoría y confirmación humana."
+path: "devsecops-agentes"
+order: 1
+level: "intermediate"
+estimatedMinutes: 30
+prerequisites:
+  - "Idea de qué es un agente de IA con herramientas (tools)"
+  - "Saber leer YAML"
+objectives:
+  - "Pensar un agente como una identidad no humana con permisos"
+  - "Escribir una policy con rutas permitidas y denegadas"
+  - "Diseñar un audit log de las acciones del agente"
+  - "Definir qué acciones exigen confirmación humana"
+evidence:
+  - "Tu archivo de policy con allowlist, denylist y reglas"
+  - "Ejemplo de una acción denegada y por qué"
+  - "Un fragmento de audit log de una acción del agente"
+commands:
+  - "cat agent-policy.yaml"
+challenge: "Escribí una policy para un agente que solo puede escribir en ./workspace, nunca en ~/.ssh ni en .env, y que pide confirmación antes de borrar. Mostrá un log de una acción permitida y una denegada."
+nextLabs:
+  - "ciberseguridad/docker-socket-to-host"
+  - "cloud-produccion/cloudtrail-quien-hizo-que"
+tags:
+  - "devsecops"
+  - "agentes"
+  - "permisos"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+Un agente de IA dejó de ser un chatbot hace rato. Lee archivos, ejecuta comandos, llama APIs, crea tickets, toca repos. Cada una de esas capacidades es un **permiso**, y cada permiso es superficie de ataque. El riesgo real no es que el modelo escriba algo raro: es que **tenga herramientas y las use sobre lo que no debía**.
+
+<Callout type="concepto">
+  Pensá el agente como una **identidad no humana**: como un usuario de servicio
+  o una IAM role. La pregunta de seguridad no es "¿qué texto genera?", es "¿qué
+  puede **ver**, qué puede **tocar**, qué puede **modificar**, y queda
+  **registrado**?". El prompt injection importa, pero es solo una forma de
+  abusar esas capacidades.
+</Callout>
+
+## El problema: permisos amplios "por las dudas"
+
+Lo cómodo es darle al agente acceso total al filesystem y a una shell, "así no se traba". Eso es el equivalente a `chmod 777` para agentes: funciona hasta que una instrucción maliciosa —escondida en un archivo que el agente lee, en una página, en un issue— lo convence de leer `.env`, exfiltrar `~/.ssh/id_rsa` o borrar algo importante.
+
+<Callout type="error">
+  "Le doy acceso a todo y confío en el modelo." El modelo no es el límite de
+  seguridad; **la policy** lo es. Si la única barrera entre el agente y tu clave
+  SSH es que "ojalá no se le ocurra", no tenés un control, tenés una esperanza.
+</Callout>
+
+## El control: una policy explícita
+
+Mínimo privilegio también aplica a los agentes. Declarás qué puede tocar (**allowlist**), qué nunca (**denylist**), y qué necesita aprobación humana.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+cat agent-policy.yaml
+```
+
+</TerminalBlock>
+
+```yaml
+# agent-policy.yaml — política de un agente de archivos
+filesystem:
+  allow_write:
+    - "./workspace/**" # única zona donde puede escribir
+  allow_read:
+    - "./workspace/**"
+    - "./docs/**"
+  deny: # nunca, ni leer ni escribir
+    - "**/.env"
+    - "**/.env.*"
+    - "~/.ssh/**"
+    - "**/secrets/**"
+    - "/etc/**"
+
+actions:
+  require_confirmation: # el humano aprueba antes de ejecutar
+    - "file.delete"
+    - "shell.exec"
+    - "network.request"
+
+audit:
+  log_path: "./logs/agent-audit.jsonl"
+  log_denied: true # también se registran los intentos bloqueados
+```
+
+<Callout type="concepto">
+  La regla de oro: **denegar gana sobre permitir**. Si una ruta matchea la
+  denylist, no hay allowlist que la habilite. Y el default es negar: lo que no
+  está explícitamente permitido, no se puede.
+</Callout>
+
+## Acción denegada: cómo se ve
+
+El agente, influenciado por una instrucción maliciosa, intenta leer un secreto. La policy lo corta antes de que pase nada:
+
+```text
+[agente] tool=file.read  path="../.env"
+[policy] match deny="**/.env"  →  DENEGADO
+[agente] respuesta: no puedo acceder a ese archivo (fuera de política)
+```
+
+No hubo "criterio del modelo" en el medio: hubo una regla que se ejecuta siempre, sin importar lo que diga el prompt.
+
+## Auditoría: si no quedó registrado, no pasó
+
+Toda acción —permitida o bloqueada— se escribe en un log append-only. Es tu CloudTrail del agente.
+
+```json
+{"ts":"2026-05-02T14:03:11Z","tool":"file.write","path":"./workspace/out.md","decision":"allow"}
+{"ts":"2026-05-02T14:03:40Z","tool":"file.read","path":"../.env","decision":"deny","rule":"**/.env"}
+{"ts":"2026-05-02T14:04:02Z","tool":"file.delete","path":"./workspace/tmp","decision":"await_confirmation"}
+```
+
+<Callout type="evidencia">
+  Un buen audit log responde, después del hecho: **qué** intentó el agente,
+  **sobre qué recurso**, **qué decidió la policy** y **cuándo**. Loguear también
+  lo denegado es clave: los intentos bloqueados son la señal temprana de que
+  algo (o alguien) está empujando al agente fuera de su caja.
+</Callout>
+
+## Confirmación humana para lo irreversible
+
+No todo se automatiza. Las acciones destructivas o de alto impacto —borrar, ejecutar shell arbitraria, mandar datos afuera— pasan por un **approval gate**: el agente propone, un humano confirma.
+
+```text
+┌────────────┐   propone   ┌──────────────┐   aprueba   ┌──────────┐
+│   Agente   │ ──────────► │ Approval gate│ ──────────► │ Ejecuta  │
+└────────────┘             └──────────────┘             └──────────┘
+                                  │ rechaza
+                                  └────────► se descarta + se loguea
+```
+
+<Callout type="concepto">
+  El patrón completo: **mínimo privilegio** (allowlist acotada) + **denylist
+  explícita** (lo sagrado, nunca) + **audit log** (todo queda escrito) +
+  **approval gate** (lo irreversible lo confirma un humano). Con esos cuatro, un
+  agente útil deja de ser un agente peligroso.
+</Callout>
+
+Si tu agente tiene herramientas, también tiene superficie de ataque. Dárselas no es el problema; dárselas **a ciegas**, sí.

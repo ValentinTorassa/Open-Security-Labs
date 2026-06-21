@@ -1,0 +1,25 @@
+---
+interface Props {
+  /** Etiqueta de la ventana (ej: usuario@host, ruta, o el shell). */
+  title?: string;
+}
+const { title = "vt@labs:~" } = Astro.props;
+---
+
+<div class="border-base-700 bg-base-900 my-6 overflow-hidden rounded-lg border">
+  <div
+    class="border-base-700 bg-base-850 flex items-center gap-2 border-b px-4 py-2"
+  >
+    <span class="flex gap-1.5" aria-hidden="true">
+      <span class="bg-term-red/70 h-2.5 w-2.5 rounded-full"></span>
+      <span class="bg-term-amber/70 h-2.5 w-2.5 rounded-full"></span>
+      <span class="bg-term-green/70 h-2.5 w-2.5 rounded-full"></span>
+    </span>
+    <span class="text-base-400 ml-1 font-mono text-xs">{title}</span>
+  </div>
+  <div
+    class="text-base-100 overflow-x-auto px-4 py-3 font-mono text-[0.82rem] leading-relaxed [&_pre]:!m-0 [&_pre]:!border-0 [&_pre]:!bg-transparent [&_pre]:!p-0"
+  >
+    <slot />
+  </div>
+</div>

@@ -1,0 +1,64 @@
+---
+const links = [
+  { href: "/rutas", label: "Rutas" },
+  { href: "/labs", label: "Labs" },
+  { href: "/certificaciones", label: "Certis" },
+  { href: "/contribuir", label: "Contribuir" },
+  { href: "/about", label: "Acerca" },
+];
+
+const path = Astro.url.pathname;
+const isActive = (href: string) =>
+  href === "/" ? path === "/" : path.startsWith(href);
+---
+
+<header
+  class="border-base-800 bg-base-950/80 sticky top-0 z-40 border-b backdrop-blur"
+>
+  <div
+    class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-5 sm:px-6"
+  >
+    <a
+      href="/"
+      class="group flex shrink-0 items-center gap-2.5"
+      aria-label="VT Security Labs — inicio"
+    >
+      <span
+        class="border-base-700 bg-base-900 text-term-green group-hover:border-term-green/50 flex h-7 w-7 items-center justify-center rounded-md border font-mono text-sm font-bold transition-colors"
+      >
+        &gt;_
+      </span>
+      <span class="flex items-baseline gap-1.5">
+        <span
+          class="text-base-50 font-mono text-sm font-semibold tracking-tight"
+          >VT Security</span
+        >
+        <span class="text-base-400 hidden font-mono text-sm sm:inline"
+          >Labs</span
+        >
+      </span>
+    </a>
+
+    <nav
+      class="-mx-2 flex items-center gap-0.5 overflow-x-auto px-2 sm:gap-1"
+      aria-label="Principal"
+    >
+      {
+        links.map((l) => (
+          <a
+            href={l.href}
+            class:list={[
+              "shrink-0 rounded-md px-2 py-1.5 font-mono text-sm transition-colors sm:px-3",
+              isActive(l.href)
+                ? "text-term-green"
+                : "text-base-300 hover:text-base-50",
+            ]}
+            aria-current={isActive(l.href) ? "page" : undefined}
+          >
+            {l.label}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+</header>

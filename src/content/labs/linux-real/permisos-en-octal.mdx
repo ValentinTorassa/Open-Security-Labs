@@ -1,0 +1,91 @@
+---
+title: "Permisos en octal: leer 644 sin pensar"
+description: "Un lab quirúrgico: solo traducir entre rwx y los tres dígitos octales, hasta que te salga automático."
+path: "linux-real"
+order: 2
+level: "beginner"
+estimatedMinutes: 12
+prerequisites:
+  - "Saber qué son rwx y los bloques dueño/grupo/otros (lab anterior)"
+objectives:
+  - "Convertir rwx a octal de memoria"
+  - "Convertir octal a rwx de memoria"
+  - "Leer 644, 600, 755 y 700 sin dudar"
+evidence:
+  - "Captura del juego con una racha de al menos 5 correctas seguidas"
+commands:
+  - "stat -c '%a %n'"
+challenge: "Llegá a una racha de 5 en el juego. Después corré stat -c '%a %n' sobre tres archivos tuyos y verificá que predecís el número antes de verlo."
+nextLabs:
+  - "ciberseguridad/por-que-chmod-777"
+tags:
+  - "linux"
+  - "permisos"
+  - "octal"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import PermissionsGame from "../../../components/PermissionsGame.astro";
+
+Este lab hace **una sola cosa**: que leas permisos en octal sin frenar a pensar. Nada más. Es corto a propósito.
+
+## La regla, en una línea
+
+Cada bloque de permisos (dueño, grupo, otros) es un número del 0 al 7. Se arma sumando:
+
+```text
+r = 4    (leer)
+w = 2    (escribir)
+x = 1    (ejecutar)
+```
+
+Sumás dentro de cada bloque y te queda un dígito por bloque:
+
+```text
+rwx = 4+2+1 = 7
+rw- = 4+2+0 = 6
+r-x = 4+0+1 = 5
+r-- = 4+0+0 = 4
+```
+
+Entonces `-rw-r--r--` se lee bloque por bloque: `rw-`=6, `r--`=4, `r--`=4 → **644**.
+
+<Callout type="concepto">
+  No hay nada que memorizar más allá de `4-2-1`. Los "números mágicos" que ves
+  siempre (644, 755, 600, 700) son solo combinaciones de esa suma. Cuando la
+  suma te sale sola, los permisos dejan de ser un misterio.
+</Callout>
+
+## Practicá hasta que sea automático
+
+Te toca. El juego genera permisos al azar: traducilos a sus tres dígitos. Buscá una racha.
+
+<PermissionsGame />
+
+<Callout type="comando">
+Para verificar permisos en octal directo desde la terminal, sin contar a mano:
+
+`stat -c '%a %n' archivo` te devuelve el número y el nombre.
+
+</Callout>
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+stat -c "%a %n" ~/.ssh/id_ed25519 2>/dev/null
+# 600 /home/vt/.ssh/id_ed25519   ← una clave privada debe ser 600
+```
+
+</TerminalBlock>
+
+## Los cuatro que vas a usar siempre
+
+```text
+644  rw-r--r--   archivos normales (dueño escribe, el resto lee)
+600  rw-------   secretos: claves, .env, tokens
+755  rwxr-xr-x   ejecutables y directorios (todos entran/ejecutan)
+700  rwx------   directorios privados (solo el dueño)
+```
+
+Si estos cuatro te salen de memoria, ya tenés el 90% de los casos reales cubiertos.

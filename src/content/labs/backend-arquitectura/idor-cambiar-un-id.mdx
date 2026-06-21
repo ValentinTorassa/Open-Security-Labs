@@ -1,0 +1,126 @@
+---
+title: "IDOR: el ataque de cambiar un número"
+description: "Lab quirúrgico sobre el bug de autorización más común: pedir el recurso de otro cambiando un id en la URL. Con diagrama y quiz."
+path: "backend-arquitectura"
+order: 2
+level: "intermediate"
+estimatedMinutes: 15
+prerequisites:
+  - "Saber qué es un endpoint y un token (lab: JWT no es autorización)"
+objectives:
+  - "Reconocer un IDOR a partir del diseño de un endpoint"
+  - "Distinguir 'token válido' de 'acción permitida'"
+  - "Nombrar el chequeo que lo previene"
+evidence:
+  - "Captura del quiz"
+  - "Pseudocódigo del chequeo de ownership que agregarías a un endpoint tuyo"
+commands:
+  - "curl -H 'Authorization: Bearer <token>'"
+challenge: "Tomá un endpoint de un proyecto tuyo que reciba un id en la URL. Escribí el chequeo de ownership que le falta (o confirmá que ya lo tiene) en 3 líneas de pseudocódigo."
+nextLabs:
+  - "ciberseguridad/docker-socket-to-host"
+tags:
+  - "backend"
+  - "idor"
+  - "auth"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import Mermaid from "../../../components/Mermaid.astro";
+import Quiz from "../../../components/Quiz.astro";
+
+El **IDOR** (Insecure Direct Object Reference) no necesita romper nada criptográfico. Es, literalmente, cambiar un número en la URL y recibir el dato de otra persona. Por eso es tan común: el atacante usa la app exactamente como fue diseñada.
+
+## El ataque, en un diagrama
+
+<Mermaid
+  caption="Mismo token válido, otro id. Si el servidor responde, es IDOR."
+  code={`sequenceDiagram
+  actor A as Atacante (user_42)
+  participant API
+  participant DB
+  Note over A,API: Token válido de user_42
+  A->>API: GET /facturas/100 (su id)
+  API->>DB: buscar factura 100
+  DB-->>API: factura de user_42
+  API-->>A: 200 OK ✔ (correcto)
+  A->>API: GET /facturas/101 (id ajeno)
+  API->>DB: buscar factura 101
+  DB-->>API: factura de OTRO usuario
+  API-->>A: 200 OK ✘ IDOR`}
+/>
+
+El token nunca se rompió. `user_42` está perfectamente autenticado. El problema es que el servidor **sirvió el recurso sin chequear que fuera suyo**.
+
+<Callout type="concepto">
+  La trampa mental: "el token es válido, entonces la request es legítima".
+  Falso. Un token válido prueba **identidad** (authn). No prueba que esa
+  identidad sea **dueña del recurso** que pide (authz). Son dos preguntas
+  distintas y el servidor tiene que responder las dos.
+</Callout>
+
+## El chequeo que falta
+
+```text
+GET /facturas/{id}
+
+función obtener_factura(request, id):
+    usuario = validar_token(request)          # authn ✓
+    factura = db.buscar(id)
+
+    si factura.owner_id != usuario.id:         # ← authz: el chequeo clave
+        responder 404                          # 404, no 403: no revela que existe
+
+    responder 200, factura
+```
+
+Una condición. Eso es lo que separa un endpoint seguro de un IDOR. Y es justo lo que falta cuando alguien asume que "con login alcanza".
+
+<Callout type="error">
+  Devolver `403` cuando el recurso no es tuyo **confirma que existe**. Un
+  atacante que itera ids aprende cuáles son válidos. Devolver `404` (como si no
+  existiera) no le da esa información. Mismo bloqueo, menos filtración.
+</Callout>
+
+## Probarlo (en tu propio sistema)
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# Con tu token, pedí un id que NO es tuyo. ¿Responde 200 o 404?
+curl -s -o /dev/null -w "%{http_code}\n" \
+  -H "Authorization: Bearer $TOKEN" \
+  https://api.tuapp.local/facturas/101
+```
+
+</TerminalBlock>
+
+## Quiz
+
+<Quiz
+  questions={[
+    {
+      q: "¿Cuál es la causa raíz de un IDOR?",
+      options: [
+        "Una firma de token débil o mal validada",
+        "Falta el chequeo de que el recurso pertenezca a quien lo pide",
+        "El uso de HTTP en vez de HTTPS",
+      ],
+      answer: 1,
+      explain:
+        "El IDOR es un fallo de autorización: el token puede ser perfecto. Lo que falta es verificar ownership del recurso.",
+    },
+    {
+      q: "Un endpoint devuelve 200 al pedir el id de otro usuario con un token válido. ¿Qué es?",
+      options: [
+        "Comportamiento normal: el token es válido",
+        "Un IDOR: sirve un recurso ajeno sin chequear ownership",
+        "Un error 5xx mal codificado",
+      ],
+      answer: 1,
+      explain:
+        "Token válido + recurso ajeno servido = IDOR. La validez del token no implica permiso sobre ese recurso puntual.",
+    },
+  ]}
+/>

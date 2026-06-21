@@ -1,0 +1,116 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const principles = [
+  {
+    t: "Entender antes que defender",
+    d: "No podés defender sistemas que no entendés cómo funcionan. Primero el sistema, después la herramienta.",
+  },
+  {
+    t: "La magia no existe",
+    d: "Una request no es magia. Cloud no es magia. Todo se puede descomponer en componentes, estado, protocolos, logs y permisos.",
+  },
+  {
+    t: "Evidencia, no certificados de asistencia",
+    d: "Cada lab deja un artefacto: comandos, writeups, diagramas, repos. Lo que se puede mostrar, se puede evaluar.",
+  },
+  {
+    t: "Sin hype",
+    d: "Nada de promesas de bootcamp, fearmongering ni lenguaje de influencer. Tradeoffs honestos y criterio práctico.",
+  },
+];
+---
+
+<BaseLayout
+  title="Acerca"
+  description="Qué es VT Security Labs, de dónde viene y por qué existe."
+  width="prose"
+>
+  <section class="py-12">
+    <p class="rule-label">Acerca</p>
+    <h1 class="text-base-50 mt-3 text-3xl font-bold sm:text-4xl">
+      Una plataforma para entender los sistemas de verdad
+    </h1>
+
+    <div class="lab-prose prose prose-invert mt-8 max-w-none">
+      <p>
+        <strong>VT Security Labs</strong> es una plataforma educativa, abierta y gratuita,
+        inspirada en la idea de Linux Journey pero enfocada en lo que más importa
+        cuando trabajás con sistemas reales: Linux, redes, arquitectura backend, cloud,
+        producción, DevSecOps, agentes de IA y ciberseguridad.
+      </p>
+      <p>
+        Es un proyecto de <strong>VT Security</strong>, el espacio de Valentín
+        Torassa Colombero —ingeniero de ciberseguridad y backend/cloud desde
+        Rosario, Argentina— para enseñar en español, con voseo, de forma directa
+        y práctica. La misma línea del canal y las charlas, ahora como labs
+        reproducibles.
+      </p>
+      <p>
+        El material está pensado para Argentina y LatAm, pero sirve a cualquiera
+        que prefiera entender el mecanismo antes que coleccionar herramientas.
+      </p>
+    </div>
+
+    <h2 class="text-base-50 mt-12 text-2xl font-bold">En qué creemos</h2>
+    <div class="mt-6 grid gap-4 sm:grid-cols-2">
+      {
+        principles.map((p) => (
+          <div class="card p-5">
+            <h3 class="text-base-50 font-semibold">{p.t}</h3>
+            <p class="text-base-300 mt-2 text-sm leading-relaxed">{p.d}</p>
+          </div>
+        ))
+      }
+    </div>
+
+    <h2 class="text-base-50 mt-12 text-2xl font-bold">Qué no es</h2>
+    <ul class="text-base-300 mt-4 space-y-2">
+      <li class="flex gap-2.5">
+        <span class="text-term-red font-mono" aria-hidden="true">✕</span>
+        Un bootcamp con promesas de sueldo en 3 meses.
+      </li>
+      <li class="flex gap-2.5">
+        <span class="text-term-red font-mono" aria-hidden="true">✕</span>
+        Un catálogo de herramientas para memorizar.
+      </li>
+      <li class="flex gap-2.5">
+        <span class="text-term-red font-mono" aria-hidden="true">✕</span>
+        Contenido ofensivo para atacar sistemas ajenos. Todo es defensivo, seguro
+        y reproducible en labs locales.
+      </li>
+    </ul>
+
+    <div
+      class="border-base-700 bg-base-850/40 text-base-300 mt-12 rounded-xl border p-6 text-sm"
+    >
+      <p class="text-base-400 font-mono text-xs">Encontrá a VT Security en</p>
+      <div class="mt-3 flex flex-wrap gap-x-5 gap-y-2 font-mono text-sm">
+        <a
+          href="https://www.youtube.com/@vtcibersecurity"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-term-green hover:underline">YouTube</a
+        >
+        <a
+          href="https://github.com/ValentinTorassa"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-term-green hover:underline">GitHub</a
+        >
+        <a
+          href="https://www.linkedin.com/in/valetorassa/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-term-green hover:underline">LinkedIn</a
+        >
+        <a
+          href="https://valentorassa.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-term-green hover:underline">valentorassa.com</a
+        >
+      </div>
+    </div>
+  </section>
+</BaseLayout>

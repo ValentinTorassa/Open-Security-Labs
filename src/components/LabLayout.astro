@@ -1,0 +1,99 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getPath } from "../data/paths";
+import Prerequisites from "./Prerequisites.astro";
+import Objectives from "./Objectives.astro";
+import EvidenceBox from "./EvidenceBox.astro";
+import ChallengeBox from "./ChallengeBox.astro";
+import NextLabLinks from "./NextLabLinks.astro";
+
+interface Props {
+  lab: CollectionEntry<"labs">;
+}
+const { lab } = Astro.props;
+const { data } = lab;
+const path = getPath(data.path);
+const accent = path?.accent ?? "#56d364";
+
+const levelLabel: Record<string, string> = {
+  beginner: "Inicial",
+  intermediate: "Intermedio",
+  advanced: "Avanzado",
+};
+---
+
+<article class="py-10" style={`--accent: ${accent}`}>
+  <!-- Breadcrumb -->
+  <nav class="text-base-400 mb-6 font-mono text-xs" aria-label="Migas de pan">
+    <a href="/labs" class="hover:text-term-green">labs</a>
+    <span class="text-base-600 mx-1.5">/</span>
+    {
+      path && (
+        <a
+          href={`/rutas/${path.slug}`}
+          class="hover:text-[color:var(--accent)]"
+          style="color: var(--accent)"
+        >
+          {path.slug}
+        </a>
+      )
+    }
+  </nav>
+
+  <!-- Header -->
+  <header class="border-base-800 mb-8 border-b pb-8">
+    <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+      <span
+        class="rounded border px-2 py-0.5"
+        style="border-color: color-mix(in srgb, var(--accent) 35%, transparent); color: var(--accent)"
+      >
+        {path?.title ?? data.path}
+      </span>
+      <span class="border-base-700 text-base-400 rounded border px-2 py-0.5">
+        {levelLabel[data.level]}
+      </span>
+      <span class="text-base-400">· {data.estimatedMinutes} min</span>
+    </div>
+
+    <h1 class="text-base-50 mt-4 text-3xl leading-tight font-bold sm:text-4xl">
+      {data.title}
+    </h1>
+    <p class="text-base-300 mt-3 text-lg leading-relaxed">{data.description}</p>
+
+    {
+      data.tags.length > 0 && (
+        <div class="mt-4 flex flex-wrap gap-2">
+          {data.tags.map((t) => (
+            <span class="text-base-500 font-mono text-xs">#{t}</span>
+          ))}
+        </div>
+      )
+    }
+  </header>
+
+  <Prerequisites items={data.prerequisites} />
+  <Objectives items={data.objectives} />
+
+  <!-- Cuerpo del lab (MDX) -->
+  <div class="lab-prose prose prose-invert mt-8 max-w-none">
+    <slot />
+  </div>
+
+  {data.evidence.length > 0 && <EvidenceBox items={data.evidence} />}
+  {data.challenge && <ChallengeBox prompt={data.challenge} />}
+  {data.nextLabs.length > 0 && <NextLabLinks ids={data.nextLabs} />}
+
+  <!-- Pie del lab -->
+  <footer
+    class="border-base-700 bg-base-850/50 text-base-300 mt-12 rounded-xl border p-5 text-sm"
+  >
+    <p class="text-base-400 font-mono text-xs">¿Hiciste el lab?</p>
+    <p class="mt-2">
+      Subí tu evidencia (comandos, screenshots, writeup) a tu repo o portfolio.
+      Si encontrás un error o querés mejorar este lab,
+      <a href="/contribuir" class="text-term-green hover:underline"
+        >contribuí al repo</a
+      >.
+    </p>
+  </footer>
+</article>

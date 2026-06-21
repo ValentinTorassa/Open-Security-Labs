@@ -1,0 +1,199 @@
+---
+// Examen: respondés todo y después calificás. Muestra puntaje, aprobado/no y
+// revisión por pregunta. Client-side, sin persistencia.
+import type { ExamQuestion } from "../data/questions";
+
+interface Props {
+  questions: ExamQuestion[];
+  /** Puntaje mínimo para aprobar (porcentaje). */
+  passScore?: number;
+  title?: string;
+  subtitle?: string;
+}
+const { questions, passScore = 70, title = "Examen", subtitle } = Astro.props;
+const uid = "exam-" + Math.random().toString(36).slice(2, 9);
+---
+
+<section
+  class="not-prose border-base-700 bg-base-850/50 my-8 rounded-xl border p-5 sm:p-6"
+  data-exam
+  data-pass={passScore}
+  id={uid}
+>
+  <header class="flex flex-wrap items-baseline justify-between gap-2">
+    <h3 class="text-base-50 flex items-center gap-2 text-lg font-semibold">
+      <span class="text-term-green font-mono" aria-hidden="true">▣</span>
+      {title}
+    </h3>
+    <p class="text-base-400 font-mono text-xs">
+      {questions.length} preguntas · aprobás con {passScore}%
+    </p>
+  </header>
+  {subtitle && <p class="text-base-400 mt-1 text-sm">{subtitle}</p>}
+
+  <ol class="mt-5 space-y-6">
+    {
+      questions.map((item, qi) => (
+        <li class="list-none" data-question data-answer={item.answer}>
+          <p class="text-base-100 text-sm font-medium">
+            <span class="text-base-400 font-mono">{qi + 1}.</span> {item.q}
+          </p>
+          <div class="mt-3 grid gap-2" role="radiogroup">
+            {item.options.map((opt, oi) => (
+              <button
+                type="button"
+                data-option
+                data-index={oi}
+                aria-pressed="false"
+                class="border-base-700 bg-base-900/60 text-base-200 hover:border-base-500 aria-pressed:border-term-cyan aria-pressed:bg-term-cyan/10 flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left text-sm transition-colors disabled:cursor-default"
+              >
+                <span class="text-base-500 font-mono text-xs" data-mark>
+                  {String.fromCharCode(97 + oi)}
+                </span>
+                <span>{opt}</span>
+              </button>
+            ))}
+          </div>
+          {item.explain && (
+            <p
+              class="border-base-700 bg-base-900 text-base-300 mt-2 hidden rounded-md border px-3 py-2 text-xs leading-relaxed"
+              data-explain
+            >
+              {item.explain}
+            </p>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+
+  <div class="mt-6 flex flex-wrap items-center gap-3">
+    <button
+      type="button"
+      data-exam-grade
+      class="bg-term-green text-base-950 rounded-lg px-5 py-2.5 font-mono text-sm font-semibold transition-transform hover:-translate-y-0.5"
+      >Calificar examen</button
+    >
+    <button
+      type="button"
+      data-exam-reset
+      class="border-base-700 text-base-200 hover:border-base-500 hidden rounded-lg border px-4 py-2.5 font-mono text-sm transition-colors"
+      >Reiniciar ↻</button
+    >
+    <p
+      class="hidden font-mono text-sm font-semibold"
+      data-exam-result
+      aria-live="polite"
+    >
+    </p>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-exam]").forEach((exam) => {
+    const pass = Number(exam.dataset.pass ?? 70);
+    const questions = Array.from(
+      exam.querySelectorAll<HTMLElement>("[data-question]"),
+    );
+    const gradeBtn = exam.querySelector<HTMLButtonElement>("[data-exam-grade]");
+    const resetBtn = exam.querySelector<HTMLButtonElement>("[data-exam-reset]");
+    const result = exam.querySelector<HTMLElement>("[data-exam-result]");
+    let graded = false;
+
+    const select = (question: HTMLElement, btn: HTMLButtonElement) => {
+      if (graded) return;
+      question
+        .querySelectorAll<HTMLButtonElement>("[data-option]")
+        .forEach((b) => b.setAttribute("aria-pressed", "false"));
+      btn.setAttribute("aria-pressed", "true");
+      question.dataset.selected = btn.dataset.index;
+    };
+
+    const grade = () => {
+      if (graded) return;
+      let correct = 0;
+      questions.forEach((question) => {
+        const answer = Number(question.dataset.answer);
+        const selected =
+          question.dataset.selected !== undefined
+            ? Number(question.dataset.selected)
+            : -1;
+        if (selected === answer) correct += 1;
+
+        question
+          .querySelectorAll<HTMLButtonElement>("[data-option]")
+          .forEach((b) => {
+            b.disabled = true;
+            const i = Number(b.dataset.index);
+            const mark = b.querySelector<HTMLElement>("[data-mark]");
+            if (i === answer) {
+              b.classList.add("border-term-green", "bg-term-green/10");
+              b.classList.remove("border-base-700", "bg-base-900/60");
+              if (mark) mark.textContent = "✓";
+            } else if (i === selected) {
+              b.classList.add("border-term-red", "bg-term-red/10");
+              b.classList.remove("border-base-700", "bg-base-900/60");
+              if (mark) mark.textContent = "✕";
+            }
+          });
+        question
+          .querySelector<HTMLElement>("[data-explain]")
+          ?.classList.remove("hidden");
+      });
+
+      graded = true;
+      const score = Math.round((correct / questions.length) * 100);
+      const ok = score >= pass;
+      if (result) {
+        result.textContent = `${ok ? "✓ Aprobado" : "✕ No alcanzó"} · ${correct}/${questions.length} (${score}%)`;
+        result.classList.remove("hidden");
+        result.classList.add(ok ? "text-term-green" : "text-term-red");
+      }
+      gradeBtn?.classList.add("hidden");
+      resetBtn?.classList.remove("hidden");
+      exam.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    };
+
+    const reset = () => {
+      graded = false;
+      questions.forEach((question) => {
+        delete question.dataset.selected;
+        question
+          .querySelectorAll<HTMLButtonElement>("[data-option]")
+          .forEach((b) => {
+            b.disabled = false;
+            b.setAttribute("aria-pressed", "false");
+            b.classList.remove(
+              "border-term-green",
+              "bg-term-green/10",
+              "border-term-red",
+              "bg-term-red/10",
+            );
+            b.classList.add("border-base-700", "bg-base-900/60");
+            const mark = b.querySelector<HTMLElement>("[data-mark]");
+            if (mark)
+              mark.textContent = String.fromCharCode(
+                97 + Number(b.dataset.index),
+              );
+          });
+        question
+          .querySelector<HTMLElement>("[data-explain]")
+          ?.classList.add("hidden");
+      });
+      result?.classList.add("hidden");
+      result?.classList.remove("text-term-green", "text-term-red");
+      gradeBtn?.classList.remove("hidden");
+      resetBtn?.classList.add("hidden");
+    };
+
+    questions.forEach((question) => {
+      question
+        .querySelectorAll<HTMLButtonElement>("[data-option]")
+        .forEach((btn) => {
+          btn.addEventListener("click", () => select(question, btn));
+        });
+    });
+    gradeBtn?.addEventListener("click", grade);
+    resetBtn?.addEventListener("click", reset);
+  });
+</script>

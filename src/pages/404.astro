@@ -1,0 +1,47 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="404 — ruta no encontrada" width="default">
+  <section
+    class="flex flex-col items-center justify-center py-24 text-center sm:py-32"
+  >
+    <img
+      src="/penguin.svg"
+      alt="Mascota pingüino de VT Security"
+      width="120"
+      height="132"
+      class="mb-8 h-32 w-auto drop-shadow-[0_8px_24px_rgba(63,185,80,0.15)]"
+    />
+
+    <p class="rule-label">Error 404</p>
+    <h1 class="text-base-50 mt-3 text-3xl font-bold sm:text-4xl">
+      Esta ruta no existe en el sistema
+    </h1>
+    <p class="text-base-300 mt-4 max-w-md text-base leading-relaxed">
+      El recurso que pediste devolvió <code
+        class="mono bg-base-800 text-term-red rounded px-1.5 py-0.5"
+        >404 Not Found</code
+      >. O el link está roto, o todavía no escribimos ese lab.
+    </p>
+
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a
+        href="/"
+        class="bg-term-green text-base-950 rounded-lg px-5 py-2.5 font-mono text-sm font-semibold transition-transform hover:-translate-y-0.5"
+      >
+        Volver al inicio
+      </a>
+      <a
+        href="/labs"
+        class="border-base-700 bg-base-900/60 text-base-100 hover:border-term-green/50 hover:text-term-green rounded-lg border px-5 py-2.5 font-mono text-sm font-semibold transition-colors"
+      >
+        Ver todos los labs
+      </a>
+    </div>
+
+    <p class="text-base-500 mt-10 font-mono text-xs">
+      <span class="text-term-green">$</span> cd /algun-lugar-que-exista
+    </p>
+  </section>
+</BaseLayout>

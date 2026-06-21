@@ -1,0 +1,183 @@
+---
+title: "Permisos, usuarios y procesos: la base real de Linux"
+description: "Quién sos, qué podés tocar y qué se está ejecutando. Los tres ejes que explican casi todo lo que pasa en un sistema Linux."
+path: "linux-real"
+order: 1
+level: "beginner"
+estimatedMinutes: 35
+prerequisites:
+  - "Una terminal en Linux, WSL o una VM descartable"
+  - "Saber abrir una shell y escribir comandos"
+objectives:
+  - "Identificar tu usuario, grupos y UID/GID"
+  - "Leer los permisos de un archivo en formato rwx y octal"
+  - "Cambiar permisos con chmod y entender qué implica"
+  - "Listar procesos y entender con qué usuario corren"
+  - "Encontrar qué procesos están escuchando en qué puertos"
+evidence:
+  - "Screenshot de un cambio de permisos (antes y después de chmod)"
+  - "Writeup de 2 párrafos explicando la diferencia entre usuario, grupo y otros"
+  - "Salida de ss -tulpn con rutas o datos sensibles tachados"
+commands:
+  - "whoami"
+  - "id"
+  - "ls -l"
+  - "chmod"
+  - "ps aux"
+  - "ss -tulpn"
+challenge: "Creá un archivo notas.txt, dejalo legible solo para tu usuario (chmod 600), verificá con ls -l y explicá en dos líneas por qué el grupo y otros ya no pueden leerlo."
+nextLabs:
+  - "redes-internet/una-request-no-es-magia"
+  - "ciberseguridad/docker-socket-to-host"
+tags:
+  - "linux"
+  - "permisos"
+  - "procesos"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+Antes de hablar de seguridad, hardening o servidores, hay tres preguntas que Linux se hace todo el tiempo:
+
+1. **¿Quién sos?** (usuario y grupos)
+2. **¿Qué podés tocar?** (permisos)
+3. **¿Qué se está ejecutando, y como quién?** (procesos)
+
+Si entendés esas tres cosas, el 80% de los "errores raros" de Linux dejan de ser magia y pasan a ser preguntas con respuesta.
+
+## 1. Quién sos
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+whoami
+id
+```
+
+</TerminalBlock>
+
+`whoami` te dice tu nombre de usuario. `id` te dice mucho más: tu **UID** (número de usuario), tu **GID** (grupo primario) y todos los grupos a los que pertenecés.
+
+<Callout type="concepto">
+  Para el kernel no existís como "valen": existís como un número, el **UID**. El
+  nombre es solo una etiqueta cómoda que vive en `/etc/passwd`. Los permisos se
+  evalúan contra números, no contra nombres.
+</Callout>
+
+El UID `0` es especial: es **root**. No es "el admin" por configuración, es root porque su UID es 0. Por eso cambiar de usuario importa tanto en seguridad.
+
+## 2. Qué podés tocar
+
+Listá un directorio con detalle:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+ls -l
+```
+
+</TerminalBlock>
+
+Cada línea empieza con algo así: `-rw-r--r--`. Eso es el corazón del modelo de permisos de Linux. Se lee en bloques:
+
+```text
+-      rw-     r--     r--
+tipo   dueño   grupo   otros
+```
+
+- **tipo**: `-` archivo, `d` directorio, `l` enlace.
+- **dueño** (user): el usuario que posee el archivo.
+- **grupo** (group): el grupo que posee el archivo.
+- **otros** (other): todos los demás.
+
+Cada bloque tiene tres permisos: `r` (read/leer), `w` (write/escribir), `x` (execute/ejecutar). Si la letra está, el permiso existe; si hay un `-`, no.
+
+<Callout type="concepto">
+  En un **archivo**, `x` significa "se puede ejecutar". En un **directorio**,
+  `x` significa "se puede entrar" (hacer `cd` y atravesarlo). Es el error de
+  intuición más común al empezar.
+</Callout>
+
+### El mismo permiso, en octal
+
+Los permisos también se escriben con números. Cada permiso vale: `r=4`, `w=2`, `x=1`. Se suman por bloque:
+
+```text
+rw-  = 4+2+0 = 6
+r--  = 4+0+0 = 4
+rwx  = 4+2+1 = 7
+```
+
+Entonces `-rw-r--r--` es `644`, y `-rwxr-xr-x` es `755`.
+
+### Cambiar permisos
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+echo "mis notas" > notas.txt
+ls -l notas.txt          # probablemente -rw-r--r-- (644)
+chmod 600 notas.txt
+ls -l notas.txt          # ahora -rw------- (600)
+```
+
+</TerminalBlock>
+
+Con `600` el dueño puede leer y escribir, y **nadie más puede ni leer**. Esa es la base de proteger una clave SSH, un archivo de config o un token.
+
+<Callout type="error">
+  `chmod 777` no es "arreglar permisos": es **dárselos a todo el mundo**. Si
+  algo "no anda por permisos" y lo resolvés con `777`, lo más probable es que
+  acabes de abrir un agujero. Casi nunca es la respuesta correcta.
+</Callout>
+
+## 3. Qué se está ejecutando
+
+Un proceso es un programa en ejecución. Y todo proceso corre **con la identidad de algún usuario**, lo que define qué puede tocar.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+ps aux | head
+```
+
+</TerminalBlock>
+
+La primera columna es el **usuario** dueño del proceso. Eso importa: si un servicio web corre como `root` y lo comprometen, el atacante es root. Si corre como un usuario limitado, el daño queda acotado. A eso se le llama **principio de mínimo privilegio**.
+
+<Callout type="comando">
+  `ps aux` muestra todos los procesos del sistema con su usuario, uso de
+  CPU/memoria y el comando. Sumá `| grep nginx` (o el servicio que busques) para
+  filtrar.
+</Callout>
+
+## 4. Procesos que escuchan en la red
+
+Un proceso que abre un puerto está aceptando conexiones. Saber **quién escucha dónde** es media investigación de seguridad.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+ss -tulpn
+```
+
+</TerminalBlock>
+
+- `-t` TCP, `-u` UDP
+- `-l` solo los que están escuchando (listening)
+- `-p` el proceso dueño (puede requerir sudo para verlo completo)
+- `-n` números de puerto, sin resolver nombres
+
+Si ves un puerto abierto que no reconocés, esa es exactamente la pregunta correcta: _¿qué proceso es, quién lo levantó y por qué está expuesto?_
+
+<Callout type="concepto">
+  Juntá las tres ideas: un **proceso** corre como un **usuario**, ese usuario
+  tiene **permisos**, y el proceso puede estar **escuchando en la red**.
+  Identidad + permisos + exposición. Ese triángulo explica casi todo incidente
+  en un servidor Linux.
+</Callout>
+
+## Cerrando
+
+No memorizaste comandos: entendiste un modelo. Quién sos (UID/grupos), qué podés tocar (rwx/octal) y qué corre y cómo (procesos y puertos). Sobre esa base se construyen el hardening, el debugging y la respuesta a incidentes.

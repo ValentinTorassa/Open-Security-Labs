@@ -1,0 +1,26 @@
+---
+interface Props {
+  /** Enunciado del reto. Si no se pasa, usa el slot. */
+  prompt?: string;
+  title?: string;
+}
+const { prompt, title = "Reto" } = Astro.props;
+---
+
+<section
+  class="border-term-amber/30 bg-term-amber/5 my-8 rounded-xl border p-5"
+>
+  <h3
+    class="text-term-amber flex items-center gap-2 font-mono text-sm font-semibold"
+  >
+    <span aria-hidden="true">⚑</span>
+    {title}
+  </h3>
+  <div class="text-base-100 mt-3 text-sm leading-relaxed">
+    {prompt ? <p>{prompt}</p> : <slot />}
+  </div>
+  <p class="text-base-400 mt-4 font-mono text-xs">
+    Resolvelo, sacá un screenshot y escribí dos líneas explicando qué pasó. Eso
+    es la evidencia.
+  </p>
+</section>

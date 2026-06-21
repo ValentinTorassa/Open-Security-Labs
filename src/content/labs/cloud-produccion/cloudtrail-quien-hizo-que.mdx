@@ -1,0 +1,142 @@
+---
+title: "CloudTrail: quién hizo qué en AWS"
+description: "En la nube, la identidad es el perímetro. CloudTrail registra cada acción de cada identidad. Aprendé a leer esos eventos para investigar un incidente."
+path: "cloud-produccion"
+order: 1
+level: "intermediate"
+estimatedMinutes: 35
+prerequisites:
+  - "Idea básica de qué es AWS (cuentas, usuarios, roles)"
+  - "Saber leer JSON"
+objectives:
+  - "Entender qué registra CloudTrail y qué no"
+  - "Leer los campos clave de un evento: identidad, acción, origen, recurso"
+  - "Reconstruir una historia de abuso de identidad con eventos"
+  - "Saber qué eventos de IAM merecen una alerta"
+evidence:
+  - "Tus respuestas a las tres preguntas de investigación"
+  - "Writeup corto: la línea de tiempo del incidente reconstruida"
+  - "Lista de 3 eventos de IAM que pondrías a alertar y por qué"
+commands:
+  - "jq '.Records[] | {time:.eventTime, who:.userIdentity.arn, action:.eventName}'"
+challenge: "Con el dataset de abajo, ordená los eventos por tiempo y contá la historia: qué identidad empezó, qué rol asumió, qué permisos sumó y qué hizo al final. Tres líneas."
+nextLabs:
+  - "ciberseguridad/docker-socket-to-host"
+  - "devsecops-agentes/agente-no-deberia-tocar-archivos-a-ciegas"
+tags:
+  - "cloud"
+  - "aws"
+  - "logs"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+En tu compu, el perímetro es la red: un firewall, una IP. En la nube eso se desdibuja. Lo que define qué puede pasar es **la identidad**: un usuario, un rol, una access key. Y la herramienta que registra qué hizo cada identidad es **CloudTrail**.
+
+<Callout type="concepto">
+  En AWS, **identidad es perímetro**. Casi toda acción —crear una máquina, leer
+  un bucket, asumir un rol— pasa por una API, y CloudTrail anota quién la llamó,
+  cuándo, desde dónde y sobre qué. Después de un incidente, ese registro es la
+  diferencia entre saber qué pasó y adivinar.
+</Callout>
+
+## Qué registra (y qué no)
+
+CloudTrail registra **llamadas a la API** de AWS: el plano de control. "Alguien asumió este rol", "alguien creó una access key", "alguien cambió esta policy". Lo que **no** registra por defecto es el contenido: no te dice qué bytes se leyeron de un objeto S3, solo que se llamó a la API. Para ese nivel hace falta logging de datos aparte.
+
+## Anatomía de un evento
+
+Cada evento es un JSON. Estos son los campos que mirás primero:
+
+```json
+{
+  "eventTime": "2026-03-14T09:42:11Z",
+  "eventName": "CreateAccessKey",
+  "userIdentity": {
+    "type": "IAMUser",
+    "arn": "arn:aws:iam::1234:user/deploy-bot",
+    "accessKeyId": "AKIAEXAMPLE000"
+  },
+  "sourceIPAddress": "203.0.113.50",
+  "requestParameters": { "userName": "deploy-bot" },
+  "responseElements": { "accessKey": { "accessKeyId": "AKIAEXAMPLE999" } }
+}
+```
+
+- **eventTime**: cuándo. Tu línea de tiempo se arma con esto.
+- **eventName**: qué acción (`AssumeRole`, `CreateAccessKey`, `AttachUserPolicy`…).
+- **userIdentity.arn**: quién. La identidad que hizo la llamada.
+- **sourceIPAddress**: desde dónde. Una IP rara es una señal.
+- **requestParameters / responseElements**: sobre qué recurso y con qué resultado.
+
+<Callout type="comando">
+  Para barrer un export de CloudTrail rápido, `jq` te deja ver lo esencial de
+  cada evento en una línea: tiempo, quién y qué acción.
+</Callout>
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+jq '.Records[] | {time: .eventTime, who: .userIdentity.arn, action: .eventName, ip: .sourceIPAddress}' trail.json
+```
+
+</TerminalBlock>
+
+## El caso: un dataset sintético
+
+Estos eventos son **falsos**, solo para practicar. Leelos y reconstruí la historia.
+
+```text
+1) 09:40  ConsoleLogin       arn:.../user/deploy-bot     ip 203.0.113.50   MFA: no
+2) 09:42  CreateAccessKey    arn:.../user/deploy-bot     ip 203.0.113.50   nueva key AKIA...999
+3) 09:55  AssumeRole         arn:.../user/deploy-bot     ip 198.51.100.7   rol: ops-admin
+4) 10:01  AttachRolePolicy   arn:.../assumed-role/ops    ip 198.51.100.7   policy: AdministratorAccess
+5) 10:06  PutBucketPolicy    arn:.../assumed-role/ops    ip 198.51.100.7   bucket: backups-prod (público)
+```
+
+<Callout type="error">
+  Mirá el evento 1: `ConsoleLogin` **sin MFA** de un usuario que es un bot de
+  deploy (los bots no deberían loguearse por consola). Esa sola línea ya es una
+  anomalía. Las que siguen escalan: nueva key para persistir, asumir un rol con
+  más poder, ampliar permisos a administrador y abrir un bucket de backups. Es
+  una intrusión de manual.
+</Callout>
+
+## Las tres preguntas de investigación
+
+Respondé con el dataset de arriba (las respuestas están implícitas en los eventos):
+
+1. **¿Qué identidad inició la actividad sospechosa y qué la hace rara?**
+2. **¿Cómo consiguió más permisos de los que tenía al principio?**
+3. **¿Cuál fue la acción de mayor impacto y qué recurso quedó expuesto?**
+
+<Callout type="concepto">
+  La forma de un abuso de identidad casi siempre es la misma: **acceso inicial**
+  (credencial expuesta o login débil) → **persistencia** (crear una key nueva) →
+  **escalada** (asumir un rol, sumar policies) → **impacto** (tocar el recurso
+  que les interesa). Si conocés esa secuencia, leés un trail como quien lee un
+  relato.
+</Callout>
+
+## Qué pondrías a alertar
+
+No alcanza con tener CloudTrail prendido si nadie lo mira. Un mínimo razonable es alertar sobre eventos de identidad de alto riesgo:
+
+```text
+CreateAccessKey        → ¿quién crea credenciales nuevas, y para quién?
+AssumeRole (sensible)  → asumir roles con permisos amplios
+AttachUserPolicy /
+  AttachRolePolicy      → cambios de permisos, sobre todo Administrator*
+ConsoleLogin sin MFA   → logins humanos sin segundo factor
+PutBucketPolicy        → un bucket que pasa a ser público
+```
+
+<Callout type="evidencia">
+  Trabajá siempre con **eventos sintéticos** como estos. Nunca pegues logs
+  reales con account IDs, ARNs internos o IPs de tu organización en un repo
+  público o en un lab. La técnica se enseña igual; el dato sensible no hace
+  falta.
+</Callout>
+
+CloudTrail no es decoración que se prende para una auditoría. Es la cámara de seguridad de tu cuenta. El día del incidente, o sabés leerla, o estás adivinando.

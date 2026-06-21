@@ -1,0 +1,130 @@
+---
+// Mini-juego de preguntas de opción múltiple. Client-side, sin persistencia.
+// Scalable: pasale un array de preguntas y listo.
+interface Question {
+  q: string;
+  options: string[];
+  /** Índice (0-based) de la opción correcta. */
+  answer: number;
+  /** Explicación que se muestra al responder. */
+  explain?: string;
+}
+interface Props {
+  questions: Question[];
+  title?: string;
+}
+const { questions, title = "Comprobá lo que entendiste" } = Astro.props;
+const uid = "quiz-" + Math.random().toString(36).slice(2, 9);
+---
+
+<section
+  class="not-prose border-term-cyan/30 bg-term-cyan/5 my-8 rounded-xl border p-5"
+  data-quiz
+  id={uid}
+>
+  <h3
+    class="text-term-cyan flex items-center gap-2 font-mono text-sm font-semibold"
+  >
+    <span aria-hidden="true">▸</span>
+    {title}
+  </h3>
+  <p
+    class="text-base-400 mt-1 font-mono text-xs"
+    data-quiz-score
+    data-total={questions.length}
+  >
+    0 / {questions.length} correctas
+  </p>
+
+  <ol class="mt-4 space-y-6">
+    {
+      questions.map((item, qi) => (
+        <li class="list-none" data-question data-answer={item.answer}>
+          <p class="text-base-100 text-sm font-medium">
+            <span class="text-term-cyan font-mono">{qi + 1}.</span> {item.q}
+          </p>
+          <div class="mt-3 grid gap-2">
+            {item.options.map((opt, oi) => (
+              <button
+                type="button"
+                data-option
+                data-index={oi}
+                class="border-base-700 bg-base-850/60 text-base-200 hover:border-base-500 flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left text-sm transition-colors disabled:cursor-default"
+              >
+                <span
+                  class="text-base-500 font-mono text-xs"
+                  data-mark
+                  aria-hidden="true"
+                >
+                  {String.fromCharCode(97 + oi)}
+                </span>
+                <span>{opt}</span>
+              </button>
+            ))}
+          </div>
+          {item.explain && (
+            <p
+              class="border-base-700 bg-base-900 text-base-300 mt-2 hidden rounded-md border px-3 py-2 text-xs leading-relaxed"
+              data-explain
+            >
+              {item.explain}
+            </p>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-quiz]").forEach((quiz) => {
+    const scoreEl = quiz.querySelector<HTMLElement>("[data-quiz-score]");
+    const total = Number(scoreEl?.dataset.total ?? 0);
+    let correct = 0;
+
+    quiz
+      .querySelectorAll<HTMLElement>("[data-question]")
+      .forEach((question) => {
+        const answer = Number(question.dataset.answer);
+        const options =
+          question.querySelectorAll<HTMLButtonElement>("[data-option]");
+        const explain = question.querySelector<HTMLElement>("[data-explain]");
+        let answered = false;
+
+        options.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            if (answered) return;
+            answered = true;
+            const idx = Number(btn.dataset.index);
+            const isRight = idx === answer;
+            if (isRight) correct += 1;
+
+            options.forEach((b) => {
+              b.disabled = true;
+              const i = Number(b.dataset.index);
+              const mark = b.querySelector<HTMLElement>("[data-mark]");
+              if (i === answer) {
+                b.classList.add("border-term-green", "bg-term-green/10");
+                b.classList.remove("border-base-700", "bg-base-850/60");
+                if (mark) {
+                  mark.textContent = "✓";
+                  mark.classList.add("text-term-green");
+                }
+              } else if (i === idx) {
+                b.classList.add("border-term-red", "bg-term-red/10");
+                b.classList.remove("border-base-700", "bg-base-850/60");
+                if (mark) {
+                  mark.textContent = "✕";
+                  mark.classList.add("text-term-red");
+                }
+              }
+            });
+
+            explain?.classList.remove("hidden");
+            if (scoreEl)
+              scoreEl.textContent = `${correct} / ${total} correctas`;
+          });
+        });
+      });
+  });
+</script>

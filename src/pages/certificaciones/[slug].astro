@@ -1,0 +1,145 @@
+---
+import type { GetStaticPaths } from "astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Exam from "../../components/Exam.astro";
+import Icon from "../../components/Icon.astro";
+import { certifications } from "../../data/certifications";
+import { getPath } from "../../data/paths";
+
+export const getStaticPaths = (async () => {
+  return certifications.map((cert) => ({
+    params: { slug: cert.slug },
+    props: { cert },
+  }));
+}) satisfies GetStaticPaths;
+
+const { cert } = Astro.props;
+const relatedPaths = cert.relatedPaths
+  .map((slug) => getPath(slug))
+  .filter((p): p is NonNullable<typeof p> => Boolean(p));
+---
+
+<BaseLayout title={cert.name} description={cert.summary} width="default">
+  <article class="py-12" style={`--accent: ${cert.accent}`}>
+    <nav class="text-base-400 mb-6 font-mono text-xs" aria-label="Migas de pan">
+      <a href="/certificaciones" class="hover:text-term-green"
+        >certificaciones</a
+      >
+      <span class="text-base-600 mx-1.5">/</span>
+      <span style="color: var(--accent)">{cert.slug}</span>
+    </nav>
+
+    <!-- Header -->
+    <header
+      class="border-base-800 flex flex-wrap items-start gap-4 border-b pb-8"
+    >
+      <span
+        class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border"
+        style="border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent)"
+      >
+        <Icon name={cert.icon} size={28} />
+      </span>
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+          <span
+            class="rounded border px-2 py-0.5"
+            style="border-color: color-mix(in srgb, var(--accent) 35%, transparent); color: var(--accent)"
+            >{cert.code}</span
+          >
+          <span class="border-base-700 text-base-400 rounded border px-2 py-0.5"
+            >{cert.level}</span
+          >
+          <span class="text-base-400">· {cert.vendor}</span>
+        </div>
+        <h1 class="text-base-50 mt-3 text-3xl font-bold sm:text-4xl">
+          {cert.name}
+        </h1>
+        <p class="text-base-300 mt-3 text-lg leading-relaxed">{cert.summary}</p>
+      </div>
+    </header>
+
+    <!-- Dominios -->
+    <section class="mt-10">
+      <h2 class="text-base-50 text-xl font-semibold">Dominios del examen</h2>
+      <p class="text-base-400 mt-1 text-sm">
+        El peso indica cuánto pesa cada área en la nota. Estudiá proporcional.
+      </p>
+      <ul class="mt-5 space-y-3">
+        {
+          cert.domains.map((d) => (
+            <li>
+              <div class="flex items-baseline justify-between gap-3">
+                <span class="text-base-200 text-sm">{d.name}</span>
+                <span class="text-base-400 font-mono text-xs">{d.weight}%</span>
+              </div>
+              <div class="bg-base-800 mt-1.5 h-1.5 w-full overflow-hidden rounded-full">
+                <div
+                  class="h-full rounded-full"
+                  style={`width: ${d.weight}%; background: var(--accent)`}
+                />
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <!-- Rutas que preparan -->
+    {
+      relatedPaths.length > 0 && (
+        <section class="mt-10">
+          <h2 class="text-base-50 text-xl font-semibold">
+            Rutas que te preparan
+          </h2>
+          <p class="text-base-400 mt-1 text-sm">
+            Hacé estos labs antes (o mientras) preparás la certi.
+          </p>
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
+            {relatedPaths.map((p) => (
+              <a
+                href={`/rutas/${p.slug}`}
+                class="card group flex items-center gap-3 p-4 hover:-translate-y-0.5"
+                style={`--accent: ${p.accent}`}
+              >
+                <span
+                  class="flex h-9 w-9 items-center justify-center rounded-md border"
+                  style="border-color: color-mix(in srgb, var(--accent) 40%, transparent); color: var(--accent)"
+                >
+                  <Icon name={p.icon} size={18} />
+                </span>
+                <span class="flex-1">
+                  <span class="text-base-50 block text-sm font-medium group-hover:text-[color:var(--accent)]">
+                    {p.title}
+                  </span>
+                  <span class="text-base-400 block font-mono text-xs">
+                    {p.tagline}
+                  </span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <!-- Examen de práctica -->
+    <section class="mt-12">
+      <h2 class="text-base-50 text-xl font-semibold">Examen de práctica</h2>
+      <p class="text-base-400 mt-1 text-sm">
+        Respondé todo y calificá al final. Cada pregunta trae explicación.
+      </p>
+      <Exam
+        questions={cert.exam}
+        passScore={70}
+        title={`Práctica · ${cert.code}`}
+        subtitle="Preguntas propias de práctica, no del examen real."
+      />
+    </section>
+
+    <p class="text-base-500 mt-8 font-mono text-xs leading-relaxed">
+      VT Security Labs no está afiliado a {cert.vendor}. {cert.name} y su código son
+      marcas de su dueño. Verificá siempre los dominios vigentes en la guía oficial
+      del examen antes de rendir.
+    </p>
+  </article>
+</BaseLayout>

@@ -1,0 +1,24 @@
+---
+interface Props {
+  items: string[];
+}
+const { items } = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <section class="border-base-700 bg-base-850/60 my-6 rounded-lg border p-4">
+      <h3 class="rule-label mb-3">Antes de empezar necesitás</h3>
+      <ul class="space-y-1.5">
+        {items.map((item) => (
+          <li class="text-base-300 flex gap-2.5 text-sm">
+            <span class="text-base-500 font-mono" aria-hidden="true">
+              ·
+            </span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}

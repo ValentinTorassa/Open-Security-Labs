@@ -1,0 +1,125 @@
+---
+title: "Docker socket to host: cuando el contenedor toca el sistema"
+description: "Montar /var/run/docker.sock dentro de un contenedor suele equivaler a entregar el host. Por qué se rompe el aislamiento y cómo no hacerlo."
+path: "ciberseguridad"
+order: 1
+level: "intermediate"
+estimatedMinutes: 30
+prerequisites:
+  - "Saber qué es un contenedor y una imagen"
+  - "Haber corrido docker run alguna vez"
+objectives:
+  - "Entender qué permite el Docker socket y por qué es tan poderoso"
+  - "Explicar por qué montarlo rompe la frontera contenedor/host"
+  - "Reconocer dónde aparece este patrón en CI y herramientas internas"
+  - "Tener un checklist de qué nunca montar a ciegas"
+evidence:
+  - "Diagrama del límite contenedor → socket → host"
+  - "Writeup defensivo: por qué 'solo administra contenedores' es un error mental"
+  - "Checklist de mounts peligrosos para revisar en compose y manifests"
+commands:
+  - "grep -R 'docker.sock' ."
+challenge: "Revisá un docker-compose.yml (real tuyo o de ejemplo) y buscá montajes de docker.sock o de rutas del host. Por cada uno, escribí una línea: ¿es necesario? ¿qué alternativa más segura hay?"
+nextLabs:
+  - "devsecops-agentes/agente-no-deberia-tocar-archivos-a-ciegas"
+  - "cloud-produccion/cloudtrail-quien-hizo-que"
+tags:
+  - "ciberseguridad"
+  - "docker"
+  - "contenedores"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+Este lab es **defensivo**. No hay exploit acá: hay un modelo mental para entender por qué una práctica común —montar el Docker socket dentro de un contenedor— es una frontera de seguridad rota, y qué hacer en lugar de eso.
+
+<Callout type="concepto">
+  El **Docker socket** (`/var/run/docker.sock`) es la puerta de control del
+  demonio de Docker, que corre como **root** en el host. Quien puede hablarle a
+  ese socket, puede pedirle a Docker que cree contenedores, monte directorios
+  del host y los corra con privilegios. No "administra contenedores": comanda al
+  proceso root que los crea.
+</Callout>
+
+## Por qué se rompe el aislamiento
+
+La promesa de un contenedor es aislamiento: lo que pasa adentro, queda adentro. Ese límite se sostiene en namespaces, cgroups y capabilities del kernel. Pero el socket de Docker **saltea ese modelo**, porque no es un recurso del contenedor: es un canal directo al demonio del host.
+
+Si un contenedor tiene el socket montado y alguien lo compromete, no necesita "escapar" del contenedor rompiendo el kernel. Solo tiene que **pedirle a Docker, educadamente, que le cree otro contenedor** con el sistema de archivos del host montado adentro. Docker, que es root, obedece.
+
+```text
+┌─────────────────────────────┐
+│  Contenedor "inofensivo"    │
+│  (un panel, un CI runner,   │
+│   un agente…)               │
+│                             │
+│   /var/run/docker.sock  ────┼──► demonio Docker (root en el host)
+└─────────────────────────────┘            │
+                                            ▼
+                          puede crear un nuevo contenedor
+                          que monta  /  del host  →  control del host
+```
+
+<Callout type="error">
+  El error mental es pensar "el socket solo sirve para administrar contenedores,
+  no es acceso al sistema". Pero administrar contenedores **incluye** crear uno
+  nuevo que monte `/` del host. Acceso al demonio Docker es, en la práctica,
+  acceso root al host. Son equivalentes.
+</Callout>
+
+## Dónde aparece este patrón
+
+No es exótico. El socket montado aparece todo el tiempo, casi siempre por comodidad:
+
+- **Runners de CI/CD** que necesitan "buildear imágenes" y montan el socket para hablar con Docker.
+- **Dashboards de administración** de contenedores (paneles que listan y manejan contenedores).
+- **Agentes y scripts internos** que orquestan otros contenedores.
+- Tutoriales de "Docker-in-Docker" que toman el atajo del socket.
+
+<Callout type="comando">
+  Una revisión rápida en cualquier repo: buscá referencias al socket en compose
+  files y manifests antes de aprobar un cambio.
+</Callout>
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# Buscar montajes del socket en todo el repo
+grep -R --line-number "docker.sock" .
+```
+
+</TerminalBlock>
+
+Si aparece un `- /var/run/docker.sock:/var/run/docker.sock` en un `docker-compose.yml`, esa línea merece una conversación, no un merge automático.
+
+## El modelo defensivo
+
+La pregunta no es "¿cómo lo exploto?", es **"¿este contenedor necesita de verdad comandar a Docker?"**. Casi siempre la respuesta es no, y hay opciones más seguras:
+
+- **No montarlo.** El 90% de las veces el contenedor no necesita el socket; necesitaba otra cosa.
+- **Un proxy con allowlist** (tipo `docker-socket-proxy`) que solo exponga las pocas operaciones realmente necesarias y bloquee `create`, `exec`, mounts, etc.
+- **Builds sin demonio root**, con herramientas tipo BuildKit/buildah en modo rootless, que no requieren el socket privilegiado.
+- **Rootless Docker**, para que el demonio no corra como root y el blast radius sea menor.
+
+<Callout type="concepto">
+  La regla general: **lo que montás en un contenedor define su superficie de
+  ataque**. Montar el socket de Docker es montar el host. Montar `/` o
+  directorios sensibles del sistema, también. Cada montaje es un permiso, y cada
+  permiso hay que justificarlo.
+</Callout>
+
+## Checklist: qué no montar a ciegas
+
+```text
+[ ] /var/run/docker.sock      → control del demonio = control del host
+[ ] /  (raíz del host)        → acceso total al filesystem del host
+[ ] /etc, /root, /home        → configs, claves y datos sensibles
+[ ] /proc, /sys (sin razón)   → información y control del kernel
+[ ] dispositivos (--device)   → acceso directo al hardware
+[ ] --privileged              → desactiva casi todas las protecciones
+```
+
+Por cada ítem, la misma pregunta: _¿es estrictamente necesario, o es comodidad?_ En seguridad, "es más cómodo" casi nunca gana la discusión.
+
+Un contenedor que puede tocar el sistema deja de ser un contenedor: es un proceso con disfraz. Entender dónde está esa frontera es lo que te permite no romperla sin darte cuenta.

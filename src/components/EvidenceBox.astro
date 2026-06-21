@@ -1,0 +1,39 @@
+---
+interface Props {
+  /** Lista de evidencias esperadas. Si no se pasa, usa el slot. */
+  items?: string[];
+}
+const { items } = Astro.props;
+---
+
+<section
+  class="border-term-violet/30 bg-term-violet/5 my-8 rounded-xl border p-5"
+>
+  <h3
+    class="text-term-violet flex items-center gap-2 font-mono text-sm font-semibold"
+  >
+    <span aria-hidden="true">✓</span> Evidencia que deja este lab
+  </h3>
+  <p class="text-base-400 mt-1 text-xs">
+    La evidencia se construye haciendo. Guardá esto en tu repo o portfolio.
+  </p>
+
+  {
+    items && items.length > 0 ? (
+      <ul class="mt-4 space-y-2">
+        {items.map((item) => (
+          <li class="text-base-200 flex gap-2.5 text-sm">
+            <span class="text-term-violet mt-0.5 font-mono" aria-hidden="true">
+              →
+            </span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <div class="text-base-200 mt-3 text-sm">
+        <slot />
+      </div>
+    )
+  }
+</section>

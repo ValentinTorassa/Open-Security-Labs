@@ -1,0 +1,111 @@
+---
+title: "Por qué chmod 777 es un problema, no una solución"
+description: "Micro-lab: qué hace realmente 777, por qué 'lo arreglé con 777' suele abrir un agujero, y qué poner en su lugar."
+path: "ciberseguridad"
+order: 2
+level: "beginner"
+estimatedMinutes: 10
+prerequisites:
+  - "Saber leer permisos en octal (lab: permisos en octal)"
+objectives:
+  - "Entender qué habilita exactamente 777"
+  - "Reconocer por qué es peligroso en un servidor compartido"
+  - "Elegir un permiso mínimo en lugar de 777"
+evidence:
+  - "Writeup de 4 líneas: un caso donde verías 777 y con qué lo reemplazarías"
+commands:
+  - "find . -perm -o=w -type f"
+challenge: "Buscá archivos world-writable en un directorio de prueba con find . -perm -o=w. Por cada uno, decidí el permiso mínimo correcto y justificá en una línea."
+nextLabs:
+  - "ciberseguridad/docker-socket-to-host"
+tags:
+  - "ciberseguridad"
+  - "permisos"
+  - "hardening"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import Quiz from "../../../components/Quiz.astro";
+
+"No andaba por permisos, le puse 777 y listo." Es el atajo más común y uno de los más peligrosos. Este lab es corto: entendé por qué.
+
+## Qué dice 777, de verdad
+
+`777` es `rwxrwxrwx`: **lectura, escritura y ejecución para todos** — dueño, grupo y cualquier otro usuario del sistema.
+
+```text
+7   7   7
+rwx rwx rwx
+dueño grupo otros
+```
+
+El bloque que importa es el último. `otros = 7` significa que **cualquier usuario o proceso del sistema** puede leer, modificar y ejecutar ese archivo.
+
+<Callout type="error">
+  "Es mi máquina, no pasa nada." En un servidor casi nunca sos el único: hay
+  servicios corriendo como otros usuarios (nginx, una base, un runner de CI). Si
+  uno de esos procesos se compromete, `777` le regala tu archivo. Un archivo
+  world-writable es un archivo que cualquiera puede reemplazar.
+</Callout>
+
+## Por qué es un agujero
+
+Si un atacante toma control de un proceso de bajo privilegio y encuentra un script tuyo en `777`, puede **reescribirlo**. Cuando ese script lo ejecuta después un usuario con más permisos (o un cron como root), el código del atacante corre con esos permisos. `777` convirtió un problema chico en una escalada de privilegios.
+
+<Callout type="concepto">
+  El principio es **mínimo privilegio**: dale a cada archivo el permiso más
+  chico que lo deje funcionar, y nada más. `777` es justo lo contrario: el
+  permiso más grande posible, "por las dudas". Casi siempre el problema real era
+  otro (el dueño del archivo, el directorio padre, el usuario del servicio).
+</Callout>
+
+## Qué poner en su lugar
+
+```text
+¿Es un secreto (clave, .env)?          600  (solo el dueño lee/escribe)
+¿Es un archivo de datos normal?        644  (dueño escribe, el resto lee)
+¿Es un script o binario ejecutable?    755  (todos ejecutan, solo el dueño escribe)
+¿"No tiene permiso" un servicio?       cambiá el DUEÑO (chown), no el modo
+```
+
+<Callout type="comando">
+Para encontrar archivos world-writable (el `o=w` peligroso) y revisarlos:
+
+`find . -perm -o=w -type f`
+
+</Callout>
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# Archivos que cualquiera puede escribir, dentro del directorio actual
+find . -perm -o=w -type f -not -path './.git/*'
+```
+
+</TerminalBlock>
+
+## Quiz
+
+<Quiz
+  questions={[
+    {
+      q: "Un servicio no puede leer config.json. ¿Cuál es la mejor primera movida?",
+      options: [
+        "chmod 777 config.json",
+        "Ver qué usuario corre el servicio y ajustar dueño/grupo (chown) o usar 640",
+        "Mover el archivo a /tmp",
+      ],
+      answer: 1,
+      explain:
+        "El problema casi siempre es de propiedad, no de modo. Ajustar el dueño/grupo o usar 640 resuelve el acceso sin abrirlo a todo el sistema.",
+    },
+    {
+      q: "¿Qué permiso le corresponde a una clave privada SSH?",
+      options: ["644", "777", "600"],
+      answer: 2,
+      explain:
+        "600 = rw-------: solo el dueño puede leerla. De hecho SSH se niega a usar claves privadas con permisos más abiertos.",
+    },
+  ]}
+/>

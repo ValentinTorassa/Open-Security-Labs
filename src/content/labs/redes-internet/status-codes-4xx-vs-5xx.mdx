@@ -1,0 +1,122 @@
+---
+title: "4xx vs 5xx: ¿de quién es la culpa?"
+description: "Lab quirúrgico para decidir, en un segundo, si un error HTTP es culpa de la request o del servidor. Con árbol de decisión y quiz."
+path: "redes-internet"
+order: 2
+level: "beginner"
+estimatedMinutes: 12
+prerequisites:
+  - "Haber visto una respuesta HTTP (lab: una request no es magia)"
+objectives:
+  - "Separar 4xx (culpa de la request) de 5xx (culpa del servidor)"
+  - "Reaccionar distinto ante un 401, un 403 y un 404"
+  - "Saber por dónde empezar a debuggear según el código"
+evidence:
+  - "Captura del quiz con tu puntaje"
+  - "Writeup de 3 líneas: un 4xx y un 5xx que viste en un proyecto y qué los causó"
+commands:
+  - "curl -s -o /dev/null -w '%{http_code}'"
+challenge: "Pegале curl a tres endpoints (uno que exista, uno que no, y uno que requiera auth). Anotá el código de cada uno y clasificá: ¿4xx o 5xx? ¿de quién es la culpa?"
+nextLabs:
+  - "backend-arquitectura/idor-cambiar-un-id"
+tags:
+  - "redes"
+  - "http"
+  - "debugging"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import Mermaid from "../../../components/Mermaid.astro";
+import Quiz from "../../../components/Quiz.astro";
+
+Cuando algo falla por HTTP, la primera bifurcación te ahorra horas: **¿el problema está en lo que mandaste, o en el servidor que respondió?** El código de estado ya te lo dice.
+
+## La regla
+
+<Mermaid
+  caption="La primera pregunta ante cualquier error HTTP."
+  code={`flowchart TD
+  A[Recibís un código de error] --> B{¿Empieza con 4 o 5?}
+  B -->|4xx| C[Culpa de la REQUEST]
+  B -->|5xx| D[Culpa del SERVIDOR]
+  C --> C1[Revisá: URL, token, permisos, body]
+  D --> D1[Revisá: logs del server, deploy, dependencias]`}
+/>
+
+- **4xx = vos.** Mandaste algo que el servidor no puede aceptar: sin token, sin permiso, a una URL que no existe, con un body inválido. El servidor está sano; rechazó tu pedido.
+- **5xx = el servidor.** Tu request era válida, pero el servidor no pudo cumplirla: explotó, se quedó sin una dependencia, o un gateway no llegó al backend.
+
+<Callout type="concepto">
+  La distinción importa porque cambia **dónde mirás**. Ante un 4xx, revisás tu
+  request (headers, auth, URL). Ante un 5xx, vas a los logs del servidor.
+  Confundir el lado es perder media tarde buscando en el lugar equivocado.
+</Callout>
+
+## Los 4xx que más vas a ver
+
+```text
+400  Bad Request    el body o los parámetros están mal formados
+401  Unauthorized   no estás autenticado (falta o venció el token)
+403  Forbidden      estás autenticado, pero no tenés permiso
+404  Not Found      el recurso no existe (o no querés que sepas que existe)
+429  Too Many Req.  te frenaron por rate limit
+```
+
+<Callout type="error">
+  El par que más se confunde: **401 vs 403**. `401` = "no sé quién sos"
+  (autenticación). `403` = "sé quién sos, pero esto no es para vos"
+  (autorización). Si tratás un 403 como un problema de login, vas a estar
+  renovando tokens que ya son válidos.
+</Callout>
+
+## Comprobalo en la terminal
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# Solo el código de estado, nada más
+curl -s -o /dev/null -w "%{http_code}\n" https://example.com/no-existe
+```
+
+</TerminalBlock>
+
+## Quiz: clasificá rápido
+
+<Quiz
+  questions={[
+    {
+      q: "Tu request a la API responde 503. ¿Por dónde empezás?",
+      options: [
+        "Reviso mi token y los headers que mando",
+        "Voy a los logs del servidor: es un 5xx",
+        "Cambio la URL del endpoint",
+      ],
+      answer: 1,
+      explain:
+        "503 es 5xx: el servidor recibió algo válido pero no pudo responder (sobrecarga, dependencia caída). El problema no está en tu request.",
+    },
+    {
+      q: "Tenés un token válido pero un endpoint te devuelve 403. ¿Qué significa?",
+      options: [
+        "El token venció: hay que renovarlo",
+        "El recurso no existe",
+        "Estás autenticado, pero no tenés permiso sobre ese recurso",
+      ],
+      answer: 2,
+      explain:
+        "403 es autorización, no autenticación. Tu identidad es válida (si no, sería 401); lo que falta es permiso sobre ese recurso puntual.",
+    },
+    {
+      q: "Pedís /usuarios/999 y te da 404, aunque sabés que el id existe. ¿Qué puede ser?",
+      options: [
+        "Un bug: siempre debería devolver el dato",
+        "Una decisión de seguridad: devuelve 404 para no confirmar que existe",
+        "El servidor está caído",
+      ],
+      answer: 1,
+      explain:
+        "Devolver 404 en vez de 403 cuando el recurso no es tuyo evita filtrar qué ids existen. Es una práctica común y deliberada.",
+    },
+  ]}
+/>

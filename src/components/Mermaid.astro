@@ -1,0 +1,60 @@
+---
+// Diagrama Mermaid renderizado en el cliente, con el tema de VT Security Labs.
+// Solo se carga el JS de mermaid en las páginas que usan este componente.
+interface Props {
+  code: string;
+  caption?: string;
+}
+const { code, caption } = Astro.props;
+---
+
+<figure class="not-prose my-7">
+  <div
+    class="border-base-700 bg-base-900 overflow-x-auto rounded-xl border p-4 sm:p-6"
+  >
+    <pre class="mermaid flex justify-center text-center">{code}</pre>
+  </div>
+  {
+    caption && (
+      <figcaption class="text-base-400 mt-2 text-center font-mono text-xs">
+        {caption}
+      </figcaption>
+    )
+  }
+</figure>
+
+<script>
+  import mermaid from "mermaid";
+
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: "strict",
+    theme: "base",
+    fontFamily: "JetBrains Mono Variable, ui-monospace, monospace",
+    themeVariables: {
+      darkMode: true,
+      background: "#0b0f11",
+      mainBkg: "#12181b",
+      primaryColor: "#12181b",
+      primaryTextColor: "#dde4e8",
+      primaryBorderColor: "#273139",
+      secondaryColor: "#0f1417",
+      tertiaryColor: "#0f1417",
+      lineColor: "#3b4750",
+      textColor: "#b9c4cb",
+      nodeBorder: "#273139",
+      clusterBkg: "#0f1417",
+      clusterBorder: "#1a2228",
+      edgeLabelBackground: "#0b0f11",
+      fontSize: "14px",
+    },
+  });
+
+  const render = () => mermaid.run({ querySelector: ".mermaid" });
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", render);
+  } else {
+    render();
+  }
+</script>

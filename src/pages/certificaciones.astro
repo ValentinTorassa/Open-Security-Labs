@@ -1,0 +1,46 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import CertCard from "../components/CertCard.astro";
+import { certifications } from "../data/certifications";
+
+const totalQuestions = certifications.reduce((a, c) => a + c.exam.length, 0);
+---
+
+<BaseLayout
+  title="Certificaciones"
+  description="Preparación y exámenes de práctica para AWS Cloud Practitioner, CompTIA Security+, Network+, Linux+ y AWS Solutions Architect. En español, con explicaciones."
+  width="wide"
+>
+  <section class="py-12">
+    <p class="rule-label">Preparación para certificaciones</p>
+    <h1 class="text-base-50 mt-3 max-w-3xl text-3xl font-bold sm:text-4xl">
+      Preparate para las certis que piden en los avisos
+    </h1>
+    <p class="text-base-300 mt-4 max-w-2xl text-lg leading-relaxed">
+      Cada certificación viene con sus dominios reales, las rutas de VT Security
+      Labs que te preparan y un <strong>examen de práctica</strong> con explicaciones.
+      Estudiás el sistema en los labs, y acá medís si estás listo.
+    </p>
+
+    <div class="text-base-400 mt-6 flex flex-wrap gap-4 font-mono text-xs">
+      <span
+        ><span class="text-term-green">{certifications.length}</span> certificaciones</span
+      >
+      <span
+        ><span class="text-term-green">{totalQuestions}</span> preguntas de práctica</span
+      >
+    </div>
+
+    <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {certifications.map((cert) => <CertCard cert={cert} />)}
+    </div>
+
+    <p
+      class="border-base-800 bg-base-850/40 text-base-500 mt-10 rounded-lg border p-4 font-mono text-xs leading-relaxed"
+    >
+      VT Security Labs no está afiliado a AWS ni a CompTIA. Los nombres, códigos
+      y marcas pertenecen a sus dueños. Las preguntas son propias y de práctica:
+      no reproducen preguntas reales del examen.
+    </p>
+  </section>
+</BaseLayout>

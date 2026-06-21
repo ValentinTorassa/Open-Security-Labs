@@ -1,0 +1,27 @@
+---
+import { getCollection, render } from "astro:content";
+import type { GetStaticPaths } from "astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import LabLayout from "../../components/LabLayout.astro";
+
+export const getStaticPaths = (async () => {
+  const labs = await getCollection("labs", ({ data }) => !data.draft);
+  return labs.map((lab) => ({
+    params: { slug: lab.id },
+    props: { lab },
+  }));
+}) satisfies GetStaticPaths;
+
+const { lab } = Astro.props;
+const { Content } = await render(lab);
+---
+
+<BaseLayout
+  title={lab.data.title}
+  description={lab.data.description}
+  width="prose"
+>
+  <LabLayout lab={lab}>
+    <Content />
+  </LabLayout>
+</BaseLayout>

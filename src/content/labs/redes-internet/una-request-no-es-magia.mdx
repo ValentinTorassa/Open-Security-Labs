@@ -1,0 +1,164 @@
+---
+title: "Una request no es magia: DNS, TCP, HTTP y logs"
+description: "Qué pasa de verdad entre que escribís una URL y ves una respuesta. Resolución de nombres, conexión, request, respuesta y dónde mirar cuando falla."
+path: "redes-internet"
+order: 1
+level: "beginner"
+estimatedMinutes: 30
+prerequisites:
+  - "Una terminal con dig y curl (Linux, WSL o macOS)"
+  - "Conexión a internet"
+objectives:
+  - "Resolver un nombre a una IP con dig y entender el resultado"
+  - "Seguir una request HTTP completa con curl -v"
+  - "Leer status codes y headers sin adivinar"
+  - "Medir la latencia de cada etapa de una request"
+  - "Saber dónde mirar cuando algo falla en la red"
+evidence:
+  - "Un trace de curl -v de una request real, con el dominio que elijas"
+  - "Diagrama simple del flujo navegador → DNS → servidor → respuesta"
+  - "Tabla con los tiempos de cada etapa (DNS, conexión, TLS, total)"
+commands:
+  - "dig +short"
+  - "dig"
+  - "curl -v"
+  - "curl -w"
+challenge: "Elegí un sitio, medí con curl -w el tiempo de DNS, conexión y total. Cambiá el dominio por su IP directa y compará. Explicá en dos líneas qué etapa desapareció y por qué."
+nextLabs:
+  - "backend-arquitectura/jwt-no-es-autorizacion"
+  - "cloud-produccion/cloudtrail-quien-hizo-que"
+tags:
+  - "redes"
+  - "dns"
+  - "http"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import Mermaid from "../../../components/Mermaid.astro";
+
+Escribís una URL, apretás Enter y aparece una página. Parece instantáneo y parece magia. No lo es: es una secuencia de pasos bien definida, y cada uno puede fallar, demorar o mentirte. Si conocés los pasos, dejás de adivinar.
+
+<Callout type="concepto">
+  El flujo mínimo de una request es: **resolver el nombre** (DNS) → **abrir la
+  conexión** (TCP, y TLS si es HTTPS) → **mandar la request** (HTTP) → **recibir
+  la respuesta** → **leer el resultado**. Todo bug de producción termina, tarde
+  o temprano, tocando uno de estos pasos.
+</Callout>
+
+## 1. DNS: del nombre a la IP
+
+Las computadoras no hablan con `ejemplo.com`, hablan con una IP. DNS es la guía telefónica que traduce uno en otro.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+dig +short example.com
+```
+
+</TerminalBlock>
+
+Eso te devuelve la IP, limpia. Para ver el detalle completo:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+dig example.com
+```
+
+</TerminalBlock>
+
+Mirá la sección `ANSWER`: ahí está el registro, su tipo (`A` para IPv4, `AAAA` para IPv6) y el **TTL**, los segundos que se puede cachear esa respuesta.
+
+<Callout type="error">
+  "El cambio de DNS no toma efecto." Casi siempre es **caché + TTL**: tu
+  sistema, tu router o tu ISP siguen usando la respuesta vieja hasta que expira
+  el TTL. No es que "DNS no anda", es que está haciendo justo lo que tiene que
+  hacer.
+</Callout>
+
+## 2. La request completa, en vivo
+
+`curl -v` (verbose) te muestra cada etapa: la conexión, el handshake TLS, los headers que mandás y los que recibís.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+curl -v https://example.com
+```
+
+</TerminalBlock>
+
+Leelo por símbolos:
+
+- Líneas con `*` → lo que hace curl por debajo (conectar, TLS, etc.).
+- Líneas con `>` → **lo que vos enviás** (tu request y tus headers).
+- Líneas con `<` → **lo que el servidor responde** (status y sus headers).
+
+## 3. Status codes: no los adivines
+
+La primera línea de la respuesta trae el código. No hace falta memorizarlos todos, sí entender las familias:
+
+```text
+2xx  ✓ salió bien            (200 OK, 204 No Content)
+3xx  → andá a otro lado      (301 movido, 304 no cambió)
+4xx  ✗ error tuyo            (401 sin auth, 403 sin permiso, 404 no existe)
+5xx  ✗ error del servidor    (500 explotó, 502/504 problema de gateway)
+```
+
+<Callout type="concepto">
+  La diferencia clave: **4xx es culpa de la request** (mandaste algo mal: sin
+  token, sin permiso, a una URL que no existe). **5xx es culpa del servidor**
+  (recibió algo válido pero no pudo responder). Saber de qué lado está el
+  problema te ahorra horas.
+</Callout>
+
+## 4. Headers: el contexto de la conversación
+
+Los headers son metadata. Algunos que importan seguido:
+
+- `Content-Type`: qué formato tiene el cuerpo (`application/json`, `text/html`).
+- `Authorization`: tus credenciales (un token, por ejemplo).
+- `Cache-Control`: si la respuesta se puede cachear y por cuánto.
+- `Set-Cookie`: el servidor te pide guardar una cookie.
+
+## 5. Latencia: ¿dónde se va el tiempo?
+
+"La página tarda" no es un diagnóstico. ¿Tarda el DNS? ¿La conexión? ¿El servidor en responder? `curl -w` te lo desglosa:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+curl -o /dev/null -s -w \
+  "dns:    %{time_namelookup}s\nconexion: %{time_connect}s\ntls:    %{time_appconnect}s\ntotal:  %{time_total}s\n" \
+  https://example.com
+```
+
+</TerminalBlock>
+
+Ahora "está lento" se convierte en una pregunta concreta: _¿qué etapa es la que pesa?_ Si es `time_namelookup`, es DNS. Si es `time_total` pero las demás son bajas, el servidor tarda en pensar la respuesta.
+
+<Callout type="concepto">
+  Tres palabras que vas a vivir en producción: **latencia** (cuánto tarda cada
+  salto), **timeout** (cuánto esperás antes de rendirte) y **retry** (reintentar
+  cuando falla). Mal combinadas —reintentar algo lento sin límite— convierten un
+  problema chico en una caída total.
+</Callout>
+
+## El diagrama mental
+
+<Mermaid
+  caption="El recorrido completo de una request. Cuando algo falle, sabés en qué flecha mirar."
+  code={`sequenceDiagram
+  participant N as Navegador
+  participant D as DNS
+  participant S as Servidor
+  N->>D: 1. resolver nombre (dig)
+  D-->>N: IP
+  N->>S: 2. abrir conexión (TCP + TLS)
+  N->>S: 3. GET /ruta + headers
+  S-->>N: 4. status + headers + body
+  Note over N: render`}
+/>
+
+Guardá ese diagrama. Cada flecha es una etapa que podés medir con `curl -w` y un lugar donde algo puede fallar.

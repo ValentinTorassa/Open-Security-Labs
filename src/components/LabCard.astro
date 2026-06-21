@@ -1,0 +1,77 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getPath } from "../data/paths";
+
+interface Props {
+  lab: CollectionEntry<"labs">;
+  /** Mostrar el nombre de la ruta (útil en /labs). */
+  showPath?: boolean;
+}
+const { lab, showPath = true } = Astro.props;
+const { data } = lab;
+const path = getPath(data.path);
+
+const levelLabel: Record<string, string> = {
+  beginner: "Inicial",
+  intermediate: "Intermedio",
+  advanced: "Avanzado",
+};
+const accent = path?.accent ?? "#56d364";
+---
+
+<a
+  href={`/labs/${lab.id}`}
+  class="card group flex flex-col p-5 hover:-translate-y-0.5"
+  style={`--accent: ${accent}`}
+>
+  <div class="flex items-center justify-between gap-2">
+    {
+      showPath && path && (
+        <span
+          class="inline-flex items-center gap-1.5 font-mono text-xs"
+          style="color: var(--accent)"
+        >
+          <span
+            class="h-1.5 w-1.5 rounded-full"
+            style="background: var(--accent)"
+            aria-hidden="true"
+          />
+          {path.title}
+        </span>
+      )
+    }
+    <span class="text-base-400 ml-auto font-mono text-xs">
+      {data.estimatedMinutes} min
+    </span>
+  </div>
+
+  <h3
+    class="text-base-50 mt-3 text-base leading-snug font-semibold group-hover:text-[color:var(--accent)]"
+  >
+    {data.title}
+  </h3>
+
+  <p class="text-base-300 mt-2 line-clamp-3 text-sm leading-relaxed">
+    {data.description}
+  </p>
+
+  <div class="border-base-800 mt-4 flex items-center gap-2 border-t pt-3">
+    <span
+      class="border-base-700 bg-base-800/60 text-base-400 rounded border px-2 py-0.5 font-mono text-[0.7rem]"
+    >
+      {levelLabel[data.level]}
+    </span>
+    {
+      data.tags
+        .slice(0, 2)
+        .map((t) => (
+          <span class="text-base-500 font-mono text-[0.7rem]">#{t}</span>
+        ))
+    }
+    <span
+      class="text-base-500 ml-auto font-mono transition-transform group-hover:translate-x-0.5"
+      style="color: var(--accent)"
+      aria-hidden="true">→</span
+    >
+  </div>
+</a>

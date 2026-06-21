@@ -1,0 +1,146 @@
+---
+// Juego: traducir permisos simbólicos (rwx) a octal. Client-side, sin backend.
+// Genera permisos al azar en cada ronda y lleva una racha.
+const uid = "perms-" + Math.random().toString(36).slice(2, 9);
+---
+
+<section
+  class="not-prose border-term-green/30 bg-term-green/5 my-8 rounded-xl border p-5"
+  data-perms-game
+  id={uid}
+>
+  <h3
+    class="text-term-green flex items-center gap-2 font-mono text-sm font-semibold"
+  >
+    <span aria-hidden="true">▸</span> Juego: de rwx a octal
+  </h3>
+  <p class="text-base-400 mt-1 text-xs">
+    Traducí los permisos a sus tres dígitos. <code class="text-base-300"
+      >r=4, w=2, x=1</code
+    >.
+  </p>
+
+  <div
+    class="border-base-700 bg-base-900 mt-4 flex flex-col items-center gap-4 rounded-lg border p-5"
+  >
+    <code
+      class="text-base-50 font-mono text-2xl tracking-[0.2em]"
+      data-perms-symbolic>----------</code
+    >
+
+    <div class="flex items-center gap-2">
+      <input
+        type="text"
+        inputmode="numeric"
+        maxlength="3"
+        placeholder="644"
+        data-perms-input
+        aria-label="Permisos en octal"
+        class="border-base-600 bg-base-850 text-base-50 focus:border-term-green w-24 rounded-md border px-3 py-2 text-center font-mono text-lg outline-none"
+      />
+      <button
+        type="button"
+        data-perms-check
+        class="bg-term-green text-base-950 rounded-md px-4 py-2 font-mono text-sm font-semibold transition-transform hover:-translate-y-0.5"
+        >Verificar</button
+      >
+      <button
+        type="button"
+        data-perms-new
+        class="border-base-700 text-base-200 hover:border-base-500 rounded-md border px-3 py-2 font-mono text-sm transition-colors"
+        >Otra ↻</button
+      >
+    </div>
+
+    <p
+      class="min-h-[1.25rem] text-center font-mono text-sm"
+      data-perms-feedback
+      aria-live="polite"
+    >
+    </p>
+    <p class="text-base-500 font-mono text-xs" data-perms-streak>Racha: 0</p>
+  </div>
+</section>
+
+<script>
+  document
+    .querySelectorAll<HTMLElement>("[data-perms-game]")
+    .forEach((game) => {
+      const symbolicEl = game.querySelector<HTMLElement>(
+        "[data-perms-symbolic]",
+      );
+      const input = game.querySelector<HTMLInputElement>("[data-perms-input]");
+      const checkBtn =
+        game.querySelector<HTMLButtonElement>("[data-perms-check]");
+      const newBtn = game.querySelector<HTMLButtonElement>("[data-perms-new]");
+      const feedback = game.querySelector<HTMLElement>("[data-perms-feedback]");
+      const streakEl = game.querySelector<HTMLElement>("[data-perms-streak]");
+
+      if (
+        !symbolicEl ||
+        !input ||
+        !checkBtn ||
+        !newBtn ||
+        !feedback ||
+        !streakEl
+      )
+        return;
+
+      const bits = ["r", "w", "x"];
+      let current = 0;
+      let streak = 0;
+
+      const toSymbolic = (octal: number) => {
+        let out = "-"; // tipo: archivo
+        for (const digit of String(octal).padStart(3, "0")) {
+          const n = Number(digit);
+          out += bits.map((b, i) => ((n >> (2 - i)) & 1 ? b : "-")).join("");
+        }
+        return out;
+      };
+
+      const newRound = () => {
+        current =
+          ((Math.floor(Math.random() * 8) << 6) |
+            (Math.floor(Math.random() * 8) << 3) |
+            Math.floor(Math.random() * 8)) >>>
+          0;
+        // current como número octal de 3 dígitos
+        const o =
+          Math.floor(current / 64) * 100 +
+          (Math.floor(current / 8) % 8) * 10 +
+          (current % 8);
+        symbolicEl.textContent = toSymbolic(o);
+        symbolicEl.dataset.octal = String(o).padStart(3, "0");
+        input.value = "";
+        feedback.textContent = "";
+        feedback.className = "min-h-[1.25rem] text-center font-mono text-sm";
+        input.focus();
+      };
+
+      const check = () => {
+        const expected = symbolicEl.dataset.octal ?? "";
+        const got = input.value.trim().padStart(3, "0");
+        if (got === expected) {
+          streak += 1;
+          feedback.textContent = "✓ ¡Correcto!";
+          feedback.className =
+            "min-h-[1.25rem] text-center font-mono text-sm text-term-green";
+        } else {
+          streak = 0;
+          feedback.textContent = `✕ Era ${expected}`;
+          feedback.className =
+            "min-h-[1.25rem] text-center font-mono text-sm text-term-red";
+        }
+        streakEl.textContent = `Racha: ${streak}`;
+      };
+
+      checkBtn.addEventListener("click", check);
+      newBtn.addEventListener("click", newRound);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") check();
+      });
+
+      newRound();
+    });
+</script>

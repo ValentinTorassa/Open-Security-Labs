@@ -1,0 +1,86 @@
+---
+import Icon from "./Icon.astro";
+import type { IconName } from "../data/icons";
+
+type CalloutType =
+  | "concepto"
+  | "comando"
+  | "error"
+  | "evidencia"
+  | "reto"
+  | "nota";
+
+interface Props {
+  type?: CalloutType;
+  title?: string;
+}
+
+const { type = "nota", title } = Astro.props;
+
+const variants: Record<
+  CalloutType,
+  { label: string; icon: IconName; accent: string; border: string; bg: string }
+> = {
+  concepto: {
+    label: "Concepto",
+    icon: "lightbulb",
+    accent: "text-term-cyan",
+    border: "border-term-cyan/30",
+    bg: "bg-term-cyan/5",
+  },
+  comando: {
+    label: "Comando",
+    icon: "terminal",
+    accent: "text-term-green",
+    border: "border-term-green/30",
+    bg: "bg-term-green/5",
+  },
+  error: {
+    label: "Error común",
+    icon: "alert-triangle",
+    accent: "text-term-red",
+    border: "border-term-red/30",
+    bg: "bg-term-red/5",
+  },
+  evidencia: {
+    label: "Evidencia",
+    icon: "camera",
+    accent: "text-term-violet",
+    border: "border-term-violet/30",
+    bg: "bg-term-violet/5",
+  },
+  reto: {
+    label: "Reto",
+    icon: "flag",
+    accent: "text-term-amber",
+    border: "border-term-amber/30",
+    bg: "bg-term-amber/5",
+  },
+  nota: {
+    label: "Nota",
+    icon: "info",
+    accent: "text-base-300",
+    border: "border-base-600",
+    bg: "bg-base-800/40",
+  },
+};
+
+const v = variants[type];
+---
+
+<aside class:list={["my-6 rounded-lg border px-4 py-3.5", v.border, v.bg]}>
+  <p
+    class:list={[
+      "mb-1.5 flex items-center gap-2 font-mono text-xs font-semibold tracking-wider uppercase",
+      v.accent,
+    ]}
+  >
+    <Icon name={v.icon} size={15} strokeWidth={2.25} />
+    <span>{title ?? v.label}</span>
+  </p>
+  <div
+    class="text-base-200 text-sm leading-relaxed [&>:first-child]:mt-0 [&>:last-child]:mb-0"
+  >
+    <slot />
+  </div>
+</aside>

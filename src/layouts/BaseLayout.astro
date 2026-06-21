@@ -1,0 +1,69 @@
+---
+import "@fontsource-variable/inter";
+import "@fontsource-variable/jetbrains-mono";
+import "../styles/global.css";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Ancho del contenido principal. `wide` para landing, `prose` para labs. */
+  width?: "default" | "wide" | "prose";
+}
+
+const {
+  title,
+  description = "Labs prácticos en español para entender Linux, redes, backend, cloud y ciberseguridad de verdad. Aprendé construyendo evidencia.",
+  width = "default",
+} = Astro.props;
+
+const fullTitle =
+  title === "VT Security Labs" ? title : `${title} · VT Security Labs`;
+
+const mainWidth =
+  width === "wide"
+    ? "max-w-6xl"
+    : width === "prose"
+      ? "max-w-3xl"
+      : "max-w-5xl";
+---
+
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#07090a" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content="es_AR" />
+    <meta name="twitter:card" content="summary" />
+  </head>
+  <body class="bg-base-950 min-h-screen antialiased">
+    <a
+      href="#contenido"
+      class="bg-term-green text-base-950 sr-only rounded px-3 py-2 font-mono text-sm focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50"
+    >
+      Saltar al contenido
+    </a>
+
+    <Header />
+
+    <main
+      id="contenido"
+      class:list={["mx-auto w-full px-5 sm:px-6", mainWidth]}
+    >
+      <slot />
+    </main>
+
+    <Footer />
+  </body>
+</html>

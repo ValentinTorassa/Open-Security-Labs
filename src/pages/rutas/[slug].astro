@@ -1,0 +1,125 @@
+---
+import { getCollection } from "astro:content";
+import type { GetStaticPaths } from "astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import LabCard from "../../components/LabCard.astro";
+import Exam from "../../components/Exam.astro";
+import { paths } from "../../data/paths";
+import { pathExams } from "../../data/path-exams";
+
+export const getStaticPaths = (async () => {
+  return paths.map((path) => ({
+    params: { slug: path.slug },
+    props: { path },
+  }));
+}) satisfies GetStaticPaths;
+
+const { path } = Astro.props;
+const exam = pathExams[path.slug];
+
+const allLabs = await getCollection("labs", ({ data }) => !data.draft);
+const labs = allLabs
+  .filter((l) => l.data.path === path.slug)
+  .sort(
+    (a, b) =>
+      a.data.order - b.data.order ||
+      a.data.estimatedMinutes - b.data.estimatedMinutes,
+  );
+---
+
+<BaseLayout title={path.title} description={path.positioning} width="wide">
+  <section class="py-12" style={`--accent: ${path.accent}`}>
+    <nav class="text-base-400 mb-6 font-mono text-xs" aria-label="Migas de pan">
+      <a href="/rutas" class="hover:text-term-green">rutas</a>
+      <span class="text-base-600 mx-1.5">/</span>
+      <span style="color: var(--accent)">{path.slug}</span>
+    </nav>
+
+    <div class="flex items-center gap-3">
+      <span
+        class="flex h-11 w-11 items-center justify-center rounded-lg border font-mono text-lg font-bold"
+        style="border-color: color-mix(in srgb, var(--accent) 40%, transparent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent)"
+      >
+        {String(path.order).padStart(2, "0")}
+      </span>
+      <h1 class="text-base-50 text-3xl font-bold sm:text-4xl">{path.title}</h1>
+    </div>
+
+    <p class="text-base-200 mt-4 max-w-2xl text-lg leading-relaxed">
+      {path.positioning}
+    </p>
+
+    <!-- Temario -->
+    <div class="mt-8">
+      <h2 class="rule-label mb-3">Qué cubre esta ruta</h2>
+      <div class="flex flex-wrap gap-2">
+        {
+          path.focus.map((f) => (
+            <span class="border-base-700 bg-base-850/60 text-base-300 rounded-md border px-2.5 py-1 font-mono text-xs">
+              {f}
+            </span>
+          ))
+        }
+      </div>
+    </div>
+
+    <!-- Labs -->
+    <div class="mt-12">
+      <div class="mb-5 flex items-baseline justify-between">
+        <h2 class="text-base-50 text-xl font-semibold">Labs de la ruta</h2>
+        <span class="text-base-400 font-mono text-xs">
+          {labs.length}
+          {labs.length === 1 ? "lab" : "labs"}
+        </span>
+      </div>
+
+      {
+        labs.length > 0 ? (
+          <div class="grid gap-4 sm:grid-cols-2">
+            {labs.map((lab) => (
+              <LabCard lab={lab} showPath={false} />
+            ))}
+          </div>
+        ) : (
+          <div class="border-base-700 bg-base-850/40 rounded-xl border border-dashed p-8 text-center">
+            <p class="text-base-400 font-mono text-sm">
+              Todavía no hay labs publicados en esta ruta.
+            </p>
+            <a
+              href="/contribuir"
+              class="text-term-green mt-3 inline-block text-sm hover:underline"
+            >
+              ¿Querés escribir el primero? →
+            </a>
+          </div>
+        )
+      }
+    </div>
+
+    <!-- Examen corto de la ruta -->
+    {
+      exam && exam.length > 0 && (
+        <div class="mt-14">
+          <h2 class="rule-label mb-1">Cerrá la ruta</h2>
+          <p class="text-base-300 mb-2 text-sm">
+            Un examen corto para ver si te quedaron los conceptos clave.
+          </p>
+          <Exam
+            questions={exam}
+            passScore={67}
+            title={`Examen: ${path.title}`}
+          />
+        </div>
+      )
+    }
+
+    <div class="mt-12">
+      <a
+        href="/rutas"
+        class="text-base-400 hover:text-term-green font-mono text-sm"
+      >
+        ← Volver a todas las rutas
+      </a>
+    </div>
+  </section>
+</BaseLayout>

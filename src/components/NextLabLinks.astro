@@ -1,0 +1,45 @@
+---
+import { getCollection } from "astro:content";
+
+interface Props {
+  /** IDs de labs, ej: "redes-internet/una-request-no-es-magia". */
+  ids: string[];
+}
+const { ids } = Astro.props;
+
+const all = await getCollection("labs");
+const nextLabs = ids
+  .map((id) => all.find((l) => l.id === id))
+  .filter((l): l is NonNullable<typeof l> => Boolean(l));
+---
+
+{
+  nextLabs.length > 0 && (
+    <nav class="my-8" aria-label="Labs siguientes">
+      <h3 class="rule-label mb-3">Seguí con</h3>
+      <div class="grid gap-3 sm:grid-cols-2">
+        {nextLabs.map((lab) => (
+          <a
+            href={`/labs/${lab.id}`}
+            class="card group flex items-center justify-between gap-3 p-4 hover:-translate-y-0.5"
+          >
+            <span>
+              <span class="text-base-50 group-hover:text-term-green block text-sm font-medium">
+                {lab.data.title}
+              </span>
+              <span class="text-base-400 mt-0.5 block font-mono text-xs">
+                {lab.data.estimatedMinutes} min · {lab.data.level}
+              </span>
+            </span>
+            <span
+              class="text-base-500 group-hover:text-term-green font-mono transition-transform group-hover:translate-x-0.5"
+              aria-hidden="true"
+            >
+              →
+            </span>
+          </a>
+        ))}
+      </div>
+    </nav>
+  )
+}
