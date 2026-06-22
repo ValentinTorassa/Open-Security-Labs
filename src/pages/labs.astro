@@ -42,10 +42,91 @@ const totalMin = labs.reduce((acc, l) => acc + l.data.estimatedMinutes, 0);
       <span
         ><span class="text-term-green">~{totalMin}</span> min de práctica</span
       >
+      <span data-progress class="hidden"
+        ><span class="text-term-green" data-progress-count>0</span> completados</span
+      >
     </div>
 
-    <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="mt-8">
+      <label for="lab-search" class="sr-only">Buscar labs</label>
+      <div class="relative max-w-md">
+        <span
+          class="text-base-500 pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-mono text-sm"
+          aria-hidden="true">/</span
+        >
+        <input
+          id="lab-search"
+          type="search"
+          inputmode="search"
+          placeholder="buscar por título, ruta o tag…"
+          data-lab-search
+          class="border-base-700 bg-base-850/60 text-base-100 placeholder:text-base-500 focus:border-term-green w-full rounded-lg border py-2.5 pr-3 pl-8 font-mono text-sm outline-none"
+        />
+      </div>
+    </div>
+
+    <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {sorted.map((lab) => <LabCard lab={lab} />)}
     </div>
+
+    <p
+      class="text-base-400 mt-10 hidden text-center font-mono text-sm"
+      data-no-results
+    >
+      No hay labs que coincidan con tu búsqueda.
+    </p>
   </section>
 </BaseLayout>
+
+<script>
+  import { isLabDone, onProgress } from "../scripts/progress";
+
+  const cards = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-lab-card]"),
+  );
+
+  // Progreso guardado en el navegador (fuente única: scripts/progress).
+  const progress = document.querySelector<HTMLElement>("[data-progress]");
+  const progressCount = document.querySelector<HTMLElement>(
+    "[data-progress-count]",
+  );
+
+  function renderProgress() {
+    let done = 0;
+    cards.forEach((card) => {
+      const id = card.dataset.labId ?? "";
+      const ok = isLabDone(id);
+      if (ok) done += 1;
+      const badge = card.querySelector("[data-done-badge]");
+      badge?.classList.toggle("hidden", !ok);
+      badge?.classList.toggle("inline-flex", ok);
+    });
+    if (progress && progressCount) {
+      progressCount.textContent = String(done);
+      progress.classList.toggle("hidden", done === 0);
+    }
+  }
+
+  renderProgress();
+  onProgress(renderProgress);
+
+  // Búsqueda client-side: filtra por título, ruta y tags.
+  const input = document.querySelector<HTMLInputElement>("[data-lab-search]");
+  const noResults = document.querySelector<HTMLElement>("[data-no-results]");
+  const filter = () => {
+    const q = (input?.value ?? "").trim().toLowerCase();
+    let visible = 0;
+    cards.forEach((card) => {
+      const haystack = [
+        card.dataset.title ?? "",
+        card.dataset.path ?? "",
+        card.dataset.tags ?? "",
+      ].join(" ");
+      const match = q === "" || haystack.includes(q);
+      card.classList.toggle("hidden", !match);
+      if (match) visible += 1;
+    });
+    noResults?.classList.toggle("hidden", visible !== 0);
+  };
+  input?.addEventListener("input", filter);
+</script>

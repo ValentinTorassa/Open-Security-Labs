@@ -2,12 +2,14 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Icon from "../components/Icon.astro";
+import PathCard from "../components/PathCard.astro";
+import CertCard from "../components/CertCard.astro";
 import { paths } from "../data/paths";
 import { certifications } from "../data/certifications";
 
 const labs = await getCollection("labs", ({ data }) => !data.draft);
-const countFor = (slug: string) =>
-  labs.filter((l) => l.data.path === slug).length;
+const labsFor = (slug: string) => labs.filter((l) => l.data.path === slug);
+const allLabIds = labs.map((l) => l.id);
 
 // Pasos del método (la 4ª, "evidencia", en dorado).
 const method = [
@@ -64,14 +66,8 @@ const audience = [
   },
 ];
 
-// Listado de rutas para la "ventana de terminal" del hero.
-const routeList = paths.map((p) => `${p.slug}/`);
-
 const youtube = "https://www.youtube.com/@vtcibersecurity";
 const repo = "https://github.com/ValentinTorassa/VT-Security-Labs";
-
-// Color del chip de nivel de cada certi, derivado de su acento de marca.
-const levelChip = (cert: (typeof certifications)[number]) => cert.accent;
 ---
 
 <BaseLayout title="VT Security Labs" width="wide">
@@ -119,18 +115,14 @@ const levelChip = (cert: (typeof certifications)[number]) => cert.accent;
       </p>
 
       <div class="mt-8 flex flex-wrap gap-3">
-        <a
-          href="#rutas"
-          class="bg-term-green text-base-950 inline-flex items-center gap-2 rounded-[10px] px-5 py-3 font-mono text-sm font-bold transition hover:-translate-y-px hover:brightness-110"
-          style="box-shadow:0 0 22px color-mix(in srgb, var(--color-term-green) 30%, transparent);"
-        >
+        <a href="#rutas" class="btn-primary">
           <span class="opacity-60">$</span> empezar a aprender
         </a>
         <a
           href={youtube}
           target="_blank"
           rel="noopener noreferrer"
-          class="border-base-600 text-base-100 hover:border-term-green hover:bg-term-green/[0.06] inline-flex items-center gap-2 rounded-[10px] border px-5 py-3 font-mono text-sm font-semibold transition"
+          class="btn-ghost"
         >
           ver el canal ↗
         </a>
@@ -142,6 +134,15 @@ const levelChip = (cert: (typeof certifications)[number]) => cert.accent;
         <span><span class="text-term-green">0{paths.length}</span> rutas</span>
         <span><span class="text-term-green">100%</span> open source</span>
         <span><span class="text-term-green">0</span> login · 0 tracking</span>
+        <a
+          href="/perfil"
+          data-global-progress
+          data-all-ids={allLabIds.join(",")}
+          class="hover:text-term-green hidden"
+        >
+          <span class="text-term-green" data-global-progress-text></span> tu progreso
+          →
+        </a>
       </div>
     </div>
 
@@ -177,7 +178,16 @@ const levelChip = (cert: (typeof certifications)[number]) => cert.accent;
           > ls rutas/
         </div>
         <div class="text-term-blue grid grid-cols-2 gap-x-3.5 pt-0.5 pb-2">
-          {routeList.map((r) => <span>{r}</span>)}
+          {
+            paths.map((p) => (
+              <a
+                href={`/rutas/${p.slug}`}
+                class="hover:text-term-green w-fit transition-colors hover:underline"
+              >
+                {p.slug}/
+              </a>
+            ))
+          }
         </div>
         <div>
           <span class="text-term-green">vt@labs</span><span
@@ -199,6 +209,35 @@ const levelChip = (cert: (typeof certifications)[number]) => cert.accent;
       </div>
     </div>
   </section>
+
+  <!-- ===================== TU PROGRESO (solo para quien ya empezó) ======= -->
+  <a
+    href="/perfil"
+    data-resume
+    data-all-ids={allLabIds.join(",")}
+    class="card group hidden items-center gap-5 p-5 hover:-translate-y-0.5"
+  >
+    <div class="min-w-0 flex-1">
+      <p class="text-base-400 font-mono text-xs">// seguí donde lo dejaste</p>
+      <p class="text-base-100 mt-1 font-mono text-sm">
+        Llevás <span class="text-term-green font-semibold" data-resume-text
+        ></span> del catálogo
+      </p>
+      <div class="bg-base-800 mt-3 h-1.5 w-full overflow-hidden rounded-full">
+        <div
+          data-resume-bar
+          class="bg-term-green h-full rounded-full transition-[width] duration-500"
+          style="width:0%"
+        >
+        </div>
+      </div>
+    </div>
+    <span
+      class="text-term-green shrink-0 font-mono text-sm transition-transform group-hover:translate-x-0.5"
+    >
+      ver tu perfil →
+    </span>
+  </a>
 
   <!-- ===================== MÉTODO ===================== -->
   <section id="metodo" class="scroll-mt-20 py-16">
@@ -250,46 +289,18 @@ const levelChip = (cert: (typeof certifications)[number]) => cert.accent;
       Seis caminos que se cruzan. Empezá por donde te haga falta entender mejor.
     </p>
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {
-        paths.map((path) => (
-          <a
-            href={`/rutas/${path.slug}`}
-            class="card group hover:border-term-green block p-6 hover:-translate-y-1"
-            style={`--accent:${path.accent}`}
-          >
-            <div class="mb-4 flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <span
-                  class="flex h-9 w-9 items-center justify-center rounded-[10px] border"
-                  style="border-color:color-mix(in srgb, var(--color-term-green) 28%, transparent); background:color-mix(in srgb, var(--color-term-green) 9%, transparent); color:var(--color-term-green)"
-                >
-                  <Icon name={path.icon} size={19} strokeWidth={1.6} />
-                </span>
-                <span class="bg-term-green text-base-950 rounded-md px-2.5 py-1 font-mono text-xs font-semibold">
-                  {String(path.order).padStart(2, "0")}
-                </span>
-              </div>
-              <span class="text-base-500 font-mono text-xs">~/{path.slug}</span>
-            </div>
-            <h3 class="text-base-50 group-hover:text-term-green mb-2.5 font-mono text-lg font-bold transition-colors">
-              {path.title}
-            </h3>
-            <p class="text-base-400 mb-4 text-sm leading-relaxed">
-              {path.description}
-            </p>
-            <div class="flex flex-wrap items-center gap-1.5 font-mono text-xs">
-              {path.focus.slice(0, 3).map((f) => (
-                <span class="text-term-blue bg-term-blue/10 rounded px-2 py-0.5 lowercase">
-                  {f}
-                </span>
-              ))}
-              <span class="text-base-500 ml-auto">
-                {countFor(path.slug)} labs
-              </span>
-            </div>
-          </a>
-        ))
+        paths.map((path) => {
+          const pathLabs = labsFor(path.slug);
+          return (
+            <PathCard
+              path={path}
+              labCount={pathLabs.length}
+              labIds={pathLabs.map((l) => l.id)}
+            />
+          );
+        })
       }
     </div>
   </section>
@@ -309,40 +320,8 @@ const levelChip = (cert: (typeof certifications)[number]) => cert.accent;
       Cada ruta apunta a una.
     </p>
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {
-        certifications.map((cert) => (
-          <a
-            href={`/certificaciones/${cert.slug}`}
-            class="card group hover:border-term-green block p-5 hover:-translate-y-1"
-            style={`--accent:${levelChip(cert)}`}
-          >
-            <div class="mb-4 flex items-center gap-3.5">
-              <span
-                class="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border font-mono text-base font-bold"
-                style="border-color:color-mix(in srgb, var(--accent) 40%, transparent); background:color-mix(in srgb, var(--accent) 10%, transparent); color:var(--accent)"
-              >
-                {cert.badge}
-              </span>
-              <div class="min-w-0">
-                <h3 class="text-base-50 mb-0.5 font-mono text-base leading-tight font-bold">
-                  {cert.name}
-                </h3>
-                <p class="text-base-500 text-xs">{cert.vendor}</p>
-              </div>
-            </div>
-            <div class="border-base-700 flex items-center justify-between border-t pt-3.5 font-mono text-xs">
-              <span class="text-term-blue">~/{cert.relatedPaths[0]}</span>
-              <span
-                class="rounded-full border px-2.5 py-1"
-                style="border-color:color-mix(in srgb, var(--accent) 25%, transparent); background:color-mix(in srgb, var(--accent) 10%, transparent); color:var(--accent)"
-              >
-                {cert.level}
-              </span>
-            </div>
-          </a>
-        ))
-      }
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {certifications.map((cert) => <CertCard cert={cert} />)}
     </div>
     <p class="text-base-500 mt-6 text-xs leading-relaxed">
       VT Security Labs no está afiliado a estas organizaciones; cada logo y
@@ -406,8 +385,7 @@ const levelChip = (cert: (typeof certifications)[number]) => cert.accent;
             class="border-base-600 block h-[124px] w-[124px] rounded-2xl border bg-black"
           />
           <span
-            class="bg-term-green text-base-950 absolute -right-2 -bottom-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-xs font-semibold"
-            style="box-shadow:0 0 14px color-mix(in srgb, var(--color-term-green) 40%, transparent);"
+            class="bg-term-green text-base-950 glow-green absolute -right-2 -bottom-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-xs font-semibold"
           >
             ● live
           </span>
@@ -434,8 +412,7 @@ const levelChip = (cert: (typeof certifications)[number]) => cert.accent;
             href={youtube}
             target="_blank"
             rel="noopener noreferrer"
-            class="bg-term-green text-base-950 inline-flex items-center justify-center gap-2 rounded-[10px] px-5 py-3 font-mono text-sm font-bold whitespace-nowrap transition hover:brightness-110"
-            style="box-shadow:0 0 22px color-mix(in srgb, var(--color-term-green) 30%, transparent);"
+            class="btn-primary"
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"
               ><path
@@ -448,7 +425,7 @@ const levelChip = (cert: (typeof certifications)[number]) => cert.accent;
             href={repo}
             target="_blank"
             rel="noopener noreferrer"
-            class="border-base-600 text-base-100 hover:border-term-green inline-flex items-center justify-center gap-2 rounded-[10px] border px-5 py-3 font-mono text-sm font-semibold whitespace-nowrap transition"
+            class="btn-ghost"
           >
             ★ Star en GitHub
           </a>
@@ -457,3 +434,39 @@ const levelChip = (cert: (typeof certifications)[number]) => cert.accent;
     </div>
   </section>
 </BaseLayout>
+
+<script>
+  import { countDone, onProgress } from "../scripts/progress";
+
+  const el = document.querySelector<HTMLElement>("[data-global-progress]");
+  const text = document.querySelector<HTMLElement>(
+    "[data-global-progress-text]",
+  );
+  const ids = (el?.dataset.allIds ?? "").split(",").filter(Boolean);
+
+  // Banner "seguí donde lo dejaste": solo se muestra si ya hay progreso.
+  const resume = document.querySelector<HTMLElement>("[data-resume]");
+  const resumeText = document.querySelector<HTMLElement>("[data-resume-text]");
+  const resumeBar = document.querySelector<HTMLElement>("[data-resume-bar]");
+
+  function render() {
+    if (!ids.length) return;
+    const done = countDone(ids);
+    const pct = Math.round((done / ids.length) * 100);
+
+    if (el && text) {
+      el.classList.toggle("hidden", done === 0);
+      text.textContent = `${done}/${ids.length} labs · ${pct}%`;
+    }
+
+    if (resume && resumeText && resumeBar) {
+      resume.classList.toggle("hidden", done === 0);
+      resume.classList.toggle("flex", done > 0);
+      resumeText.textContent = `${pct}% (${done}/${ids.length} labs)`;
+      resumeBar.style.width = `${pct}%`;
+    }
+  }
+
+  render();
+  onProgress(render);
+</script>

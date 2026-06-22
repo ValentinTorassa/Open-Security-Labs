@@ -1,0 +1,12 @@
+title = "VT Security Labs · gitleaks"
+
+# Extiende la config por defecto de gitleaks y agrega excepciones propias.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Tokens de ejemplo en gadgets/labs educativos: no son secretos reales"
+paths = [
+  # El decodificador de JWT trae un token de muestra a propósito.
+  '''src/components/gadgets/JwtDecoder\.astro''',
+]

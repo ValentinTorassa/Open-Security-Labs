@@ -17,6 +17,12 @@ export const getStaticPaths = (async () => {
 const { path } = Astro.props;
 const exam = pathExams[path.slug];
 
+// Navegación entre rutas (orden de paths.ts).
+const ordered = [...paths].sort((a, b) => a.order - b.order);
+const idx = ordered.findIndex((p) => p.slug === path.slug);
+const prevPath = idx > 0 ? ordered[idx - 1] : undefined;
+const nextPath = idx < ordered.length - 1 ? ordered[idx + 1] : undefined;
+
 const allLabs = await getCollection("labs", ({ data }) => !data.draft);
 const labs = allLabs
   .filter((l) => l.data.path === path.slug)
@@ -25,6 +31,8 @@ const labs = allLabs
       a.data.order - b.data.order ||
       a.data.estimatedMinutes - b.data.estimatedMinutes,
   );
+
+const examStoreKey = `ruta:${path.slug}`;
 ---
 
 <BaseLayout title={path.title} description={path.positioning} width="wide">
@@ -35,7 +43,7 @@ const labs = allLabs
       <span style="color: var(--accent)">{path.slug}</span>
     </nav>
 
-    <div class="flex items-center gap-3">
+    <div class="flex flex-wrap items-center gap-3">
       <span
         class="flex h-11 w-11 items-center justify-center rounded-lg border font-mono text-lg font-bold"
         style="border-color: color-mix(in srgb, var(--accent) 40%, transparent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent)"
@@ -43,6 +51,12 @@ const labs = allLabs
         {String(path.order).padStart(2, "0")}
       </span>
       <h1 class="text-base-50 text-3xl font-bold sm:text-4xl">{path.title}</h1>
+      <span
+        data-ruta-complete-badge
+        class="border-term-green/40 bg-term-green/10 text-term-green glow-green hidden items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-xs font-semibold"
+      >
+        ✓ Ruta completada
+      </span>
     </div>
 
     <p class="text-base-200 mt-4 max-w-2xl text-lg leading-relaxed">
@@ -73,6 +87,22 @@ const labs = allLabs
         </span>
       </div>
 
+      <div data-ruta-progress-wrap class="mb-5 hidden">
+        <div class="bg-base-800 h-1.5 w-full overflow-hidden rounded-full">
+          <div
+            data-ruta-progress-bar
+            class="h-full rounded-full transition-[width] duration-500"
+            style="width: 0%; background: var(--accent)"
+          >
+          </div>
+        </div>
+        <p
+          data-ruta-progress-label
+          class="text-base-400 mt-2 font-mono text-xs"
+        >
+        </p>
+      </div>
+
       {
         labs.length > 0 ? (
           <div class="grid gap-4 sm:grid-cols-2">
@@ -96,24 +126,89 @@ const labs = allLabs
       }
     </div>
 
-    <!-- Examen corto de la ruta -->
+    <!-- Examen corto de la ruta: se desbloquea al completar los labs -->
     {
       exam && exam.length > 0 && (
-        <div class="mt-14">
+        <div class="mt-14" data-exam-gate>
           <h2 class="rule-label mb-1">Cerrá la ruta</h2>
-          <p class="text-base-300 mb-2 text-sm">
+          <p class="text-base-300 mb-4 text-sm">
             Un examen corto para ver si te quedaron los conceptos clave.
           </p>
-          <Exam
-            questions={exam}
-            passScore={67}
-            title={`Examen: ${path.title}`}
-          />
+
+          <div
+            data-exam-locked
+            class="border-base-700 bg-base-850/40 rounded-xl border border-dashed p-7 text-center"
+          >
+            <p class="text-base-200 text-sm">
+              <span aria-hidden="true">🔒</span> Completá los {labs.length} labs
+              de la ruta para desbloquear el examen.
+            </p>
+            <div class="bg-base-800 mx-auto mt-4 h-1.5 max-w-xs overflow-hidden rounded-full">
+              <div
+                data-exam-gate-bar
+                class="h-full rounded-full transition-[width] duration-500"
+                style="width: 0%; background: var(--accent)"
+              />
+            </div>
+            <p
+              data-exam-gate-label
+              class="text-base-500 mt-2 font-mono text-xs"
+            >
+              0/{labs.length} labs
+            </p>
+          </div>
+
+          <div data-exam-content class="hidden">
+            <Exam
+              questions={exam}
+              passScore={67}
+              title={`Examen: ${path.title}`}
+              storeKey={examStoreKey}
+            />
+          </div>
         </div>
       )
     }
 
-    <div class="mt-12">
+    <nav
+      class="border-base-800 mt-14 grid gap-3 border-t pt-6 sm:grid-cols-2"
+      aria-label="Navegación entre rutas"
+    >
+      {
+        prevPath ? (
+          <a
+            href={`/rutas/${prevPath.slug}`}
+            class="card group flex flex-col p-4 hover:-translate-y-0.5"
+            style={`--accent: ${prevPath.accent}`}
+          >
+            <span class="text-base-500 font-mono text-xs">← Ruta anterior</span>
+            <span class="text-base-100 mt-1 font-semibold group-hover:text-[color:var(--accent)]">
+              {prevPath.title}
+            </span>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      {
+        nextPath && (
+          <a
+            href={`/rutas/${nextPath.slug}`}
+            class="card group flex flex-col p-4 text-right hover:-translate-y-0.5 sm:col-start-2"
+            style={`--accent: ${nextPath.accent}`}
+          >
+            <span class="text-base-500 font-mono text-xs">
+              Ruta siguiente →
+            </span>
+            <span class="text-base-100 mt-1 font-semibold group-hover:text-[color:var(--accent)]">
+              {nextPath.title}
+            </span>
+          </a>
+        )
+      }
+    </nav>
+
+    <div class="mt-10">
       <a
         href="/rutas"
         class="text-base-400 hover:text-term-green font-mono text-sm"
@@ -123,3 +218,58 @@ const labs = allLabs
     </div>
   </section>
 </BaseLayout>
+
+<script>
+  import { isLabDone, onProgress } from "../../scripts/progress";
+
+  const cards = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-lab-card]"),
+  );
+  const total = cards.length;
+
+  const wrap = document.querySelector("[data-ruta-progress-wrap]");
+  const bar = document.querySelector<HTMLElement>("[data-ruta-progress-bar]");
+  const label = document.querySelector("[data-ruta-progress-label]");
+  const completeBadge = document.querySelector("[data-ruta-complete-badge]");
+  const gate = document.querySelector("[data-exam-gate]");
+
+  function render() {
+    if (!total) return;
+    let done = 0;
+    cards.forEach((card) => {
+      const id = card.dataset.labId ?? "";
+      const ok = isLabDone(id);
+      if (ok) done += 1;
+      const badge = card.querySelector("[data-done-badge]");
+      badge?.classList.toggle("hidden", !ok);
+      badge?.classList.toggle("inline-flex", ok);
+    });
+
+    const pct = Math.round((done / total) * 100);
+    const allDone = done === total;
+
+    wrap?.classList.toggle("hidden", done === 0);
+    if (bar) bar.style.width = `${pct}%`;
+    if (label)
+      label.textContent = `${done}/${total} labs completados · ${pct}%`;
+
+    completeBadge?.classList.toggle("hidden", !allDone);
+    completeBadge?.classList.toggle("inline-flex", allDone);
+
+    if (gate) {
+      const gbar = gate.querySelector<HTMLElement>("[data-exam-gate-bar]");
+      const glabel = gate.querySelector("[data-exam-gate-label]");
+      if (gbar) gbar.style.width = `${pct}%`;
+      if (glabel) glabel.textContent = `${done}/${total} labs`;
+      gate
+        .querySelector("[data-exam-locked]")
+        ?.classList.toggle("hidden", allDone);
+      gate
+        .querySelector("[data-exam-content]")
+        ?.classList.toggle("hidden", !allDone);
+    }
+  }
+
+  render();
+  onProgress(render);
+</script>
