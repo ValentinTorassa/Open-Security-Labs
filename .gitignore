@@ -32,3 +32,4 @@ pnpm-debug.log*
 # lockfiles de otros gestores (usamos npm)
 yarn.lock
 pnpm-lock.yaml
+.vercel
