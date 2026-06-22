@@ -1,0 +1,142 @@
+---
+title: "IAM: leer una policy antes de que te muerda"
+description: "En AWS, los permisos los decide una policy JSON, no tu intuición. Aprendé a leer Effect, Action, Resource y por qué un Deny le gana a cualquier Allow."
+path: "cloud-produccion"
+order: 2
+level: "intermediate"
+estimatedMinutes: 30
+prerequisites:
+  - "Saber leer JSON"
+  - "Idea básica de IAM (usuarios, roles, policies)"
+objectives:
+  - "Leer los cuatro campos clave de una policy: Effect, Action, Resource, Condition"
+  - "Entender por qué un Deny explícito gana sobre cualquier Allow"
+  - "Detectar permisos demasiado amplios (wildcards) en una policy"
+  - "Reescribir una policy peligrosa hacia mínimo privilegio"
+evidence:
+  - "Tu análisis de las dos policies de abajo: qué permite cada una de verdad"
+  - "Una policy reescrita de '*' a mínimo privilegio"
+  - "Writeup de 2 líneas: por qué el Deny del ejemplo corta el acceso"
+commands:
+  - "aws iam simulate-principal-policy"
+  - "jq '.Statement[] | {Effect, Action, Resource}'"
+challenge: "Tomá la policy 'peligrosa' de abajo y reescribila para que un bot solo pueda leer (GetObject) de un único bucket. Mostrá el antes y el después y explicá qué dejaste afuera."
+nextLabs:
+  - "cloud-produccion/cloudtrail-quien-hizo-que"
+  - "devsecops-agentes/secret-scanning-token-al-repo"
+tags:
+  - "cloud"
+  - "aws"
+  - "iam"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+En la nube no hay un firewall que diga "este pibe puede entrar". Hay una **policy**: un JSON que dice, para cada identidad, qué acciones puede hacer sobre qué recursos. Si no sabés leer ese JSON, no sabés qué puede hacer tu cuenta. Y lo que _creés_ que permite casi nunca es lo que permite.
+
+<Callout type="concepto">
+  Una policy de IAM responde tres preguntas por cada regla (statement):
+  **quién** (el principal), **qué puede hacer** (Action) y **sobre qué**
+  (Resource). El `Effect` dice si esa combinación se **permite** (`Allow`) o se
+  **niega** (`Deny`). Nada más, y nada menos.
+</Callout>
+
+## Anatomía de un statement
+
+```json
+{
+  "Effect": "Allow",
+  "Action": ["s3:GetObject", "s3:PutObject"],
+  "Resource": "arn:aws:s3:::reportes-prod/*"
+}
+```
+
+- **Effect**: `Allow` o `Deny`.
+- **Action**: qué llamadas a la API. `s3:GetObject` es leer un objeto; `s3:*` es _todo_ S3.
+- **Resource**: sobre qué. El `/*` al final acota a los objetos de **ese** bucket.
+- **Condition** (opcional): bajo qué circunstancias (una IP, MFA presente, etc.).
+
+## La regla que más gente olvida: Deny gana
+
+AWS evalúa así: si **algo** te niega explícitamente, estás negado, sin importar cuántos Allow tengas. El default ya es negar; un `Deny` es un cerrojo por encima de todo.
+
+```json
+[
+  {
+    "Effect": "Allow",
+    "Action": "s3:*",
+    "Resource": "*"
+  },
+  {
+    "Effect": "Deny",
+    "Action": "s3:DeleteObject",
+    "Resource": "arn:aws:s3:::backups-prod/*"
+  }
+]
+```
+
+<Callout type="concepto">
+  El orden de los statements **no importa**: IAM no lee de arriba a abajo como
+  un if/else. Junta todos los Allow y todos los Deny, y si hay un Deny que
+  matchea, gana. Acá el bot puede hacer cualquier cosa en S3 (`s3:*`), **menos**
+  borrar objetos del bucket de backups. Ese `Deny` es una red de seguridad.
+</Callout>
+
+## La policy peligrosa
+
+Esta aparece en mil tutoriales y en mil cuentas reales. Leela despacio:
+
+```json
+{
+  "Effect": "Allow",
+  "Action": "*",
+  "Resource": "*"
+}
+```
+
+<Callout type="error">
+  `Action: "*"` sobre `Resource: "*"` es **AdministratorAccess** escrito a mano.
+  Le da a esa identidad permiso para todo: borrar bases de datos, crear
+  usuarios, apagar máquinas, abrir buckets al mundo. Si esa credencial se
+  filtra, no perdés un bucket: perdés la cuenta. Es el `chmod 777` de la nube.
+</Callout>
+
+## Mínimo privilegio: lo que el bot necesita y nada más
+
+Si el laburo del bot es leer reportes de un bucket, su policy es esto y se acabó:
+
+```json
+{
+  "Effect": "Allow",
+  "Action": "s3:GetObject",
+  "Resource": "arn:aws:s3:::reportes-prod/*"
+}
+```
+
+No puede escribir, no puede borrar, no puede tocar otros buckets ni otros servicios. Si esa key se filtra, el daño queda acotado a leer un bucket. Eso es **blast radius**: cuánto se puede romper cuando algo sale mal.
+
+## Probalo sin adivinar
+
+AWS tiene un simulador: le pasás una identidad y una acción, y te dice si la policy la permite. Mejor que deducirlo de memoria.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+aws iam simulate-principal-policy \
+  --policy-source-arn arn:aws:iam::1234:user/deploy-bot \
+  --action-names s3:DeleteObject \
+  --resource-arns "arn:aws:s3:::backups-prod/archivo.txt"
+```
+
+</TerminalBlock>
+
+<Callout type="evidencia">
+  Practicá con ARNs **ficticios** (`1234`, `reportes-prod`) como los de acá.
+  Nunca pegues account IDs reales, ARNs internos ni nombres de buckets de tu
+  organización en un repo o un lab público. El concepto se entiende igual.
+</Callout>
+
+## Cerrando
+
+Una policy no es burocracia: es el límite real de lo que cada identidad puede hacer. Si sabés leer `Effect`, `Action`, `Resource` y tenés grabado que **Deny gana**, dejás de confiar en que "alguien la configuró bien" y empezás a verificarlo.

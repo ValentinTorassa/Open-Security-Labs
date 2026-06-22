@@ -5,8 +5,7 @@ import PathCard from "../components/PathCard.astro";
 import { paths } from "../data/paths";
 
 const labs = await getCollection("labs", ({ data }) => !data.draft);
-const countFor = (slug: string) =>
-  labs.filter((l) => l.data.path === slug).length;
+const labsFor = (slug: string) => labs.filter((l) => l.data.path === slug);
 ---
 
 <BaseLayout
@@ -27,9 +26,16 @@ const countFor = (slug: string) =>
 
     <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {
-        paths.map((path) => (
-          <PathCard path={path} labCount={countFor(path.slug)} />
-        ))
+        paths.map((path) => {
+          const pathLabs = labsFor(path.slug);
+          return (
+            <PathCard
+              path={path}
+              labCount={pathLabs.length}
+              labIds={pathLabs.map((l) => l.id)}
+            />
+          );
+        })
       }
     </div>
   </section>

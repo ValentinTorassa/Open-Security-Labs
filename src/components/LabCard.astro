@@ -23,6 +23,11 @@ const accent = path?.accent ?? "#56d364";
   href={`/labs/${lab.id}`}
   class="card group flex flex-col p-5 hover:-translate-y-0.5"
   style={`--accent: ${accent}`}
+  data-lab-card
+  data-lab-id={lab.id}
+  data-title={data.title.toLowerCase()}
+  data-path={data.path}
+  data-tags={data.tags.join(" ").toLowerCase()}
 >
   <div class="flex items-center justify-between gap-2">
     {
@@ -40,9 +45,17 @@ const accent = path?.accent ?? "#56d364";
         </span>
       )
     }
-    <span class="text-base-400 ml-auto font-mono text-xs">
-      {data.estimatedMinutes} min
-    </span>
+    <div class="ml-auto flex items-center gap-2">
+      <span
+        class="border-term-green/40 bg-term-green/10 text-term-green hidden items-center rounded-full border px-2 py-0.5 font-mono text-[0.65rem]"
+        data-done-badge
+      >
+        ✓ hecho
+      </span>
+      <span class="text-base-400 font-mono text-xs">
+        {data.estimatedMinutes} min
+      </span>
+    </div>
   </div>
 
   <h3

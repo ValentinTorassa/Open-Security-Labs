@@ -1,0 +1,91 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PermissionsGame from "../components/PermissionsGame.astro";
+import CidrCalculator from "../components/gadgets/CidrCalculator.astro";
+import IamPolicyAnalyzer from "../components/gadgets/IamPolicyAnalyzer.astro";
+import HttpStatusExplorer from "../components/gadgets/HttpStatusExplorer.astro";
+import JwtDecoder from "../components/gadgets/JwtDecoder.astro";
+import HashPlayground from "../components/gadgets/HashPlayground.astro";
+
+const tools = [
+  { id: "permisos", label: "Permisos rwx → octal", area: "Linux" },
+  { id: "cidr", label: "Calculadora CIDR", area: "Redes" },
+  { id: "iam", label: "Evaluador IAM", area: "Cloud" },
+  { id: "http", label: "Códigos HTTP", area: "Backend" },
+  { id: "jwt", label: "Decodificador JWT", area: "Backend / Seguridad" },
+  { id: "hash", label: "base64 vs SHA-256", area: "Cripto" },
+];
+---
+
+<BaseLayout
+  title="Herramientas"
+  description="Mini-herramientas interactivas para practicar: permisos Linux, CIDR, IAM, códigos HTTP, JWT y hashing. Todo corre en tu navegador, sin backend."
+  width="default"
+>
+  <section class="py-12">
+    <p class="rule-label">Gadgets</p>
+    <h1 class="text-base-50 mt-3 text-3xl font-bold sm:text-4xl">
+      Herramientas
+    </h1>
+    <p class="text-base-300 mt-4 max-w-2xl text-lg leading-relaxed">
+      Calculadoras y decodificadores para practicar lo que ves en los labs. Todo
+      corre en tu navegador: <span class="text-term-green"
+        >0 datos enviados</span
+      >, nada sale de tu equipo.
+    </p>
+
+    <nav class="mt-6 flex flex-wrap gap-2" aria-label="Índice de herramientas">
+      {
+        tools.map((t) => (
+          <a
+            href={`#${t.id}`}
+            class="border-base-700 bg-base-850/60 text-base-300 hover:border-term-green hover:text-base-50 rounded-md border px-3 py-1.5 font-mono text-xs transition-colors"
+          >
+            {t.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="mt-8 space-y-2">
+      <div id="permisos" class="scroll-mt-20">
+        <h2 class="rule-label">Linux · permisos</h2>
+        <PermissionsGame />
+      </div>
+
+      <div id="cidr" class="scroll-mt-20">
+        <h2 class="rule-label">Redes · subnetting</h2>
+        <CidrCalculator />
+      </div>
+
+      <div id="iam" class="scroll-mt-20">
+        <h2 class="rule-label">Cloud · IAM</h2>
+        <IamPolicyAnalyzer />
+      </div>
+
+      <div id="http" class="scroll-mt-20">
+        <h2 class="rule-label">Backend · HTTP</h2>
+        <HttpStatusExplorer />
+      </div>
+
+      <div id="jwt" class="scroll-mt-20">
+        <h2 class="rule-label">Backend · tokens</h2>
+        <JwtDecoder />
+      </div>
+
+      <div id="hash" class="scroll-mt-20">
+        <h2 class="rule-label">Cripto · encoding vs hashing</h2>
+        <HashPlayground />
+      </div>
+    </div>
+
+    <div class="border-base-800 mt-12 border-t pt-6">
+      <a
+        href="/labs"
+        class="text-base-400 hover:text-term-green font-mono text-sm"
+      >
+        → Practicá estas herramientas en los labs
+      </a>
+    </div>
+  </section>
+</BaseLayout>

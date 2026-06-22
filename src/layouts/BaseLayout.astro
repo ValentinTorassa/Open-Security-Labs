@@ -10,12 +10,15 @@ interface Props {
   description?: string;
   /** Ancho del contenido principal. `wide` para landing, `prose` para labs. */
   width?: "default" | "wide" | "prose";
+  /** Imagen para compartir en redes (relativa al sitio). */
+  image?: string;
 }
 
 const {
   title,
   description = "Labs prácticos en español para entender Linux, redes, backend, cloud y ciberseguridad de verdad. Aprendé construyendo evidencia.",
   width = "default",
+  image = "/og-default.png",
 } = Astro.props;
 
 const fullTitle =
@@ -27,6 +30,25 @@ const mainWidth =
     : width === "prose"
       ? "max-w-3xl"
       : "max-w-5xl";
+
+// URLs absolutas para SEO y tarjetas sociales.
+const site = Astro.site ?? new URL("https://labs.vtsecurity.dev");
+const canonical = new URL(Astro.url.pathname, site);
+const ogImage = new URL(image, site);
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "VT Security Labs",
+  url: site.href,
+  description,
+  inLanguage: "es-AR",
+  author: {
+    "@type": "Person",
+    name: "Valentín Torassa Colombero",
+    url: "https://valentorassa.com",
+  },
+};
 ---
 
 <!doctype html>
@@ -41,12 +63,31 @@ const mainWidth =
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#07090a" />
+    <link rel="canonical" href={canonical.href} />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="VT Security Labs"
+      href={new URL("/rss.xml", site).href}
+    />
 
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="VT Security Labs" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:locale" content="es_AR" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:url" content={canonical.href} />
+    <meta property="og:image" content={ogImage.href} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage.href} />
+
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={JSON.stringify(jsonLd)}
+    />
   </head>
   <body class="bg-base-950 min-h-screen antialiased">
     <a

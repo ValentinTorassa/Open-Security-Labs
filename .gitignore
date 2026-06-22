@@ -26,6 +26,9 @@ pnpm-debug.log*
 .idea/
 *.swp
 
+# herramientas locales de agentes (no se versionan)
+.claude/
+
 # lockfiles de otros gestores (usamos npm)
 yarn.lock
 pnpm-lock.yaml

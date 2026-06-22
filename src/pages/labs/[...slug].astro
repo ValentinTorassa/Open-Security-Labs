@@ -6,6 +6,21 @@ import LabLayout from "../../components/LabLayout.astro";
 
 export const getStaticPaths = (async () => {
   const labs = await getCollection("labs", ({ data }) => !data.draft);
+
+  // Validación en build: cada id de `nextLabs` tiene que existir (y no ser draft).
+  // Un typo rompe el build acá en vez de quedar como un link muerto silencioso.
+  const ids = new Set(labs.map((l) => l.id));
+  const broken = labs.flatMap((l) =>
+    l.data.nextLabs
+      .filter((id) => !ids.has(id))
+      .map((id) => `  - "${l.id}" → nextLabs: "${id}" no existe`),
+  );
+  if (broken.length > 0) {
+    throw new Error(
+      `nextLabs apunta a labs inexistentes (o en draft):\n${broken.join("\n")}`,
+    );
+  }
+
   return labs.map((lab) => ({
     params: { slug: lab.id },
     props: { lab },

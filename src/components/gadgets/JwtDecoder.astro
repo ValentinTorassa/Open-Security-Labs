@@ -1,0 +1,123 @@
+---
+// Decodificador de JWT. Client-side, sin backend: el token nunca sale del navegador.
+// Decodifica header y payload (NO verifica la firma: para eso hace falta el secreto).
+const uid = "jwt-" + Math.random().toString(36).slice(2, 9);
+
+const sample =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0IiwibmFtZSI6IkphbmUiLCJyb2xlIjoidXNlciIsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjoxNzAwMDAzNjAwfQ.s5lqQzVQk0bnv8r3mFqL0qY8mF8q3Yk0XyZ1abcdEfg";
+---
+
+<section
+  class="not-prose border-term-violet/30 bg-term-violet/5 my-8 rounded-xl border p-5"
+  data-jwt
+  id={uid}
+>
+  <h3
+    class="text-term-violet flex items-center gap-2 font-mono text-sm font-semibold"
+  >
+    <span aria-hidden="true">▸</span> Decodificador de JWT
+  </h3>
+  <p class="text-base-400 mt-1 text-xs">
+    Pegá un token y mirá qué dice por dentro. Un JWT está <strong
+      class="text-base-300">firmado, no cifrado</strong
+    >: cualquiera lee el contenido. Acá no verificamos la firma y el token nunca
+    sale de tu navegador.
+  </p>
+
+  <textarea
+    rows="4"
+    placeholder="eyJhbGci…"
+    data-jwt-input
+    aria-label="Token JWT"
+    class="border-base-600 bg-base-850 text-base-100 placeholder:text-base-500 focus:border-term-violet mt-4 w-full resize-y rounded-md border px-3 py-2 font-mono text-xs break-all outline-none"
+    >{sample}</textarea
+  >
+
+  <p
+    class="text-term-red mt-2 hidden font-mono text-xs"
+    data-jwt-error
+    aria-live="polite"
+  >
+  </p>
+
+  <div class="mt-4 hidden space-y-3" data-jwt-out>
+    <div>
+      <p class="text-term-violet font-mono text-xs font-semibold">Header</p>
+      <pre
+        class="border-base-700 bg-base-900 text-base-100 mt-1 overflow-x-auto rounded-lg border p-3 font-mono text-xs"
+        data-jwt-header>
+      </pre>
+    </div>
+    <div>
+      <p class="text-term-violet font-mono text-xs font-semibold">Payload</p>
+      <pre
+        class="border-base-700 bg-base-900 text-base-100 mt-1 overflow-x-auto rounded-lg border p-3 font-mono text-xs"
+        data-jwt-payload>
+      </pre>
+    </div>
+    <p class="text-base-400 font-mono text-xs" data-jwt-exp></p>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-jwt]").forEach((root) => {
+    const input = root.querySelector<HTMLTextAreaElement>("[data-jwt-input]");
+    const err = root.querySelector<HTMLElement>("[data-jwt-error]");
+    const out = root.querySelector<HTMLElement>("[data-jwt-out]");
+    const headerEl = root.querySelector<HTMLElement>("[data-jwt-header]");
+    const payloadEl = root.querySelector<HTMLElement>("[data-jwt-payload]");
+    const expEl = root.querySelector<HTMLElement>("[data-jwt-exp]");
+    if (!input || !err || !out || !headerEl || !payloadEl || !expEl) return;
+
+    const b64urlDecode = (s: string) => {
+      const pad = s.length % 4 === 0 ? "" : "=".repeat(4 - (s.length % 4));
+      const b64 = s.replace(/-/g, "+").replace(/_/g, "/") + pad;
+      const bin = atob(b64);
+      const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+      return new TextDecoder().decode(bytes);
+    };
+
+    const decode = () => {
+      const token = input.value.trim();
+      if (!token) {
+        out.classList.add("hidden");
+        err.classList.add("hidden");
+        return;
+      }
+      const parts = token.split(".");
+      if (parts.length !== 3) {
+        err.textContent = "✕ Un JWT tiene 3 partes separadas por puntos.";
+        err.classList.remove("hidden");
+        out.classList.add("hidden");
+        return;
+      }
+      try {
+        const header = JSON.parse(b64urlDecode(parts[0]));
+        const payload = JSON.parse(b64urlDecode(parts[1]));
+        headerEl.textContent = JSON.stringify(header, null, 2);
+        payloadEl.textContent = JSON.stringify(payload, null, 2);
+
+        if (typeof payload.exp === "number") {
+          const when = new Date(payload.exp * 1000);
+          const expired = Date.now() > payload.exp * 1000;
+          expEl.innerHTML = expired
+            ? `<span class="text-term-red">⏱ Expirado</span> · venció ${when.toLocaleString("es-AR")}`
+            : `<span class="text-term-green">⏱ Vigente</span> · vence ${when.toLocaleString("es-AR")}`;
+        } else {
+          expEl.textContent =
+            "Sin campo exp: este token no declara expiración.";
+        }
+
+        err.classList.add("hidden");
+        out.classList.remove("hidden");
+      } catch {
+        err.textContent = "✕ No pude decodificar el token. ¿Está bien copiado?";
+        err.classList.remove("hidden");
+        out.classList.add("hidden");
+      }
+    };
+
+    input.addEventListener("input", decode);
+    decode();
+  });
+</script>

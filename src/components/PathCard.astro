@@ -5,14 +5,17 @@ import Icon from "./Icon.astro";
 interface Props {
   path: LearningPath;
   labCount?: number;
+  /** Ids de los labs de la ruta, para calcular progreso en el cliente. */
+  labIds?: string[];
 }
-const { path, labCount } = Astro.props;
+const { path, labCount, labIds = [] } = Astro.props;
 ---
 
 <a
   href={`/rutas/${path.slug}`}
   class="card group relative flex flex-col overflow-hidden p-5 hover:-translate-y-0.5"
   style={`--accent: ${path.accent}`}
+  data-path-card
 >
   <span
     class="pointer-events-none absolute inset-x-0 top-0 h-px opacity-60"
@@ -70,4 +73,61 @@ const { path, labCount } = Astro.props;
       aria-hidden="true">→</span
     >
   </div>
+
+  {
+    labIds.length > 0 && (
+      <div
+        data-path-progress
+        data-lab-ids={labIds.join(",")}
+        class="mt-3 hidden"
+      >
+        <div class="bg-base-800 h-1 w-full overflow-hidden rounded-full">
+          <div
+            data-path-progress-bar
+            class="h-full rounded-full transition-[width] duration-500"
+            style="width: 0%; background: var(--accent)"
+          />
+        </div>
+        <p
+          data-path-progress-label
+          class="text-base-500 mt-1.5 font-mono text-[0.7rem]"
+        />
+      </div>
+    )
+  }
 </a>
+
+<script>
+  import { countDone, onProgress } from "../scripts/progress";
+
+  function hydrate() {
+    document
+      .querySelectorAll<HTMLElement>("[data-path-progress]")
+      .forEach((el) => {
+        const ids = (el.dataset.labIds ?? "").split(",").filter(Boolean);
+        if (!ids.length) return;
+        const done = countDone(ids);
+        if (done === 0) {
+          el.classList.add("hidden");
+          return;
+        }
+        el.classList.remove("hidden");
+        const pct = Math.round((done / ids.length) * 100);
+        const bar = el.querySelector<HTMLElement>("[data-path-progress-bar]");
+        if (bar) bar.style.width = `${pct}%`;
+        const label = el.querySelector<HTMLElement>(
+          "[data-path-progress-label]",
+        );
+        if (label) {
+          label.textContent =
+            pct === 100
+              ? `✓ ruta completada · ${done}/${ids.length}`
+              : `${done}/${ids.length} labs · ${pct}%`;
+          label.classList.toggle("text-term-green", pct === 100);
+        }
+      });
+  }
+
+  hydrate();
+  onProgress(hydrate);
+</script>

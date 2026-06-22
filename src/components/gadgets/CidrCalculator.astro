@@ -1,0 +1,148 @@
+---
+// Calculadora CIDR / subred. 100% client-side, sin backend.
+// Ingresás algo como 10.0.0.0/24 y te muestra red, broadcast, rango y hosts.
+const uid = "cidr-" + Math.random().toString(36).slice(2, 9);
+---
+
+<section
+  class="not-prose border-term-cyan/30 bg-term-cyan/5 my-8 rounded-xl border p-5"
+  data-cidr
+  id={uid}
+>
+  <h3
+    class="text-term-cyan flex items-center gap-2 font-mono text-sm font-semibold"
+  >
+    <span aria-hidden="true">▸</span> Calculadora CIDR / subred
+  </h3>
+  <p class="text-base-400 mt-1 text-xs">
+    Escribí una red en notación CIDR y mirá cómo se reparte el espacio de
+    direcciones. <code class="text-base-300">192.168.1.0/24</code>
+  </p>
+
+  <div class="mt-4 flex flex-wrap items-center gap-2">
+    <input
+      type="text"
+      inputmode="text"
+      placeholder="10.0.0.0/24"
+      value="192.168.1.0/24"
+      data-cidr-input
+      aria-label="Red en notación CIDR"
+      class="border-base-600 bg-base-850 text-base-50 focus:border-term-cyan w-56 rounded-md border px-3 py-2 font-mono text-sm outline-none"
+    />
+    <button
+      type="button"
+      data-cidr-calc
+      class="bg-term-cyan text-base-950 rounded-md px-4 py-2 font-mono text-sm font-semibold transition-transform hover:-translate-y-0.5"
+      >Calcular</button
+    >
+  </div>
+
+  <p
+    class="text-term-red mt-2 hidden font-mono text-xs"
+    data-cidr-error
+    aria-live="polite"
+  >
+  </p>
+
+  <dl
+    class="border-base-700 bg-base-900 mt-4 hidden grid-cols-1 gap-x-6 gap-y-2 rounded-lg border p-4 font-mono text-xs sm:grid-cols-2"
+    data-cidr-out
+  >
+    <div class="flex justify-between gap-3">
+      <dt class="text-base-400">Red</dt>
+      <dd class="text-base-50" data-cidr-network></dd>
+    </div>
+    <div class="flex justify-between gap-3">
+      <dt class="text-base-400">Broadcast</dt>
+      <dd class="text-base-50" data-cidr-broadcast></dd>
+    </div>
+    <div class="flex justify-between gap-3">
+      <dt class="text-base-400">Máscara</dt>
+      <dd class="text-base-50" data-cidr-mask></dd>
+    </div>
+    <div class="flex justify-between gap-3">
+      <dt class="text-base-400">Wildcard</dt>
+      <dd class="text-base-50" data-cidr-wildcard></dd>
+    </div>
+    <div class="flex justify-between gap-3">
+      <dt class="text-base-400">Primer host</dt>
+      <dd class="text-base-50" data-cidr-first></dd>
+    </div>
+    <div class="flex justify-between gap-3">
+      <dt class="text-base-400">Último host</dt>
+      <dd class="text-base-50" data-cidr-last></dd>
+    </div>
+    <div class="flex justify-between gap-3">
+      <dt class="text-base-400">Hosts usables</dt>
+      <dd class="text-term-cyan" data-cidr-hosts></dd>
+    </div>
+    <div class="flex justify-between gap-3">
+      <dt class="text-base-400">Total IPs</dt>
+      <dd class="text-base-50" data-cidr-total></dd>
+    </div>
+  </dl>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-cidr]").forEach((root) => {
+    const input = root.querySelector<HTMLInputElement>("[data-cidr-input]");
+    const calcBtn = root.querySelector<HTMLButtonElement>("[data-cidr-calc]");
+    const err = root.querySelector<HTMLElement>("[data-cidr-error]");
+    const out = root.querySelector<HTMLElement>("[data-cidr-out]");
+    if (!input || !calcBtn || !err || !out) return;
+
+    const set = (sel: string, val: string) => {
+      const el = root.querySelector<HTMLElement>(sel);
+      if (el) el.textContent = val;
+    };
+    const toIp = (n: number) =>
+      [24, 16, 8, 0].map((s) => (n >>> s) & 255).join(".");
+
+    const calc = () => {
+      const raw = input.value.trim();
+      const m = raw.match(
+        /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\/(\d{1,2})$/,
+      );
+      const fail = (msg: string) => {
+        err.textContent = "✕ " + msg;
+        err.classList.remove("hidden");
+        out.classList.add("hidden");
+      };
+      if (!m)
+        return fail("Formato inválido. Usá a.b.c.d/prefijo, ej 10.0.0.0/24");
+
+      const octs = [m[1], m[2], m[3], m[4]].map(Number);
+      const prefix = Number(m[5]);
+      if (octs.some((o) => o > 255)) return fail("Cada octeto va de 0 a 255.");
+      if (prefix > 32) return fail("El prefijo va de 0 a 32.");
+
+      const ip =
+        ((octs[0] << 24) | (octs[1] << 16) | (octs[2] << 8) | octs[3]) >>> 0;
+      const mask = prefix === 0 ? 0 : (0xffffffff << (32 - prefix)) >>> 0;
+      const network = (ip & mask) >>> 0;
+      const broadcast = (network | (~mask >>> 0)) >>> 0;
+      const total = Math.pow(2, 32 - prefix);
+      const usable = prefix >= 31 ? 0 : total - 2;
+      const first = prefix >= 31 ? network : (network + 1) >>> 0;
+      const last = prefix >= 31 ? broadcast : (broadcast - 1) >>> 0;
+
+      set("[data-cidr-network]", `${toIp(network)}/${prefix}`);
+      set("[data-cidr-broadcast]", toIp(broadcast));
+      set("[data-cidr-mask]", toIp(mask));
+      set("[data-cidr-wildcard]", toIp(~mask >>> 0));
+      set("[data-cidr-first]", toIp(first));
+      set("[data-cidr-last]", toIp(last));
+      set("[data-cidr-hosts]", usable.toLocaleString("es-AR"));
+      set("[data-cidr-total]", total.toLocaleString("es-AR"));
+
+      err.classList.add("hidden");
+      out.classList.remove("hidden");
+    };
+
+    calcBtn.addEventListener("click", calc);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") calc();
+    });
+    calc();
+  });
+</script>

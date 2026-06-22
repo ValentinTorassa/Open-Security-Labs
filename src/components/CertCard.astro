@@ -1,6 +1,5 @@
 ---
 import type { Certification } from "../data/certifications";
-import Icon from "./Icon.astro";
 
 interface Props {
   cert: Certification;
@@ -20,16 +19,16 @@ const { cert } = Astro.props;
 
   <div class="flex items-center gap-3">
     <span
-      class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border"
-      style="border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent)"
+      class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border font-mono text-sm font-bold tracking-tight"
+      style="border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent)"
     >
-      <Icon name={cert.icon} size={22} />
+      {cert.badge}
     </span>
     <div class="min-w-0">
       <p class="truncate font-mono text-xs" style="color: var(--accent)">
-        {cert.badge} · {cert.code}
+        {cert.code} · {cert.level}
       </p>
-      <p class="text-base-500 font-mono text-[0.7rem]">{cert.level}</p>
+      <p class="text-base-500 font-mono text-[0.7rem]">{cert.vendor}</p>
     </div>
   </div>
 

@@ -1,0 +1,190 @@
+---
+// Explorador de códigos de estado HTTP. Client-side, sin backend.
+// Filtrá por número o texto y mirá qué significa cada código y cuándo usarlo.
+const uid = "http-" + Math.random().toString(36).slice(2, 9);
+
+const codes: { code: number; name: string; note: string }[] = [
+  {
+    code: 200,
+    name: "OK",
+    note: "Todo salió bien. La respuesta trae el contenido pedido.",
+  },
+  {
+    code: 201,
+    name: "Created",
+    note: "Se creó un recurso. Devolvé su URL en el header Location.",
+  },
+  {
+    code: 204,
+    name: "No Content",
+    note: "Salió bien pero no hay cuerpo. Típico en DELETE o PUT.",
+  },
+  {
+    code: 301,
+    name: "Moved Permanently",
+    note: "El recurso cambió de URL para siempre. El cliente debería cachear.",
+  },
+  {
+    code: 302,
+    name: "Found",
+    note: "Redirección temporal. La URL original sigue siendo la buena.",
+  },
+  {
+    code: 304,
+    name: "Not Modified",
+    note: "No cambió desde tu última visita. Usá tu copia en caché.",
+  },
+  {
+    code: 400,
+    name: "Bad Request",
+    note: "El cliente mandó algo mal formado. Es culpa de quien pide.",
+  },
+  {
+    code: 401,
+    name: "Unauthorized",
+    note: "Falta autenticación: no sabemos quién sos. (Mal nombrado: es 'no autenticado').",
+  },
+  {
+    code: 403,
+    name: "Forbidden",
+    note: "Sabemos quién sos pero no podés. Autorización denegada.",
+  },
+  {
+    code: 404,
+    name: "Not Found",
+    note: "No existe ese recurso (o no querés revelar que existe).",
+  },
+  {
+    code: 405,
+    name: "Method Not Allowed",
+    note: "El recurso existe pero no acepta ese verbo (ej POST donde solo va GET).",
+  },
+  {
+    code: 409,
+    name: "Conflict",
+    note: "Choca con el estado actual. Típico en ediciones concurrentes.",
+  },
+  {
+    code: 418,
+    name: "I'm a teapot",
+    note: "Sí, es real. Broma del RFC 2324. No sirvas café con una tetera.",
+  },
+  {
+    code: 422,
+    name: "Unprocessable Entity",
+    note: "Sintaxis OK pero la validación semántica falló.",
+  },
+  {
+    code: 429,
+    name: "Too Many Requests",
+    note: "Frená. Estás pegándole de más (rate limiting).",
+  },
+  {
+    code: 500,
+    name: "Internal Server Error",
+    note: "Reventó algo del lado del servidor. Es culpa tuya, no del cliente.",
+  },
+  {
+    code: 502,
+    name: "Bad Gateway",
+    note: "Un proxy/gateway recibió basura del upstream.",
+  },
+  {
+    code: 503,
+    name: "Service Unavailable",
+    note: "Caído o saturado. Probá más tarde (mandá Retry-After).",
+  },
+  {
+    code: 504,
+    name: "Gateway Timeout",
+    note: "El upstream no respondió a tiempo.",
+  },
+];
+
+// Clase literal completa para que Tailwind no la purgue.
+const colorOf = (c: number) =>
+  c < 200
+    ? "text-term-blue"
+    : c < 300
+      ? "text-term-green"
+      : c < 400
+        ? "text-term-cyan"
+        : c < 500
+          ? "text-term-amber"
+          : "text-term-red";
+---
+
+<section
+  class="not-prose border-term-blue/30 bg-term-blue/5 my-8 rounded-xl border p-5"
+  data-http
+  id={uid}
+>
+  <h3
+    class="text-term-blue flex items-center gap-2 font-mono text-sm font-semibold"
+  >
+    <span aria-hidden="true">▸</span> Explorador de códigos HTTP
+  </h3>
+  <p class="text-base-400 mt-1 text-xs">
+    Buscá por número (<code class="text-base-300">403</code>) o por nombre (<code
+      class="text-base-300">forbidden</code
+    >) y entendé cuándo se usa cada uno.
+  </p>
+
+  <input
+    type="search"
+    inputmode="search"
+    placeholder="buscar código o nombre…"
+    data-http-search
+    aria-label="Buscar código HTTP"
+    class="border-base-600 bg-base-850 text-base-50 placeholder:text-base-500 focus:border-term-blue mt-4 w-full max-w-xs rounded-md border px-3 py-2 font-mono text-sm outline-none"
+  />
+
+  <ul class="mt-4 space-y-1.5" data-http-list>
+    {
+      codes.map((c) => (
+        <li
+          data-http-item
+          data-haystack={`${c.code} ${c.name} ${c.note}`.toLowerCase()}
+          class="border-base-700 bg-base-900 flex items-start gap-3 rounded-lg border p-3"
+        >
+          <span class={`${colorOf(c.code)} font-mono text-base font-bold`}>
+            {c.code}
+          </span>
+          <div class="min-w-0">
+            <span class="text-base-100 font-mono text-sm">{c.name}</span>
+            <p class="text-base-400 mt-0.5 text-xs">{c.note}</p>
+          </div>
+        </li>
+      ))
+    }
+  </ul>
+
+  <p
+    class="text-base-400 mt-3 hidden text-center font-mono text-xs"
+    data-http-empty
+  >
+    Ningún código coincide.
+  </p>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-http]").forEach((root) => {
+    const search = root.querySelector<HTMLInputElement>("[data-http-search]");
+    const items = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-http-item]"),
+    );
+    const empty = root.querySelector<HTMLElement>("[data-http-empty]");
+    if (!search) return;
+
+    search.addEventListener("input", () => {
+      const q = search.value.trim().toLowerCase();
+      let visible = 0;
+      items.forEach((it) => {
+        const match = q === "" || (it.dataset.haystack ?? "").includes(q);
+        it.classList.toggle("hidden", !match);
+        if (match) visible += 1;
+      });
+      empty?.classList.toggle("hidden", visible !== 0);
+    });
+  });
+</script>
