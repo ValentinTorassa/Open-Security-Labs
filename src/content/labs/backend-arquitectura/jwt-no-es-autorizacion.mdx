@@ -31,6 +31,7 @@ tags:
 
 import Callout from "../../../components/Callout.astro";
 import TerminalBlock from "../../../components/TerminalBlock.astro";
+import JwtDecoder from "../../../components/gadgets/JwtDecoder.astro";
 
 Un equipo agrega JWT, mete un middleware de login y da la seguridad por cerrada. El problema es que JWT resuelve **una** pregunta —¿quién sos?— y la gente cree que resolvió **otra** —¿esto lo podés hacer?—. No es lo mismo, y la confusión tiene nombre: IDOR.
 
@@ -63,6 +64,10 @@ Vas a ver algo así:
   "exp": 1735689600
 }
 ```
+
+Pegá un JWT (usá uno de juguete, nunca uno real de producción) y mirá cómo se separa en header, payload y firma. Todo se decodifica en tu navegador: nada se envía a ningún lado.
+
+<JwtDecoder />
 
 <Callout type="error">
   El payload está **codificado, no cifrado**. Cualquiera con el token puede

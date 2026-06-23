@@ -1,5 +1,10 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { contributors, avatarUrl, profileUrl } from "../data/contributors";
+
+// Más commits primero.
+const acks = [...contributors].sort((a, b) => b.commits - a.commits);
+const totalCommits = acks.reduce((n, c) => n + c.commits, 0);
 ---
 
 <BaseLayout
@@ -79,7 +84,14 @@ nextLabs:
   - "redes-internet/una-request-no-es-magia"
 tags:
   - "linux"
+contributor: "TuUsuarioDeGitHub"  # opcional; default: el mantenedor
 ---`}</code></pre>
+      <p>
+        El campo <code>contributor</code> es tu handle de GitHub. Aparece con tu nombre
+        y tu avatar en la card del lab y en los agradecimientos de abajo. Agregate
+        a <code>src/data/contributors.ts</code> con tu handle, nombre y rol; el avatar
+        se toma de <code>github.com/&lt;handle&gt;.png</code>.
+      </p>
 
       <h2>Componentes disponibles</h2>
       <p>
@@ -113,6 +125,54 @@ tags:
         frontmatter; no hace falta agregarlos a mano en el cuerpo.
       </p>
     </div>
+
+    <section class="mt-16">
+      <p class="rule-label">Agradecimientos</p>
+      <h2 class="text-base-50 mt-3 text-2xl font-bold">
+        Gente que construyó esto
+      </h2>
+      <p class="text-base-300 mt-3 leading-relaxed">
+        VT Security Labs existe gracias a quienes escriben labs, corrigen
+        errores y mejoran el material. {acks.length}
+        {acks.length === 1 ? "persona" : "personas"} y {totalCommits} commits hasta
+        hoy. Gracias 🙌
+      </p>
+
+      <ul class="mt-8 grid gap-4 sm:grid-cols-2">
+        {
+          acks.map((c) => (
+            <li>
+              <a
+                href={profileUrl(c.github)}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="card group flex items-center gap-4 p-4 hover:-translate-y-0.5"
+              >
+                <img
+                  src={avatarUrl(c.github, 96)}
+                  alt={`Avatar de ${c.name}`}
+                  width="48"
+                  height="48"
+                  loading="lazy"
+                  decoding="async"
+                  class="border-base-700 h-12 w-12 flex-none rounded-full border bg-black"
+                />
+                <div class="min-w-0">
+                  <p class="text-base-50 group-hover:text-term-green truncate font-semibold">
+                    {c.name}
+                  </p>
+                  <p class="text-base-400 truncate text-sm">{c.role}</p>
+                  <p class="text-base-500 mt-1 font-mono text-xs">
+                    @{c.github} · {c.commits}{" "}
+                    {c.commits === 1 ? "commit" : "commits"}
+                  </p>
+                </div>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
 
     <div
       class="border-base-700 bg-base-850/40 text-base-300 mt-10 rounded-xl border p-6 text-sm"

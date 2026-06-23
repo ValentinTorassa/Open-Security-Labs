@@ -1,6 +1,7 @@
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
 import { PATH_SLUGS } from "./data/paths";
+import { DEFAULT_CONTRIBUTOR } from "./data/contributors";
 
 const labs = defineCollection({
   loader: glob({ pattern: "**/*.mdx", base: "./src/content/labs" }),
@@ -22,6 +23,8 @@ const labs = defineCollection({
     // IDs de otros labs sugeridos como continuación (ej: "redes-internet/una-request-no-es-magia").
     nextLabs: z.array(z.string()).default([]),
     tags: z.array(z.string()).default([]),
+    // Handle de GitHub de quien aportó el lab (ver src/data/contributors.ts).
+    contributor: z.string().default(DEFAULT_CONTRIBUTOR),
     // Orden dentro de la ruta (menor primero). Para secuenciar labs quirúrgicos.
     order: z.number().int().default(100),
     draft: z.boolean().default(false),

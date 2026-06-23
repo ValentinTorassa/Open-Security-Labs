@@ -29,6 +29,7 @@ import Callout from "../../../components/Callout.astro";
 import TerminalBlock from "../../../components/TerminalBlock.astro";
 import Mermaid from "../../../components/Mermaid.astro";
 import Quiz from "../../../components/Quiz.astro";
+import HttpStatusExplorer from "../../../components/gadgets/HttpStatusExplorer.astro";
 
 Cuando algo falla por HTTP, la primera bifurcación te ahorra horas: **¿el problema está en lo que mandaste, o en el servidor que respondió?** El código de estado ya te lo dice.
 
@@ -69,6 +70,12 @@ Cuando algo falla por HTTP, la primera bifurcación te ahorra horas: **¿el prob
   (autorización). Si tratás un 403 como un problema de login, vas a estar
   renovando tokens que ya son válidos.
 </Callout>
+
+## Buscá cualquier código
+
+¿No te acordás qué era un 418 o un 451? Buscalo: filtrá por familia (4xx, 5xx…) y leé qué significa cada uno y de qué lado está la culpa.
+
+<HttpStatusExplorer />
 
 ## Comprobalo en la terminal
 

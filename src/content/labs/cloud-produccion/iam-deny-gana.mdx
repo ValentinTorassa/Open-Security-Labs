@@ -32,6 +32,7 @@ tags:
 
 import Callout from "../../../components/Callout.astro";
 import TerminalBlock from "../../../components/TerminalBlock.astro";
+import IamPolicyAnalyzer from "../../../components/gadgets/IamPolicyAnalyzer.astro";
 
 En la nube no hay un firewall que diga "este pibe puede entrar". Hay una **policy**: un JSON que dice, para cada identidad, qué acciones puede hacer sobre qué recursos. Si no sabés leer ese JSON, no sabés qué puede hacer tu cuenta. Y lo que _creés_ que permite casi nunca es lo que permite.
 
@@ -118,7 +119,11 @@ No puede escribir, no puede borrar, no puede tocar otros buckets ni otros servic
 
 ## Probalo sin adivinar
 
-AWS tiene un simulador: le pasás una identidad y una acción, y te dice si la policy la permite. Mejor que deducirlo de memoria.
+Antes de tocar AWS, leé la policy con el evaluador de abajo: pegás el JSON, elegís una acción y un recurso, y te dice si el resultado es `Allow`, `Deny` o el default implícito. Probá con la policy peligrosa y con la de mínimo privilegio.
+
+<IamPolicyAnalyzer />
+
+Y cuando estés en una cuenta real, AWS tiene un simulador oficial: le pasás una identidad y una acción, y te dice si la policy la permite. Mejor que deducirlo de memoria.
 
 <TerminalBlock title="vt@labs:~">
 
