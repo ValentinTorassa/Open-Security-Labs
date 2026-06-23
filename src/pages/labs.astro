@@ -73,8 +73,9 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
           class="text-base-50 block truncate text-sm font-semibold"
           data-resume-title></span>
       </span>
-      <span class="text-term-green shrink-0 font-mono text-sm" aria-hidden="true"
-        >abrir →</span
+      <span
+        class="text-term-green shrink-0 font-mono text-sm"
+        aria-hidden="true">abrir →</span
       >
     </a>
 
@@ -155,10 +156,7 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
       </div>
     </div>
 
-    <div
-      class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-      data-lab-grid
-    >
+    <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-lab-grid>
       {sorted.map((lab) => <LabCard lab={lab} />)}
     </div>
 
@@ -224,8 +222,7 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
       const matchPath = !filters.path || card.dataset.path === filters.path;
       const matchLevel = !filters.level || card.dataset.level === filters.level;
       const matchState =
-        !filters.state ||
-        (filters.state === "done" ? done : !done);
+        !filters.state || (filters.state === "done" ? done : !done);
 
       const show = matchQ && matchPath && matchLevel && matchState;
       card.classList.toggle("hidden", !show);
@@ -256,7 +253,8 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
     if (resume && resumeTitle) {
       if (done > 0 && next) {
         const el = next as HTMLElement;
-        const title = el.querySelector("h3")?.textContent?.trim() ?? "Próximo lab";
+        const title =
+          el.querySelector("h3")?.textContent?.trim() ?? "Próximo lab";
         resume.href = (el as HTMLAnchorElement).href;
         resumeTitle.textContent = title;
         resume.classList.remove("hidden");

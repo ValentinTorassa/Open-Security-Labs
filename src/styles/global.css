@@ -267,6 +267,38 @@
       color-mix(in srgb, var(--color-term-green) 30%, transparent);
   }
 
+  /* Insignias: estado bloqueado vs ganado (lo togglea el script de /perfil). */
+  .badge-card {
+    transition:
+      border-color 0.2s ease,
+      transform 0.2s ease;
+  }
+  .badge-card[data-earned="false"] .badge-medal {
+    filter: grayscale(1);
+    opacity: 0.4;
+  }
+  .badge-card[data-earned="false"] .badge-lock {
+    display: flex;
+  }
+  .badge-card[data-earned="false"] .badge-desc {
+    display: none;
+  }
+  .badge-card[data-earned="true"] .badge-hint {
+    display: none;
+  }
+  .badge-card[data-earned="true"] {
+    border-color: color-mix(in srgb, var(--badge) 40%, transparent);
+    transform: translateY(-2px);
+  }
+  .badge-card[data-earned="true"] .badge-name {
+    color: var(--color-base-50);
+  }
+  .badge-card[data-earned="true"] .badge-medal {
+    filter: drop-shadow(
+      0 0 14px color-mix(in srgb, var(--badge) 45%, transparent)
+    );
+  }
+
   /* Card base reutilizable */
   .card {
     background-color: color-mix(

@@ -3,6 +3,7 @@ import type { GetStaticPaths } from "astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Exam from "../../components/Exam.astro";
 import Icon from "../../components/Icon.astro";
+import CredentialBadge from "../../components/CredentialBadge.astro";
 import { certifications } from "../../data/certifications";
 import { getPath } from "../../data/paths";
 
@@ -17,6 +18,31 @@ const { cert } = Astro.props;
 const relatedPaths = cert.relatedPaths
   .map((slug) => getPath(slug))
   .filter((p): p is NonNullable<typeof p> => Boolean(p));
+
+const examFacts = [
+  {
+    icon: "list-checks" as const,
+    label: "Preguntas",
+    value: `${cert.meta.questions}`,
+  },
+  {
+    icon: "clock" as const,
+    label: "Duración",
+    value: `${cert.meta.durationMin} min`,
+  },
+  {
+    icon: "gauge" as const,
+    label: "Aprobás con",
+    value: cert.meta.passingScore,
+  },
+  { icon: "banknote" as const, label: "Costo aprox.", value: cert.meta.cost },
+  {
+    icon: "calendar" as const,
+    label: "Validez",
+    value: `${cert.meta.validityYears} años`,
+  },
+  { icon: "file-text" as const, label: "Formato", value: cert.meta.format },
+];
 ---
 
 <BaseLayout title={cert.name} description={cert.summary} width="default">
@@ -33,12 +59,7 @@ const relatedPaths = cert.relatedPaths
     <header
       class="border-base-800 flex flex-wrap items-start gap-4 border-b pb-8"
     >
-      <span
-        class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border"
-        style="border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent)"
-      >
-        <Icon name={cert.icon} size={28} />
-      </span>
+      <CredentialBadge icon={cert.icon} accent={cert.accent} size={64} />
       <div class="min-w-0 flex-1">
         <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
           <span
@@ -57,6 +78,50 @@ const relatedPaths = cert.relatedPaths
         <p class="text-base-300 mt-3 text-lg leading-relaxed">{cert.summary}</p>
       </div>
     </header>
+
+    <!-- Datos del examen -->
+    <section class="mt-10">
+      <h2 class="text-base-50 text-xl font-semibold">Datos del examen</h2>
+      <p class="text-base-400 mt-1 text-sm">
+        Valores aproximados. Confirmá siempre en la guía oficial vigente.
+      </p>
+      <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {
+          examFacts.map((f) => (
+            <div class="border-base-800 bg-base-850/30 rounded-lg border p-4">
+              <span
+                class="flex items-center gap-2 font-mono text-xs"
+                style="color: var(--accent)"
+              >
+                <Icon name={f.icon} size={15} />
+                {f.label}
+              </span>
+              <p class="text-base-100 mt-2 text-sm font-semibold">{f.value}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- Qué vas a poder hacer -->
+    <section class="mt-10">
+      <h2 class="text-base-50 text-xl font-semibold">Qué vas a poder hacer</h2>
+      <p class="text-base-400 mt-1 text-sm">
+        Lo que valida la certificación una vez que la tenés.
+      </p>
+      <ul class="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {
+          cert.outcomes.map((o) => (
+            <li class="text-base-200 flex items-start gap-2.5 text-sm">
+              <span class="mt-0.5 shrink-0" style="color: var(--accent)">
+                <Icon name="check" size={16} />
+              </span>
+              {o}
+            </li>
+          ))
+        }
+      </ul>
+    </section>
 
     <!-- Dominios -->
     <section class="mt-10">
