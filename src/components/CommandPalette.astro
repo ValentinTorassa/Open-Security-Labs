@@ -135,7 +135,8 @@ const items = [...pageItems, ...pathItems, ...labItems];
       <span><kbd class="text-base-300">↑↓</kbd> navegar</span>
       <span><kbd class="text-base-300">↵</kbd> abrir</span>
       <span class="ml-auto"
-        ><kbd class="text-base-300">⌘K</kbd> / <kbd class="text-base-300">/</kbd
+        ><kbd class="text-base-300" data-kbd-shortcut>Ctrl K</kbd> / <kbd
+          class="text-base-300">/</kbd
         ></span
       >
     </div>
@@ -157,6 +158,18 @@ const items = [...pageItems, ...pathItems, ...labItems];
     kind: string;
     keywords: string;
   };
+
+  // Etiqueta del atajo según el sistema: ⌘ en Mac, Ctrl en Linux/Windows.
+  const isMac = /mac|iphone|ipad|ipod/i.test(
+    navigator.platform || navigator.userAgent,
+  );
+  const modLabel = isMac ? "⌘K" : "Ctrl K";
+  document.querySelectorAll("[data-kbd-shortcut]").forEach((el) => {
+    el.textContent = modLabel;
+  });
+  document
+    .querySelector("[data-cmdk-open]")
+    ?.setAttribute("aria-label", `Buscar (${modLabel})`);
 
   const root = document.querySelector<HTMLElement>("[data-cmdk-root]");
   const input = document.querySelector<HTMLInputElement>("[data-cmdk-input]");
