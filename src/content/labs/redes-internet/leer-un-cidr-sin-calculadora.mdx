@@ -1,0 +1,91 @@
+---
+title: "Leer un /24 sin calculadora"
+description: "Lab quirúrgico para entender la notación CIDR: cuántas IPs entran en un /24, /16 o /30, y por qué el prefijo es la clave. Con calculadora interactiva."
+path: "redes-internet"
+order: 3
+level: "beginner"
+estimatedMinutes: 15
+prerequisites:
+  - "Saber qué es una dirección IPv4 (los cuatro octetos a.b.c.d)"
+objectives:
+  - "Leer el prefijo /n y saber cuántas direcciones cubre"
+  - "Distinguir red, broadcast y rango usable de un bloque"
+  - "Estimar el tamaño de un /24, /16 y /30 de memoria"
+evidence:
+  - "Captura de la calculadora con tres bloques distintos resueltos"
+  - "Writeup de 3 líneas: un rango de tu red local y cuántos hosts admite"
+commands:
+  - "ip -br addr"
+  - "ipcalc 10.0.0.0/24"
+challenge: "Mirá tu IP local con ip -br addr. Anotá el prefijo (/n) y, sin calculadora, decí cuántos hosts admite tu subred. Después verificalo con la calculadora de abajo."
+nextLabs:
+  - "cloud-produccion/iam-deny-gana"
+tags:
+  - "redes"
+  - "cidr"
+  - "subredes"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import CidrCalculator from "../../../components/gadgets/CidrCalculator.astro";
+
+Un `/24` no es una palabra mágica: es un número que te dice **cuántas direcciones IP entran en un bloque**. Este lab hace una sola cosa: que leas el prefijo CIDR y sepas el tamaño sin frenar a calcular.
+
+## La regla, en una línea
+
+Una IPv4 tiene 32 bits. El prefijo `/n` dice cuántos de esos bits son **fijos** (la parte de red). Los bits que sobran son para **hosts**.
+
+```text
+direcciones del bloque = 2 ^ (32 - n)
+
+/24  →  2 ^ 8  = 256 direcciones
+/16  →  2 ^ 16 = 65.536 direcciones
+/30  →  2 ^ 2  = 4 direcciones
+```
+
+<Callout type="concepto">
+  Cuanto **más grande** el número del prefijo, **más chico** el bloque. Un `/30`
+  tiene 4 direcciones; un `/24`, 256. Es contraintuitivo hasta que lo pensás en
+  bits: más bits fijos de red = menos bits libres para hosts.
+</Callout>
+
+## Red, broadcast y lo que podés usar
+
+De cada bloque, dos direcciones no son para hosts:
+
+- La **primera** es la dirección de red (identifica al bloque).
+- La **última** es el broadcast (le habla a todos a la vez).
+
+Por eso un `/24` con 256 direcciones tiene **254 hosts usables**, no 256.
+
+<Callout type="error">
+  El error clásico: prometer 256 máquinas en un `/24`. Son 254. En un `/30` (4
+  direcciones) quedan solo **2 hosts usables** — justo lo que necesitás para un
+  enlace punto a punto entre dos routers.
+</Callout>
+
+## Probalo
+
+Cambiá el prefijo y mirá cómo se reparte el espacio: red, broadcast, rango usable y cantidad de hosts.
+
+<CidrCalculator />
+
+## En la terminal
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# Tu IP y prefijo, en una línea por interfaz
+ip -br addr
+
+# Desglose de un bloque (si tenés ipcalc instalado)
+ipcalc 10.0.0.0/24
+```
+
+</TerminalBlock>
+
+<Callout type="reto">
+  Sin tocar la calculadora: ¿cuántos hosts usables tiene un `/26`? Pista: 32 − 26
+  = 6 bits de host. Resolvelo, y recién después verificá arriba.
+</Callout>

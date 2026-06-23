@@ -44,26 +44,90 @@ const isActive = (href: string) =>
       </span>
     </a>
 
-    <nav
-      class="-mx-2 flex items-center gap-0.5 overflow-x-auto px-2 sm:gap-1"
-      aria-label="Principal"
-    >
-      {
-        links.map((l) => (
-          <a
-            href={l.href}
-            class:list={[
-              "shrink-0 rounded-md px-2 py-1.5 font-mono text-sm transition-colors sm:px-3",
-              isActive(l.href)
-                ? "text-term-green"
-                : "text-base-300 hover:text-base-50",
-            ]}
-            aria-current={isActive(l.href) ? "page" : undefined}
-          >
-            {l.label}
-          </a>
-        ))
-      }
-    </nav>
+    <div class="flex min-w-0 items-center gap-1">
+      <nav
+        class="-mx-2 flex items-center gap-0.5 overflow-x-auto px-2 sm:gap-1"
+        aria-label="Principal"
+      >
+        {
+          links.map((l) => (
+            <a
+              href={l.href}
+              class:list={[
+                "shrink-0 rounded-md px-2 py-1.5 font-mono text-sm transition-colors sm:px-3",
+                isActive(l.href)
+                  ? "text-term-green"
+                  : "text-base-300 hover:text-base-50",
+              ]}
+              aria-current={isActive(l.href) ? "page" : undefined}
+            >
+              {l.label}
+            </a>
+          ))
+        }
+      </nav>
+
+      <button
+        type="button"
+        data-cmdk-open
+        aria-label="Buscar (Ctrl K)"
+        class="border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex shrink-0 items-center gap-2 rounded-md border px-2 py-1.5 font-mono text-sm transition-colors"
+      >
+        <span aria-hidden="true">/</span>
+        <kbd class="hidden text-[0.65rem] sm:inline">⌘K</kbd>
+      </button>
+
+      <button
+        type="button"
+        data-theme-toggle
+        aria-label="Cambiar tema claro/oscuro"
+        class="theme-toggle border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex shrink-0 items-center rounded-md border p-1.5 transition-colors"
+      >
+        <svg
+          class="i-sun h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="4"></circle>
+          <path
+            d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"
+          ></path>
+        </svg>
+        <svg
+          class="i-moon h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+        </svg>
+      </button>
+    </div>
   </div>
 </header>
+
+<script>
+  const btn = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
+  btn?.addEventListener("click", () => {
+    const light = document.documentElement.dataset.theme === "light";
+    if (light) {
+      delete document.documentElement.dataset.theme;
+      try {
+        localStorage.setItem("vtsl:theme", "dark");
+      } catch {}
+    } else {
+      document.documentElement.dataset.theme = "light";
+      try {
+        localStorage.setItem("vtsl:theme", "light");
+      } catch {}
+    }
+  });
+</script>

@@ -19,6 +19,16 @@ const sorted = [...labs].sort((a, b) => {
 });
 
 const totalMin = labs.reduce((acc, l) => acc + l.data.estimatedMinutes, 0);
+
+const levels = [
+  { value: "beginner", label: "Inicial" },
+  { value: "intermediate", label: "Intermedio" },
+  { value: "advanced", label: "Avanzado" },
+];
+
+const chip =
+  "shrink-0 rounded-full border px-3 py-1 font-mono text-xs transition-colors";
+const chipOff = "border-base-700 text-base-400 hover:text-base-100";
 ---
 
 <BaseLayout
@@ -47,6 +57,28 @@ const totalMin = labs.reduce((acc, l) => acc + l.data.estimatedMinutes, 0);
       >
     </div>
 
+    <!-- Banner "seguí con": próximo lab pendiente según tu progreso. -->
+    <a
+      data-resume
+      href="#"
+      class="card mt-8 hidden items-center gap-4 p-4 hover:-translate-y-0.5"
+    >
+      <span
+        class="bg-term-green/10 text-term-green grid h-10 w-10 shrink-0 place-items-center rounded-full font-mono"
+        aria-hidden="true">→</span
+      >
+      <span class="min-w-0 flex-1">
+        <span class="text-base-400 block font-mono text-xs">Seguí con</span>
+        <span
+          class="text-base-50 block truncate text-sm font-semibold"
+          data-resume-title></span>
+      </span>
+      <span class="text-term-green shrink-0 font-mono text-sm" aria-hidden="true"
+        >abrir →</span
+      >
+    </a>
+
+    <!-- Búsqueda -->
     <div class="mt-8">
       <label for="lab-search" class="sr-only">Buscar labs</label>
       <div class="relative max-w-md">
@@ -65,7 +97,68 @@ const totalMin = labs.reduce((acc, l) => acc + l.data.estimatedMinutes, 0);
       </div>
     </div>
 
-    <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <!-- Filtros -->
+    <div class="mt-5 space-y-3">
+      <div class="flex flex-wrap items-center gap-2" data-filter-group="path">
+        <span class="text-base-500 mr-1 font-mono text-[0.7rem]">Ruta:</span>
+        <button class:list={[chip, chipOff]} data-filter="path" data-value="">
+          Todas
+        </button>
+        {
+          paths.map((p) => (
+            <button
+              class:list={[chip, chipOff]}
+              data-filter="path"
+              data-value={p.slug}
+            >
+              {p.short}
+            </button>
+          ))
+        }
+      </div>
+      <div class="flex flex-wrap items-center gap-2" data-filter-group="level">
+        <span class="text-base-500 mr-1 font-mono text-[0.7rem]">Nivel:</span>
+        <button class:list={[chip, chipOff]} data-filter="level" data-value="">
+          Todos
+        </button>
+        {
+          levels.map((l) => (
+            <button
+              class:list={[chip, chipOff]}
+              data-filter="level"
+              data-value={l.value}
+            >
+              {l.label}
+            </button>
+          ))
+        }
+      </div>
+      <div class="flex flex-wrap items-center gap-2" data-filter-group="state">
+        <span class="text-base-500 mr-1 font-mono text-[0.7rem]">Estado:</span>
+        <button class:list={[chip, chipOff]} data-filter="state" data-value="">
+          Todos
+        </button>
+        <button
+          class:list={[chip, chipOff]}
+          data-filter="state"
+          data-value="pending"
+        >
+          Pendientes
+        </button>
+        <button
+          class:list={[chip, chipOff]}
+          data-filter="state"
+          data-value="done"
+        >
+          Hechos
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+      data-lab-grid
+    >
       {sorted.map((lab) => <LabCard lab={lab} />)}
     </div>
 
@@ -85,48 +178,111 @@ const totalMin = labs.reduce((acc, l) => acc + l.data.estimatedMinutes, 0);
     document.querySelectorAll<HTMLElement>("[data-lab-card]"),
   );
 
-  // Progreso guardado en el navegador (fuente única: scripts/progress).
   const progress = document.querySelector<HTMLElement>("[data-progress]");
   const progressCount = document.querySelector<HTMLElement>(
     "[data-progress-count]",
   );
-
-  function renderProgress() {
-    let done = 0;
-    cards.forEach((card) => {
-      const id = card.dataset.labId ?? "";
-      const ok = isLabDone(id);
-      if (ok) done += 1;
-      const badge = card.querySelector("[data-done-badge]");
-      badge?.classList.toggle("hidden", !ok);
-      badge?.classList.toggle("inline-flex", ok);
-    });
-    if (progress && progressCount) {
-      progressCount.textContent = String(done);
-      progress.classList.toggle("hidden", done === 0);
-    }
-  }
-
-  renderProgress();
-  onProgress(renderProgress);
-
-  // Búsqueda client-side: filtra por título, ruta y tags.
+  const resume = document.querySelector<HTMLAnchorElement>("[data-resume]");
+  const resumeTitle = document.querySelector<HTMLElement>(
+    "[data-resume-title]",
+  );
   const input = document.querySelector<HTMLInputElement>("[data-lab-search]");
   const noResults = document.querySelector<HTMLElement>("[data-no-results]");
-  const filter = () => {
+  const chips = Array.from(
+    document.querySelectorAll<HTMLButtonElement>("[data-filter]"),
+  );
+
+  const ON = ["border-term-green", "text-term-green"];
+  const OFF = ["border-base-700", "text-base-400"];
+
+  const filters = { path: "", level: "", state: "" };
+
+  function setChipStyles() {
+    chips.forEach((c) => {
+      const dim = c.dataset.filter as keyof typeof filters;
+      const on = filters[dim] === (c.dataset.value ?? "");
+      c.classList.toggle(ON[0], on);
+      c.classList.toggle(ON[1], on);
+      c.classList.toggle(OFF[0], !on);
+      c.classList.toggle(OFF[1], !on);
+    });
+  }
+
+  function apply() {
     const q = (input?.value ?? "").trim().toLowerCase();
     let visible = 0;
     cards.forEach((card) => {
+      const id = card.dataset.labId ?? "";
+      const done = isLabDone(id);
       const haystack = [
         card.dataset.title ?? "",
         card.dataset.path ?? "",
         card.dataset.tags ?? "",
       ].join(" ");
-      const match = q === "" || haystack.includes(q);
-      card.classList.toggle("hidden", !match);
-      if (match) visible += 1;
+
+      const matchQ = q === "" || haystack.includes(q);
+      const matchPath = !filters.path || card.dataset.path === filters.path;
+      const matchLevel = !filters.level || card.dataset.level === filters.level;
+      const matchState =
+        !filters.state ||
+        (filters.state === "done" ? done : !done);
+
+      const show = matchQ && matchPath && matchLevel && matchState;
+      card.classList.toggle("hidden", !show);
+      if (show) visible += 1;
     });
     noResults?.classList.toggle("hidden", visible !== 0);
-  };
-  input?.addEventListener("input", filter);
+  }
+
+  function renderProgress() {
+    let done = 0;
+    let next: HTMLElement | null = null;
+    cards.forEach((card) => {
+      const id = card.dataset.labId ?? "";
+      const ok = isLabDone(id);
+      if (ok) done += 1;
+      else if (!next) next = card;
+      const badge = card.querySelector("[data-done-badge]");
+      badge?.classList.toggle("hidden", !ok);
+      badge?.classList.toggle("inline-flex", ok);
+    });
+
+    if (progress && progressCount) {
+      progressCount.textContent = String(done);
+      progress.classList.toggle("hidden", done === 0);
+    }
+
+    // Banner "seguí con" solo si ya empezó y queda algo pendiente.
+    if (resume && resumeTitle) {
+      if (done > 0 && next) {
+        const el = next as HTMLElement;
+        const title = el.querySelector("h3")?.textContent?.trim() ?? "Próximo lab";
+        resume.href = (el as HTMLAnchorElement).href;
+        resumeTitle.textContent = title;
+        resume.classList.remove("hidden");
+        resume.classList.add("flex");
+      } else {
+        resume.classList.add("hidden");
+        resume.classList.remove("flex");
+      }
+    }
+  }
+
+  chips.forEach((c) =>
+    c.addEventListener("click", () => {
+      const dim = c.dataset.filter as keyof typeof filters;
+      filters[dim] = c.dataset.value ?? "";
+      setChipStyles();
+      apply();
+    }),
+  );
+  input?.addEventListener("input", apply);
+
+  setChipStyles();
+  renderProgress();
+  apply();
+  onProgress(() => {
+    renderProgress();
+    apply();
+  });
 </script>

@@ -69,6 +69,36 @@
   }
 }
 
+/* Tema claro: invierte la escala base y oscurece los acentos para contraste.
+   Va sin @layer (unlayered) para ganarle a las vars de @theme en todos los
+   consumidores, sin importar la capa donde se usen.
+   Se activa con data-theme="light" en <html> (ver script en BaseLayout). */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --color-base-950: #ffffff;
+  --color-base-900: #f6f8fa;
+  --color-base-850: #eef1f4;
+  --color-base-800: #e6eaee;
+  --color-base-700: #d6dde3;
+  --color-base-600: #b4bfc8;
+  --color-base-500: #8a949e;
+  --color-base-400: #5d6b75;
+  --color-base-300: #424d56;
+  --color-base-200: #2b343b;
+  --color-base-100: #1a2128;
+  --color-base-50: #0b0f11;
+
+  --color-term-green: #1a7f37;
+  --color-term-cyan: #0e7490;
+  --color-term-amber: #9a6700;
+  --color-term-red: #cf222e;
+  --color-term-violet: #8250df;
+  --color-term-blue: #0969da;
+
+  --color-accent: #1a7f37;
+}
+
 @layer base {
   :root {
     color-scheme: dark;
@@ -218,6 +248,17 @@
       var(--color-term-green) 6%,
       transparent
     );
+  }
+
+  /* Toggle de tema: muestra el ícono del tema al que se va a cambiar. */
+  .theme-toggle .i-moon {
+    display: none;
+  }
+  :root[data-theme="light"] .theme-toggle .i-sun {
+    display: none;
+  }
+  :root[data-theme="light"] .theme-toggle .i-moon {
+    display: inline;
   }
 
   /* Resplandor verde reutilizable (chips, avatares "live", etc.). */
