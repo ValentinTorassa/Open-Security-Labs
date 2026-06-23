@@ -277,8 +277,18 @@
     filter: grayscale(1);
     opacity: 0.4;
   }
+  /* Candado: oculto por defecto, visible solo en estado bloqueado. Va en la
+     capa components (no utilidad) para que la regla más específica gane. */
+  .badge-lock {
+    display: none;
+  }
   .badge-card[data-earned="false"] .badge-lock {
     display: flex;
+  }
+  /* Nombre: el color base vive acá (no como utilidad text-base-400) para que
+     el override de estado ganado pueda pisarlo dentro de la misma capa. */
+  .badge-name {
+    color: var(--color-base-400);
   }
   .badge-card[data-earned="false"] .badge-desc {
     display: none;
