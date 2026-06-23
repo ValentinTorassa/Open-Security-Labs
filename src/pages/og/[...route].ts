@@ -8,7 +8,11 @@ const labs = await getCollection("labs", ({ data }) => !data.draft);
 const pages = Object.fromEntries(
   labs.map((lab) => [
     lab.id,
-    { title: lab.data.title, description: lab.data.description, path: lab.data.path },
+    {
+      title: lab.data.title,
+      description: lab.data.description,
+      path: lab.data.path,
+    },
   ]),
 );
 
@@ -33,7 +37,12 @@ const route = await OGImageRoute({
       border: { color: hexToRgb(accent), width: 8, side: "block-end" },
       padding: 70,
       font: {
-        title: { color: [241, 245, 246], size: 64, weight: "Bold", families: ["JetBrains Mono"] },
+        title: {
+          color: [241, 245, 246],
+          size: 64,
+          weight: "Bold",
+          families: ["JetBrains Mono"],
+        },
         description: { color: [138, 154, 163], size: 32, families: ["Inter"] },
       },
       fonts: [

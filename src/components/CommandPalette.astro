@@ -96,13 +96,17 @@ const items = [...pageItems, ...pathItems, ...labItems];
   aria-modal="true"
   aria-label="Buscar en el sitio"
 >
-  <div data-cmdk-backdrop class="bg-base-950/70 absolute inset-0 backdrop-blur-sm">
+  <div
+    data-cmdk-backdrop
+    class="bg-base-950/70 absolute inset-0 backdrop-blur-sm"
+  >
   </div>
   <div
     class="border-base-700 bg-base-900 relative w-full max-w-xl overflow-hidden rounded-xl border shadow-2xl"
   >
     <div class="border-base-800 flex items-center gap-2 border-b px-4">
-      <span class="text-term-green font-mono text-sm" aria-hidden="true">/</span>
+      <span class="text-term-green font-mono text-sm" aria-hidden="true">/</span
+      >
       <input
         data-cmdk-input
         type="text"
@@ -117,11 +121,7 @@ const items = [...pageItems, ...pathItems, ...labItems];
         >esc</kbd
       >
     </div>
-    <ul
-      data-cmdk-list
-      class="max-h-[50vh] overflow-y-auto p-2"
-      role="listbox"
-    >
+    <ul data-cmdk-list class="max-h-[50vh] overflow-y-auto p-2" role="listbox">
     </ul>
     <p
       data-cmdk-empty
@@ -134,7 +134,10 @@ const items = [...pageItems, ...pathItems, ...labItems];
     >
       <span><kbd class="text-base-300">↑↓</kbd> navegar</span>
       <span><kbd class="text-base-300">↵</kbd> abrir</span>
-      <span class="ml-auto"><kbd class="text-base-300">⌘K</kbd> / <kbd class="text-base-300">/</kbd></span>
+      <span class="ml-auto"
+        ><kbd class="text-base-300">⌘K</kbd> / <kbd class="text-base-300">/</kbd
+        ></span
+      >
     </div>
   </div>
 </div>
@@ -162,6 +165,8 @@ const items = [...pageItems, ...pathItems, ...labItems];
   const dataEl = document.querySelector<HTMLElement>("[data-cmdk-items]");
 
   if (root && input && list && empty && dataEl) {
+    const listEl = list;
+    const emptyEl = empty;
     const items: Item[] = JSON.parse(dataEl.textContent || "[]");
     let active = 0;
     let results: Item[] = [];
@@ -198,8 +203,8 @@ const items = [...pageItems, ...pathItems, ...labItems];
         .slice(0, 12)
         .map((r) => r.it);
       active = 0;
-      list.innerHTML = "";
-      empty.classList.toggle("hidden", results.length > 0);
+      listEl.innerHTML = "";
+      emptyEl.classList.toggle("hidden", results.length > 0);
       results.forEach((it, idx) => {
         const li = document.createElement("li");
         li.setAttribute("role", "option");
@@ -217,13 +222,13 @@ const items = [...pageItems, ...pathItems, ...labItems];
           active = idx;
           paint();
         });
-        list.appendChild(li);
+        listEl.appendChild(li);
       });
       paint();
     }
 
     function paint() {
-      Array.from(list.children).forEach((el, idx) => {
+      Array.from(listEl.children).forEach((el, idx) => {
         el.classList.toggle("bg-base-800", idx === active);
         if (idx === active) el.scrollIntoView({ block: "nearest" });
       });
@@ -271,7 +276,9 @@ const items = [...pageItems, ...pathItems, ...labItems];
       }
     });
 
-    root.querySelector("[data-cmdk-backdrop]")?.addEventListener("click", close);
+    root
+      .querySelector("[data-cmdk-backdrop]")
+      ?.addEventListener("click", close);
 
     // Cualquier elemento [data-cmdk-open] abre el buscador.
     document.querySelectorAll("[data-cmdk-open]").forEach((el) =>

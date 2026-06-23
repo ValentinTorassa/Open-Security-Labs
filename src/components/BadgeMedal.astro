@@ -1,0 +1,74 @@
+---
+// Una medalla de insignia. Se renderiza bloqueada por defecto (data-earned
+// "false"); el script de /perfil pone data-earned="true" cuando se gana.
+// Los estados visuales (grayscale, glow, candado) viven en global.css.
+import Icon from "./Icon.astro";
+import { type Badge, badgeColor, TIER_LABEL } from "../data/badges";
+
+interface Props {
+  badge: Badge;
+}
+
+const { badge } = Astro.props;
+const color = badgeColor(badge);
+const uid = `bm-${badge.id}`;
+---
+
+<li
+  class="badge-card border-base-800 bg-base-850/30 flex flex-col items-center rounded-xl border p-4 text-center"
+  data-badge={badge.id}
+  data-earned="false"
+  style={`--badge:${color}`}
+>
+  <span
+    class="badge-medal relative inline-flex h-16 w-16 items-center justify-center"
+  >
+    <svg viewBox="0 0 100 100" class="absolute inset-0 h-full w-full">
+      <defs>
+        <radialGradient id={uid} cx="50%" cy="42%" r="60%">
+          <stop offset="0%" stop-color={color} stop-opacity="0.3"></stop>
+          <stop offset="100%" stop-color={color} stop-opacity="0.05"></stop>
+        </radialGradient>
+      </defs>
+      <circle
+        cx="50"
+        cy="50"
+        r="46"
+        fill={`url(#${uid})`}
+        stroke={color}
+        stroke-opacity="0.65"
+        stroke-width="3"></circle>
+      <circle
+        cx="50"
+        cy="50"
+        r="36"
+        fill="none"
+        stroke={color}
+        stroke-opacity="0.22"
+        stroke-width="1.5"></circle>
+    </svg>
+    <span class="relative" style={`color:${color}`}>
+      <Icon name={badge.icon} size={28} strokeWidth={1.75} />
+    </span>
+    <span
+      class="badge-lock border-base-700 bg-base-900 text-base-400 absolute -right-1 -bottom-1 h-6 w-6 items-center justify-center rounded-full border"
+    >
+      <Icon name="lock" size={12} />
+    </span>
+  </span>
+
+  <p class="badge-name text-base-400 mt-3 text-sm font-semibold">
+    {badge.name}
+  </p>
+  <p
+    class="text-base-600 mt-0.5 font-mono text-[0.65rem] tracking-wider uppercase"
+  >
+    {TIER_LABEL[badge.tier]}
+  </p>
+  <p class="badge-desc text-base-400 mt-1.5 text-xs leading-relaxed">
+    {badge.description}
+  </p>
+  <p class="badge-hint text-base-500 mt-1.5 text-xs leading-relaxed">
+    {badge.hint}
+  </p>
+</li>

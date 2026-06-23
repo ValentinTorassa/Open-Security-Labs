@@ -22,6 +22,23 @@ export interface Certification {
   /** Color de marca del vendor. */
   accent: string;
   summary: string;
+  /** Datos logísticos del examen real (aprox., verificá la guía oficial). */
+  meta: {
+    /** Cantidad de preguntas del examen real. */
+    questions: number;
+    /** Duración en minutos. */
+    durationMin: number;
+    /** Puntaje para aprobar (ej: "700/1000"). */
+    passingScore: string;
+    /** Costo aproximado en USD. */
+    cost: string;
+    /** Validez de la certificación en años. */
+    validityYears: number;
+    /** Formato de las preguntas. */
+    format: string;
+  };
+  /** Lo que sabés hacer al certificarte. */
+  outcomes: string[];
   /** Dominios del examen con su peso. */
   domains: { name: string; weight: number }[];
   /** Rutas de VT Security Labs que preparan para esta certi. */
@@ -42,6 +59,20 @@ export const certifications: Certification[] = [
     accent: "#ff9900",
     summary:
       "La puerta de entrada a AWS: conceptos de nube, seguridad, servicios principales y facturación. Ideal como primer certificado de cloud.",
+    meta: {
+      questions: 65,
+      durationMin: 90,
+      passingScore: "700/1000",
+      cost: "USD 100",
+      validityYears: 3,
+      format: "Opción múltiple y respuesta múltiple",
+    },
+    outcomes: [
+      "Explicar el modelo de responsabilidad compartida",
+      "Identificar los servicios core de AWS y cuándo usarlos",
+      "Entender precios, facturación y planes de soporte",
+      "Reconocer buenas prácticas de seguridad en la nube",
+    ],
     domains: [
       { name: "Conceptos de la nube", weight: 24 },
       { name: "Seguridad y cumplimiento", weight: 30 },
@@ -121,6 +152,20 @@ export const certifications: Certification[] = [
     accent: "#c80f2e",
     summary:
       "El certificado base de ciberseguridad más pedido en avisos de trabajo. Cubre amenazas, arquitectura segura, operaciones y gestión de riesgo.",
+    meta: {
+      questions: 90,
+      durationMin: 90,
+      passingScore: "750/900",
+      cost: "USD 404",
+      validityYears: 3,
+      format: "Opción múltiple + preguntas basadas en desempeño (PBQ)",
+    },
+    outcomes: [
+      "Evaluar la postura de seguridad de una organización",
+      "Identificar amenazas, ataques y vulnerabilidades comunes",
+      "Aplicar controles y arquitecturas seguras",
+      "Operar con criterio de gestión de riesgo y cumplimiento",
+    ],
     domains: [
       { name: "Conceptos generales de seguridad", weight: 12 },
       { name: "Amenazas, vulnerabilidades y mitigaciones", weight: 22 },
@@ -201,6 +246,20 @@ export const certifications: Certification[] = [
     accent: "#c80f2e",
     summary:
       "Fundamentos de redes que sostienen todo lo demás: modelo OSI, TCP/IP, routing, servicios de red y troubleshooting.",
+    meta: {
+      questions: 90,
+      durationMin: 90,
+      passingScore: "720/900",
+      cost: "USD 369",
+      validityYears: 3,
+      format: "Opción múltiple + preguntas basadas en desempeño (PBQ)",
+    },
+    outcomes: [
+      "Leer y aplicar el modelo OSI y TCP/IP",
+      "Configurar direccionamiento, subredes y routing básico",
+      "Operar servicios de red (DNS, DHCP, NAT)",
+      "Diagnosticar problemas de red por capas",
+    ],
     domains: [
       { name: "Conceptos de redes", weight: 23 },
       { name: "Implementación de redes", weight: 20 },
@@ -273,6 +332,20 @@ export const certifications: Certification[] = [
     accent: "#c80f2e",
     summary:
       "Administración de Linux del mundo real: gestión del sistema, permisos y seguridad, scripting, contenedores y troubleshooting.",
+    meta: {
+      questions: 90,
+      durationMin: 90,
+      passingScore: "720/900",
+      cost: "USD 369",
+      validityYears: 3,
+      format: "Opción múltiple + preguntas basadas en desempeño (PBQ)",
+    },
+    outcomes: [
+      "Administrar usuarios, permisos y procesos en Linux",
+      "Asegurar y endurecer un sistema",
+      "Automatizar con scripting y contenedores",
+      "Diagnosticar fallos del sistema y servicios",
+    ],
     domains: [
       { name: "Gestión del sistema", weight: 32 },
       { name: "Seguridad", weight: 21 },
@@ -340,6 +413,20 @@ export const certifications: Certification[] = [
     accent: "#ff9900",
     summary:
       "Diseñar arquitecturas seguras, resilientes, performantes y costo-eficientes en AWS. El paso siguiente después del Cloud Practitioner.",
+    meta: {
+      questions: 65,
+      durationMin: 130,
+      passingScore: "720/1000",
+      cost: "USD 150",
+      validityYears: 3,
+      format: "Opción múltiple y respuesta múltiple",
+    },
+    outcomes: [
+      "Diseñar arquitecturas seguras y resilientes en AWS",
+      "Elegir servicios de cómputo, storage y red con criterio",
+      "Optimizar rendimiento y costos",
+      "Aplicar alta disponibilidad y tolerancia a fallos",
+    ],
     domains: [
       { name: "Diseño de arquitecturas seguras", weight: 30 },
       { name: "Diseño de arquitecturas resilientes", weight: 26 },
