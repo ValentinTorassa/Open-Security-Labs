@@ -29,11 +29,37 @@ export const getStaticPaths = (async () => {
 
 const { lab } = Astro.props;
 const { Content } = await render(lab);
+
+const site = Astro.site ?? new URL("https://securitylabs.valentorassa.com");
+const labJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  headline: lab.data.title,
+  description: lab.data.description,
+  inLanguage: "es-AR",
+  url: new URL(`/labs/${lab.id}`, site).href,
+  image: new URL(`/og/${lab.id}.png`, site).href,
+  keywords: lab.data.tags.join(", "),
+  educationalLevel: lab.data.level,
+  timeRequired: `PT${lab.data.estimatedMinutes}M`,
+  author: {
+    "@type": "Person",
+    name: "Valentín Torassa Colombero",
+    url: "https://valentorassa.com",
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "VT Security Labs",
+    url: site.href,
+  },
+};
 ---
 
 <BaseLayout
   title={lab.data.title}
   description={lab.data.description}
+  image={`/og/${lab.id}.png`}
+  jsonLd={labJsonLd}
   width="prose"
 >
   <LabLayout lab={lab}>

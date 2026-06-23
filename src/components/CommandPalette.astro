@@ -1,0 +1,284 @@
+---
+import { getCollection } from "astro:content";
+import { paths, getPath } from "../data/paths";
+
+// Índice de búsqueda global, armado en build. Sin backend: viaja como JSON.
+const labs = await getCollection("labs", ({ data }) => !data.draft);
+
+type Item = {
+  href: string;
+  title: string;
+  sub: string;
+  kind: string;
+  keywords: string;
+};
+
+const labItems: Item[] = labs
+  .sort((a, b) => a.data.order - b.data.order)
+  .map((lab) => {
+    const p = getPath(lab.data.path);
+    return {
+      href: `/labs/${lab.id}`,
+      title: lab.data.title,
+      sub: p?.title ?? lab.data.path,
+      kind: "Lab",
+      keywords: [
+        lab.data.title,
+        p?.title ?? "",
+        lab.data.tags.join(" "),
+        lab.data.level,
+      ]
+        .join(" ")
+        .toLowerCase(),
+    };
+  });
+
+const pathItems: Item[] = paths.map((p) => ({
+  href: `/rutas/${p.slug}`,
+  title: p.title,
+  sub: "Ruta de aprendizaje",
+  kind: "Ruta",
+  keywords: `${p.title} ${p.short} ${p.focus.join(" ")}`.toLowerCase(),
+}));
+
+const pageItems: Item[] = [
+  {
+    href: "/labs",
+    title: "Todos los labs",
+    sub: "Catálogo completo",
+    kind: "Página",
+    keywords: "labs catalogo todos",
+  },
+  {
+    href: "/herramientas",
+    title: "Herramientas",
+    sub: "Gadgets interactivos",
+    kind: "Página",
+    keywords: "herramientas tools gadgets cidr jwt hash iam http",
+  },
+  {
+    href: "/certificaciones",
+    title: "Certificaciones",
+    sub: "Exámenes por ruta",
+    kind: "Página",
+    keywords: "certificaciones certis examenes",
+  },
+  {
+    href: "/perfil",
+    title: "Perfil",
+    sub: "Tu progreso local",
+    kind: "Página",
+    keywords: "perfil progreso token export import",
+  },
+  {
+    href: "/contribuir",
+    title: "Contribuir",
+    sub: "Sumar labs",
+    kind: "Página",
+    keywords: "contribuir aportar pr github",
+  },
+  {
+    href: "/about",
+    title: "Acerca",
+    sub: "Qué es VT Security Labs",
+    kind: "Página",
+    keywords: "acerca about sobre",
+  },
+];
+
+const items = [...pageItems, ...pathItems, ...labItems];
+---
+
+<div
+  data-cmdk-root
+  class="fixed inset-0 z-50 hidden items-start justify-center px-4 pt-[12vh]"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Buscar en el sitio"
+>
+  <div data-cmdk-backdrop class="bg-base-950/70 absolute inset-0 backdrop-blur-sm">
+  </div>
+  <div
+    class="border-base-700 bg-base-900 relative w-full max-w-xl overflow-hidden rounded-xl border shadow-2xl"
+  >
+    <div class="border-base-800 flex items-center gap-2 border-b px-4">
+      <span class="text-term-green font-mono text-sm" aria-hidden="true">/</span>
+      <input
+        data-cmdk-input
+        type="text"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="Buscar labs, rutas, herramientas…"
+        aria-label="Buscar"
+        class="text-base-100 placeholder:text-base-500 w-full bg-transparent py-3.5 font-mono text-sm outline-none"
+      />
+      <kbd
+        class="border-base-700 text-base-500 hidden rounded border px-1.5 py-0.5 font-mono text-[0.65rem] sm:inline"
+        >esc</kbd
+      >
+    </div>
+    <ul
+      data-cmdk-list
+      class="max-h-[50vh] overflow-y-auto p-2"
+      role="listbox"
+    >
+    </ul>
+    <p
+      data-cmdk-empty
+      class="text-base-500 hidden px-4 py-6 text-center font-mono text-sm"
+    >
+      Sin resultados.
+    </p>
+    <div
+      class="border-base-800 text-base-500 flex items-center gap-3 border-t px-4 py-2 font-mono text-[0.65rem]"
+    >
+      <span><kbd class="text-base-300">↑↓</kbd> navegar</span>
+      <span><kbd class="text-base-300">↵</kbd> abrir</span>
+      <span class="ml-auto"><kbd class="text-base-300">⌘K</kbd> / <kbd class="text-base-300">/</kbd></span>
+    </div>
+  </div>
+</div>
+
+<script
+  is:inline
+  type="application/json"
+  data-cmdk-items
+  set:html={JSON.stringify(items)}
+/>
+
+<script>
+  type Item = {
+    href: string;
+    title: string;
+    sub: string;
+    kind: string;
+    keywords: string;
+  };
+
+  const root = document.querySelector<HTMLElement>("[data-cmdk-root]");
+  const input = document.querySelector<HTMLInputElement>("[data-cmdk-input]");
+  const list = document.querySelector<HTMLElement>("[data-cmdk-list]");
+  const empty = document.querySelector<HTMLElement>("[data-cmdk-empty]");
+  const dataEl = document.querySelector<HTMLElement>("[data-cmdk-items]");
+
+  if (root && input && list && empty && dataEl) {
+    const items: Item[] = JSON.parse(dataEl.textContent || "[]");
+    let active = 0;
+    let results: Item[] = [];
+
+    const open = () => {
+      root.classList.remove("hidden");
+      root.classList.add("flex");
+      input.value = "";
+      render("");
+      input.focus();
+    };
+    const close = () => {
+      root.classList.add("hidden");
+      root.classList.remove("flex");
+    };
+    const isOpen = () => !root.classList.contains("hidden");
+
+    function score(it: Item, q: string): number {
+      if (!q) return 1;
+      const hay = (it.title + " " + it.keywords).toLowerCase();
+      if (hay.includes(q)) return 2;
+      // subsecuencia: cada caracter de q aparece en orden
+      let i = 0;
+      for (const ch of hay) if (ch === q[i]) i += 1;
+      return i === q.length ? 1 : 0;
+    }
+
+    function render(q: string) {
+      const query = q.trim().toLowerCase();
+      results = items
+        .map((it) => ({ it, s: score(it, query) }))
+        .filter((r) => r.s > 0)
+        .sort((a, b) => b.s - a.s)
+        .slice(0, 12)
+        .map((r) => r.it);
+      active = 0;
+      list.innerHTML = "";
+      empty.classList.toggle("hidden", results.length > 0);
+      results.forEach((it, idx) => {
+        const li = document.createElement("li");
+        li.setAttribute("role", "option");
+        li.dataset.idx = String(idx);
+        li.className =
+          "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5";
+        li.innerHTML = `
+          <span class="shrink-0 rounded border border-base-700 bg-base-800/60 px-1.5 py-0.5 font-mono text-[0.6rem] text-base-400">${it.kind}</span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm text-base-100">${it.title}</span>
+            <span class="block truncate font-mono text-[0.7rem] text-base-500">${it.sub}</span>
+          </span>`;
+        li.addEventListener("click", () => go(idx));
+        li.addEventListener("mousemove", () => {
+          active = idx;
+          paint();
+        });
+        list.appendChild(li);
+      });
+      paint();
+    }
+
+    function paint() {
+      Array.from(list.children).forEach((el, idx) => {
+        el.classList.toggle("bg-base-800", idx === active);
+        if (idx === active) el.scrollIntoView({ block: "nearest" });
+      });
+    }
+
+    function go(idx: number) {
+      const it = results[idx];
+      if (it) window.location.href = it.href;
+    }
+
+    input.addEventListener("input", () => render(input.value));
+
+    document.addEventListener("keydown", (e) => {
+      const k = e.key.toLowerCase();
+      const mod = e.metaKey || e.ctrlKey;
+      const typing =
+        document.activeElement instanceof HTMLInputElement ||
+        document.activeElement instanceof HTMLTextAreaElement;
+
+      if (mod && k === "k") {
+        e.preventDefault();
+        isOpen() ? close() : open();
+        return;
+      }
+      if (k === "/" && !typing && !isOpen()) {
+        e.preventDefault();
+        open();
+        return;
+      }
+      if (!isOpen()) return;
+      if (k === "escape") {
+        e.preventDefault();
+        close();
+      } else if (k === "arrowdown") {
+        e.preventDefault();
+        active = Math.min(active + 1, results.length - 1);
+        paint();
+      } else if (k === "arrowup") {
+        e.preventDefault();
+        active = Math.max(active - 1, 0);
+        paint();
+      } else if (k === "enter") {
+        e.preventDefault();
+        go(active);
+      }
+    });
+
+    root.querySelector("[data-cmdk-backdrop]")?.addEventListener("click", close);
+
+    // Cualquier elemento [data-cmdk-open] abre el buscador.
+    document.querySelectorAll("[data-cmdk-open]").forEach((el) =>
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        open();
+      }),
+    );
+  }
+</script>

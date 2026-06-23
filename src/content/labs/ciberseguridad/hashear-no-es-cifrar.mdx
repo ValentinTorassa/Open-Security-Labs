@@ -1,0 +1,93 @@
+---
+title: "Hashear no es cifrar"
+description: "Lab quirúrgico para no volver a confundir hash, encoding y cifrado. base64 se deshace, SHA-256 no. Con playground interactivo para verlo."
+path: "ciberseguridad"
+order: 3
+level: "beginner"
+estimatedMinutes: 14
+prerequisites:
+  - "Saber qué es texto plano vs binario"
+objectives:
+  - "Distinguir encoding (base64) de hash (SHA-256) de cifrado"
+  - "Entender por qué un hash no se 'desencripta'"
+  - "Reconocer cuándo base64 NO protege nada"
+evidence:
+  - "Captura del playground con un mismo texto en base64 y en SHA-256"
+  - "Writeup de 3 líneas: un caso donde viste base64 usado como si fuera seguridad"
+commands:
+  - "echo -n 'hola' | base64"
+  - "echo -n 'hola' | sha256sum"
+challenge: "Hasheá la misma palabra dos veces con sha256sum: tiene que dar idéntico. Cambiá una sola letra y mirá cómo cambia entero. Después codificala en base64 y volvé al texto original con base64 -d."
+nextLabs:
+  - "backend-arquitectura/jwt-no-es-autorizacion"
+tags:
+  - "ciberseguridad"
+  - "hashing"
+  - "cripto"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import HashPlayground from "../../../components/gadgets/HashPlayground.astro";
+
+Tres palabras que se usan como sinónimos y no lo son: **encoding**, **hashing** y **cifrado**. Confundirlas es la raíz de un montón de bugs de seguridad. Este lab las separa para siempre.
+
+## La diferencia, en una línea
+
+```text
+encoding (base64)  →  reversible, sin clave   →  para transportar datos
+hashing (SHA-256)  →  irreversible, una vía   →  para verificar integridad
+cifrado (AES)      →  reversible, con clave   →  para confidencialidad
+```
+
+- **base64** transforma bytes en texto seguro de transportar. Cualquiera lo deshace: no hay secreto. No protege **nada**.
+- **SHA-256** produce una huella de tamaño fijo. No se puede volver al original: es de una sola vía.
+- **Cifrado** sí protege, pero necesita una clave para ir y volver.
+
+<Callout type="error">
+  El error que más se ve: guardar un "token secreto" en base64 y creer que está
+  protegido. base64 **no es seguridad**. Si lo podés decodificar vos sin clave,
+  lo puede decodificar cualquiera.
+</Callout>
+
+## Por qué un hash no se "desencripta"
+
+Un hash tira información a la basura: muchos textos distintos pueden caer en huellas distintas, pero del resultado **no hay vuelta atrás**. Por eso:
+
+- El mismo input siempre da el mismo hash (sirve para comparar).
+- Cambiar un solo carácter cambia la huella entera (efecto avalancha).
+- No existe "desencriptar un SHA-256": lo que se hace es **comparar** hashes.
+
+<Callout type="concepto">
+  Por eso las contraseñas se guardan hasheadas (con sal), no cifradas: el
+  servidor nunca necesita recuperar tu contraseña original, solo verificar que
+  la que mandaste produce el mismo hash guardado.
+</Callout>
+
+## Probalo
+
+Escribí lo mismo en los dos. Fijate que base64 vuelve al original y SHA-256 no; y cómo cambiar una letra altera todo el hash.
+
+<HashPlayground />
+
+## En la terminal
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# encoding: va y vuelve, sin secreto
+echo -n 'hola' | base64        # aG9sYQ==
+echo -n 'aG9sYQ==' | base64 -d # hola
+
+# hash: una sola vía, determinístico
+echo -n 'hola' | sha256sum
+echo -n 'holb' | sha256sum     # una letra distinta = huella totalmente distinta
+```
+
+</TerminalBlock>
+
+<Callout type="reto">
+  Hasheá tu nombre con `sha256sum`, copiá el resultado, y hasheálo otra vez en
+  otra terminal. ¿Da igual? Tiene que dar idéntico. Ese determinismo es lo que
+  hace útil un hash.
+</Callout>
