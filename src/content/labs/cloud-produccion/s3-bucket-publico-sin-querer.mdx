@@ -1,0 +1,152 @@
+---
+title: "S3: el bucket que quedó público sin querer"
+description: "La fuga de datos más común en la nube no es un hackeo: es un bucket mal configurado. Acá ves las cuatro capas que deciden si un objeto es público y cómo verificarlo antes de que lo haga un escáner ajeno."
+path: "cloud-produccion"
+order: 3
+level: "intermediate"
+estimatedMinutes: 30
+prerequisites:
+  - "Idea básica de qué es S3 y un bucket"
+  - "Haber leído una policy de IAM (lab: IAM, Deny gana)"
+objectives:
+  - "Entender las capas que deciden el acceso: Block Public Access, policy, ACL y permisos de IAM"
+  - "Leer una bucket policy y detectar el Principal '*'"
+  - "Verificar si un bucket es público sin adivinar"
+  - "Aplicar el default seguro: Block Public Access activado"
+evidence:
+  - "El antes/después de una bucket policy: de pública a privada"
+  - "El comando con el que verificaste el estado de Block Public Access"
+  - "Writeup de 2 líneas: qué capa estaba dejando el bucket abierto"
+commands:
+  - "aws s3api get-public-access-block --bucket <bucket>"
+  - "aws s3api get-bucket-policy --bucket <bucket>"
+challenge: "Tomá la policy 'abierta' de abajo y volvela privada. Después escribí en dos líneas qué chequeo correrías para confirmar, desde afuera, que ya nadie anónimo puede leer los objetos."
+nextLabs:
+  - "cloud-produccion/iam-deny-gana"
+  - "cloud-produccion/cloudtrail-quien-hizo-que"
+tags:
+  - "cloud"
+  - "aws"
+  - "s3"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+La filtración de datos más repetida de la última década no fue un exploit ingenioso: fue un bucket de S3 que quedó público. Nadie "entró"; estaba abierto y un escáner lo encontró. La buena noticia es que decidir si un objeto es público depende de capas concretas que podés leer y cerrar.
+
+<Callout type="concepto">
+  En S3, que un objeto sea accesible públicamente depende de **cuatro capas**:
+  el **Block Public Access** (a nivel cuenta y bucket), la **bucket policy**,
+  las **ACL** del objeto, y los **permisos de IAM** de quien pide. Si no sabés
+  cuál está abierta, no sabés si estás expuesto.
+</Callout>
+
+## Las capas, de afuera hacia adentro
+
+```text
+1. Block Public Access   interruptor maestro. Si está ON, gana: nada es público.
+2. Bucket policy          JSON a nivel bucket. Un Principal "*" lo abre al mundo.
+3. ACL del objeto         permisos viejos por objeto (AllUsers = público).
+4. IAM del que pide       qué puede hacer esa identidad concreta.
+```
+
+<Callout type="comando">
+  **Block Public Access (BPA)** es el cinturón de seguridad. Activado a nivel
+  cuenta, ignora cualquier policy o ACL que intente hacer algo público. Es lo
+  primero que mirás y lo primero que dejás prendido. Hoy AWS lo activa por
+  defecto en buckets nuevos; el peligro son los viejos y los que alguien apagó
+  "para una prueba".
+</Callout>
+
+## La policy que abre el bucket
+
+Esta es la que aparece en buckets filtrados. Leela despacio, fijate en el `Principal`:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicRead",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::reportes-prod/*"
+    }
+  ]
+}
+```
+
+<Callout type="error">
+  `"Principal": "*"` significa **cualquiera en internet**, sin autenticarse. No
+  es "cualquiera de mi cuenta": es cualquiera, anónimo. Combinado con
+  `s3:GetObject` sobre `*`, todo el contenido del bucket es descargable por
+  quien conozca (o adivine) la URL. Y los escáneres adivinan nombres de buckets
+  todo el día.
+</Callout>
+
+## Verificar, no suponer
+
+Antes de creer que está cerrado, confirmalo:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# ¿El Block Public Access está activado? Querés ver los cuatro flags en true.
+aws s3api get-public-access-block --bucket reportes-prod
+
+# ¿Hay una bucket policy? ¿tiene Principal "*"?
+aws s3api get-bucket-policy --bucket reportes-prod \
+  --query Policy --output text | jq '.Statement[] | {Effect, Principal, Action}'
+```
+
+</TerminalBlock>
+
+Un BPA sano se ve así:
+
+```text
+{
+  "BlockPublicAcls": true,
+  "IgnorePublicAcls": true,
+  "BlockPublicPolicy": true,
+  "RestrictPublicBuckets": true
+}
+```
+
+## El fix: cerrar y dejar el cinturón puesto
+
+Primero sacá el `Principal "*"` de la policy (si el bucket sirve un sitio, eso se hace con CloudFront + OAC, no abriendo S3). Después prendé BPA para que ninguna policy futura lo vuelva a abrir:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+aws s3api put-public-access-block --bucket reportes-prod \
+  --public-access-block-configuration \
+  BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+```
+
+</TerminalBlock>
+
+La policy privada típica no nombra `Principal "*"` en absoluto: el acceso lo dan los roles de IAM de tus servicios, cada uno con lo justo (mirá el lab de IAM y mínimo privilegio).
+
+<Callout type="error">
+  Practicá con nombres **ficticios** (`reportes-prod`). Nunca pegues nombres de
+  buckets reales, account IDs ni ARNs internos en un repo o lab público: revelar
+  el nombre de un bucket ya es media pista para un atacante.
+</Callout>
+
+## El criterio
+
+```text
+1. ¿Block Public Access está ON a nivel cuenta?   → cinturón maestro
+2. ¿Alguna bucket policy tiene Principal "*"?      → la puerta abierta clásica
+3. ¿Hay ACLs públicas viejas (AllUsers)?           → legado peligroso
+4. ¿El acceso real lo dan roles de IAM acotados?   → así debería ser
+```
+
+<Callout type="concepto">
+  Un bucket no se "hackea": se deja abierto. La defensa no es un producto caro,
+  es un default: Block Public Access activado y cero `Principal "*"`. Verificalo
+  vos antes de que lo verifique un escáner ajeno.
+</Callout>

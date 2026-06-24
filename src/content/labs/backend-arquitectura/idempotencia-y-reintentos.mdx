@@ -1,0 +1,146 @@
+---
+title: "Idempotencia: por qué un reintento te cobra dos veces"
+description: "La red falla, el cliente reintenta, y el usuario termina con dos cobros. El problema no es el retry: es que el endpoint no es idempotente. Acá ves la diferencia y el fix."
+path: "backend-arquitectura"
+order: 3
+level: "intermediate"
+estimatedMinutes: 30
+prerequisites:
+  - "Saber qué es una API HTTP y los métodos GET/POST/PUT"
+  - "Idea básica de timeouts y reintentos"
+objectives:
+  - "Definir idempotencia y por qué importa bajo reintentos"
+  - "Saber qué métodos HTTP son idempotentes por contrato y cuáles no"
+  - "Diseñar un POST seguro con Idempotency-Key"
+  - "Reconocer el patrón en cobros, envío de mails y creación de recursos"
+evidence:
+  - "Pseudocódigo del endpoint vulnerable y del idempotente"
+  - "Una tabla: método HTTP → ¿idempotente? → qué pasa si se reintenta"
+  - "Writeup de 2 líneas: qué request duplicada deja de hacer daño tras el fix"
+commands:
+  - "curl -X POST -H 'Idempotency-Key: ...'"
+challenge: "Tomá el endpoint de cobro de abajo y agregale idempotencia con una clave. Escribí en dos líneas qué pasa ahora cuando el cliente reintenta el mismo cobro tras un timeout."
+nextLabs:
+  - "backend-arquitectura/jwt-no-es-autorizacion"
+  - "redes-internet/status-codes-4xx-vs-5xx"
+tags:
+  - "backend"
+  - "apis"
+  - "idempotencia"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+El cliente manda un cobro. El servidor lo procesa, pero la respuesta se pierde en la red: timeout. El cliente, que no sabe si funcionó, hace lo razonable: reintenta. Y el usuario aparece con **dos cobros**. El bug no está en el retry —el retry es correcto—. Está en que el endpoint no es idempotente.
+
+<Callout type="concepto">
+  Una operación es **idempotente** si ejecutarla una vez o varias veces produce
+  el **mismo resultado**. Pedir el saldo diez veces no cambia nada
+  (idempotente). Cobrar diez veces sí cambia el mundo (no idempotente). Bajo
+  reintentos, esa diferencia es plata real.
+</Callout>
+
+## El contrato de HTTP
+
+Algunos métodos son idempotentes **por definición**; los clientes y proxies cuentan con eso para reintentar:
+
+```text
+método   idempotente   si se reintenta...
+GET       sí            devuelve lo mismo, no cambia estado
+PUT       sí            deja el recurso en el mismo estado final
+DELETE    sí            borrar lo ya borrado no hace más daño
+POST      NO            crea/ejecuta de nuevo: duplica
+```
+
+<Callout type="error">
+  El problema casi siempre es **POST**. "Crear un cobro", "enviar un mail",
+  "crear una orden": cada reintento es una entidad nueva. Y los reintentos
+  ocurren igual los pidas o no: librerías HTTP, gateways y usuarios impacientes
+  reintentan solos.
+</Callout>
+
+## El endpoint roto
+
+Mirá este cobro. Es correcto… hasta el primer timeout:
+
+```text
+POST /api/charges
+
+función crear_cobro(request):
+    usuario = autenticar(request)
+    monto = request.body.monto
+
+    cobro = db.insertar_cobro(usuario.id, monto)   # ← cada llamada inserta uno
+    proveedor.cobrar(usuario.tarjeta, monto)
+    responder 201, cobro
+```
+
+El cliente llama, el server cobra, la respuesta se pierde, el cliente reintenta, el server **cobra de nuevo**. Nada acá distingue "primer intento" de "reintento del mismo cobro".
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# El mismo cobro mandado dos veces (simulando un retry). Sin idempotencia: dos cargos.
+curl -s -X POST https://api.example.com/api/charges \
+  -H "Authorization: Bearer $JWT" \
+  -H "Content-Type: application/json" \
+  -d '{"monto": 5000}'
+```
+
+</TerminalBlock>
+
+## El fix: Idempotency-Key
+
+La idea es que el cliente genere una **clave única por intención** (no por request) y la mande. El servidor recuerda esa clave: si ya la vio, devuelve el resultado guardado en vez de ejecutar otra vez.
+
+```text
+POST /api/charges
+Idempotency-Key: 7f3a9c2e-...   ← el cliente la genera una vez por cobro
+
+función crear_cobro(request):
+    usuario = autenticar(request)
+    clave = request.headers["Idempotency-Key"]
+    si clave es nula:
+        responder 400   # exigimos la clave en operaciones que cobran
+
+    existente = db.buscar_por_clave(clave)
+    si existente:
+        responder 200, existente            # ya se procesó: devolvemos lo mismo
+
+    cobro = db.insertar_cobro(usuario.id, monto, clave)   # clave UNIQUE en la tabla
+    proveedor.cobrar(usuario.tarjeta, monto)
+    responder 201, cobro
+```
+
+<Callout type="comando">
+  La clave va **única (UNIQUE) en la base**, no solo chequeada en código. Si dos
+  reintentos llegan a la vez (carrera), la restricción UNIQUE de la base es la
+  que garantiza que solo uno inserte; el otro recibe el conflicto y devuelve el
+  resultado ya existente. El código solo no alcanza bajo concurrencia.
+</Callout>
+
+<Callout type="concepto">
+  Clave por **intención**, no por request: el cliente la genera una vez cuando
+  el usuario aprieta "pagar", y la reusa en todos los reintentos de ese mismo
+  pago. Si generás una clave nueva en cada retry, no servís de nada: para el
+  server son cobros distintos.
+</Callout>
+
+## Dónde aplica
+
+No es solo cobros. Cualquier POST que cambie el mundo y pueda reintentarse:
+
+```text
+operación               riesgo sin idempotencia
+crear cobro/pago        doble cargo
+enviar email/SMS        el usuario recibe dos
+crear orden             pedido duplicado
+publicar evento a cola  el consumidor lo procesa dos veces
+```
+
+<Callout type="concepto">
+  La pregunta de diseño no es "¿se va a reintentar?", es "¿qué pasa **cuando**
+  se reintente?". Si la respuesta es "se duplica", necesitás idempotencia. Asumí
+  que toda red falla y todo cliente reintenta: es la postura segura.
+</Callout>
