@@ -96,7 +96,7 @@ export const paths: LearningPath[] = [
     title: "Backend y Arquitectura",
     tagline: "No hay arquitectura gratis.",
     positioning:
-      "La arquitectura no es una escalera de modas. Es un conjunto de tradeoffs. No hay arquitectura gratis.",
+      "La arquitectura es un conjunto de tradeoffs: no hay decisión gratis. Acá los ves de cerca.",
     description:
       "APIs, autenticación vs autorización, JWT, sesiones, IDOR, colas, observabilidad y modos de falla. Diseño con criterio.",
     command: "curl -H 'Authorization: ...'",
@@ -149,7 +149,7 @@ export const paths: LearningPath[] = [
     order: 5,
     short: "Ciberseguridad",
     title: "Ciberseguridad Práctica",
-    tagline: "Ciberseguridad no es una escalera. Es un mapa.",
+    tagline: "Ciberseguridad es entender cómo fallan los sistemas.",
     positioning:
       "Ciberseguridad no es solo herramientas. Es entender cómo fallan los sistemas. No podés defender lo que no entendés.",
     description:

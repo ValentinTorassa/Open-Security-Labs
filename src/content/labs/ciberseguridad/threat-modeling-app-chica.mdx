@@ -1,0 +1,125 @@
+---
+title: "Threat modeling de una app chica"
+description: "No necesitás un framework caro ni un equipo de seguridad para pensar en amenazas. Con cuatro preguntas y un diagrama de flujo de datos, encontrás los riesgos reales de tu app antes de escribir una línea de defensa."
+path: "ciberseguridad"
+order: 4
+level: "intermediate"
+estimatedMinutes: 30
+prerequisites:
+  - "Haber construido o leído el diseño de una app web simple"
+  - "Idea básica de autenticación vs autorización"
+objectives:
+  - "Dibujar un data flow diagram simple con sus trust boundaries"
+  - "Aplicar STRIDE como checklist de amenazas, sin ceremonia"
+  - "Priorizar riesgos por impacto y probabilidad, no por miedo"
+  - "Traducir cada amenaza en una mitigación concreta"
+evidence:
+  - "Un data flow diagram de tu app con los trust boundaries marcados"
+  - "Una tabla STRIDE: amenaza → dónde aplica → mitigación"
+  - "Writeup de 2 líneas: el riesgo más alto que encontraste y por qué"
+commands: []
+challenge: "Tomá una app que conozcas (o la de ejemplo de abajo). Dibujá su flujo de datos, marcá un trust boundary y encontrá una amenaza por cada letra de STRIDE que aplique. Elegí la más grave y escribí en dos líneas cómo la mitigarías."
+nextLabs:
+  - "backend-arquitectura/idor-cambiar-un-id"
+  - "ciberseguridad/por-que-chmod-777"
+tags:
+  - "ciberseguridad"
+  - "threat-modeling"
+  - "diseño"
+---
+
+import Callout from "../../../components/Callout.astro";
+import Mermaid from "../../../components/Mermaid.astro";
+
+Threat modeling suena a reunión de tres horas con consultores. No lo es. En el fondo son cuatro preguntas que te hacés mirando un dibujo de tu app: **¿qué estás construyendo? ¿qué puede salir mal? ¿qué vas a hacer al respecto? ¿lo hiciste bien?** El resto es disciplina, no herramientas.
+
+<Callout type="concepto">
+  **Threat modeling** es pensar como atacante sobre tu propio diseño, antes de
+  que el código esté en producción. El objetivo no es paranoia: es encontrar los
+  pocos riesgos que importan, temprano, cuando arreglarlos cuesta una línea y no
+  un incidente.
+</Callout>
+
+## Paso 1: dibujá el flujo de datos
+
+No podés proteger lo que no ves. Un **data flow diagram** muestra por dónde viajan los datos y, sobre todo, dónde cruzan un **trust boundary**: el límite entre algo que controlás y algo que no.
+
+<Mermaid
+  caption="App chica: el trust boundary está donde los datos del usuario (no confiable) entran a tu sistema."
+  code={`flowchart LR
+  U[Usuario / navegador] -->|HTTPS| A[API / backend]
+  A -->|query| D[(Base de datos)]
+  A -->|lee/escribe| S[(Bucket de archivos)]
+  A -->|llama| X[API externa de pagos]
+  subgraph confiable [Tu infraestructura]
+    A
+    D
+    S
+  end`}
+/>
+
+Todo lo que cruza desde "Usuario" hacia "Tu infraestructura" es **input no confiable**. Esa frontera es donde viven la mayoría de los bugs de seguridad.
+
+<Callout type="comando">
+  Marcá los trust boundaries como líneas en el dibujo. Cada flecha que cruza una
+  de esas líneas es un lugar donde tenés que validar, autenticar o autorizar. Si
+  una flecha cruza sin control, ahí tenés un candidato a amenaza.
+</Callout>
+
+## Paso 2: STRIDE como checklist
+
+STRIDE es un acrónimo para no olvidarte ninguna familia de amenaza. Recorrés cada flecha del diagrama y te preguntás las seis:
+
+```text
+S  Spoofing        ¿alguien puede hacerse pasar por otro?       → autenticación
+T  Tampering       ¿pueden alterar datos en tránsito o reposo?  → integridad, TLS, validación
+R  Repudiation     ¿pueden negar que lo hicieron?               → logs, auditoría
+I  Info disclosure ¿se filtra info que no debería?              → cifrado, mínimo privilegio
+D  Denial of svc   ¿pueden tirarlo abajo o saturarlo?           → rate limiting, timeouts
+E  Elevation       ¿pueden ganar permisos que no les tocan?     → authz, IDOR
+```
+
+<Callout type="error">
+  La trampa es tratar STRIDE como burocracia y marcar todo "N/A". Hacelo
+  concreto: para la flecha "Usuario → API", **Spoofing** = ¿puedo usar el token
+  de otro? **Elevation** = ¿puedo pedir el recurso de otro cambiando un id
+  (IDOR)? Si la pregunta tiene una respuesta incómoda, encontraste algo.
+</Callout>
+
+## Paso 3: priorizá por impacto, no por miedo
+
+Vas a encontrar más amenazas de las que podés arreglar hoy. Ordenalas por **impacto × probabilidad**, no por cuál suena más aterradora:
+
+```text
+amenaza                          impacto   prob.   prioridad
+IDOR en /facturas/{id}           alto      alta    🔴 ahora
+Sin rate limit en /login         medio     alta    🟠 pronto
+Logs sin el actor de la acción   medio     media   🟡 backlog
+DoS por payload gigante          bajo      baja    ⚪ después
+```
+
+<Callout type="concepto">
+  Un threat model no es una lista de todo lo malo del universo: es una lista
+  **priorizada y accionable**. Tres riesgos altos bien mitigados valen más que
+  cuarenta items genéricos que nadie va a tocar.
+</Callout>
+
+## Paso 4: cada amenaza, una mitigación
+
+El modelo recién sirve cuando cada riesgo alto tiene una acción concreta y un responsable:
+
+```text
+amenaza                  mitigación concreta
+IDOR en /facturas/{id}   chequeo de ownership: owner_id == sub (404 si no)
+Sin rate limit en login  límite por IP + backoff; alertar sobre picos
+Repudiation              log con actor, acción, recurso y timestamp
+Info disclosure en S3    Block Public Access + roles de IAM acotados
+```
+
+<Callout type="concepto">
+  Las cuatro preguntas cierran el círculo: dibujaste qué construís, usaste
+  STRIDE para ver qué puede salir mal, definiste mitigaciones, y al revisar el
+  dibujo de nuevo confirmás que las cubriste. Threat modeling no es un documento
+  que se archiva: es una forma de mirar tu propio diseño con ojos de quien lo va
+  a atacar.
+</Callout>

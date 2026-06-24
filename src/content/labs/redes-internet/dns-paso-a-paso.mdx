@@ -1,0 +1,143 @@
+---
+title: "DNS paso a paso: de un nombre a una IP"
+description: "Antes de la primera conexión hay una pregunta: ¿a qué IP voy? DNS la responde en varios saltos. Acá lo seguís con dig y entendés por qué a veces 'funciona en mi máquina'."
+path: "redes-internet"
+order: 4
+level: "beginner"
+estimatedMinutes: 20
+prerequisites:
+  - "Una terminal y poder instalar dig (paquete dnsutils o bind-utils)"
+  - "Idea básica de qué es una IP"
+objectives:
+  - "Entender la cadena de resolución: resolver → root → TLD → autoritativo"
+  - "Leer la salida de dig y distinguir respuesta, autoridad y TTL"
+  - "Diferenciar registros A, AAAA, CNAME, MX y NS"
+  - "Saber por qué un cambio de DNS 'tarda' (TTL y caché)"
+evidence:
+  - "La salida de dig +trace de un dominio, con los saltos marcados"
+  - "Una tabla chica: tipo de registro → para qué sirve"
+  - "Writeup de 2 líneas: por qué un cambio reciente todavía no se ve"
+commands:
+  - "dig +short example.com"
+  - "dig +trace example.com"
+  - "dig example.com MX"
+challenge: "Elegí un dominio y corré dig +trace. Anotá cuántos saltos hubo y qué servidor dio la respuesta final. Después mirá el TTL del registro A y explicá en dos líneas cuánto tardaría en propagarse un cambio."
+nextLabs:
+  - "redes-internet/una-request-no-es-magia"
+  - "redes-internet/status-codes-4xx-vs-5xx"
+tags:
+  - "redes"
+  - "dns"
+  - "debugging"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import Mermaid from "../../../components/Mermaid.astro";
+
+Antes de que tu navegador hable con un servidor, tiene que resolver una duda básica: **¿a qué IP me conecto?** Esa traducción de `example.com` a `93.184.216.34` la hace DNS, y no es un solo paso: es una cadena de preguntas. Entenderla explica la mitad de los "en mi máquina anda".
+
+<Callout type="concepto">
+  **DNS** (Domain Name System) traduce nombres a direcciones IP. Vos preguntás
+  un nombre; el sistema responde una IP. En el medio hay varios servidores que
+  se pasan la pregunta hasta dar con el que tiene la respuesta autoritativa.
+</Callout>
+
+## La cadena, en un dibujo
+
+<Mermaid
+  caption="Una resolución típica: tu resolver pregunta hacia abajo hasta el servidor autoritativo."
+  code={`flowchart TD
+  A[Tu máquina] -->|example.com?| B[Resolver / recursivo]
+  B -->|.com?| C[Root server]
+  C -->|andá al TLD .com| B
+  B -->|example.com?| D[Servidor TLD .com]
+  D -->|andá al autoritativo| B
+  B -->|example.com?| E[Servidor autoritativo]
+  E -->|93.184.216.34| B
+  B -->|93.184.216.34| A`}
+/>
+
+El **resolver** (normalmente el de tu ISP o uno como `1.1.1.1`) hace el trabajo sucio: pregunta al **root**, después al servidor del **TLD** (`.com`, `.ar`…), y por último al **autoritativo** del dominio, que tiene la respuesta real. Cada nivel solo sabe a quién derivarte.
+
+## Verlo con dig
+
+La respuesta corta, para confirmar a qué IP resuelve:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+dig +short example.com
+```
+
+</TerminalBlock>
+
+Y la cadena completa, salto por salto:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# +trace simula la resolución recursiva desde los roots
+dig +trace example.com
+```
+
+</TerminalBlock>
+
+En una respuesta normal de `dig` mirás tres bloques: `ANSWER` (la respuesta), `AUTHORITY` (quién manda en esa zona) y el **TTL**, el número a la izquierda del registro.
+
+```text
+;; ANSWER SECTION:
+example.com.        3600    IN    A    93.184.216.34
+;;                  ^TTL          ^tipo  ^valor
+```
+
+<Callout type="comando">
+  El **TTL** (3600 = una hora) es cuánto puede cachearse esa respuesta. No es
+  decorativo: define cuánto tarda en "propagarse" un cambio. Si bajás un TTL a
+  300 antes de migrar, los resolvers sueltan la respuesta vieja más rápido.
+</Callout>
+
+## Los registros que más vas a ver
+
+```text
+A       nombre → IPv4              example.com → 93.184.216.34
+AAAA    nombre → IPv6             example.com → 2606:2800:220:1::...
+CNAME   alias → otro nombre       www → example.com
+MX      a dónde va el mail        example.com → mail.example.com
+NS      quién es autoritativo     example.com → ns1.example.com
+TXT     texto (SPF, verificación) "v=spf1 include:..."
+```
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# Pedir un tipo puntual
+dig example.com MX +short
+dig example.com NS +short
+```
+
+</TerminalBlock>
+
+<Callout type="error">
+  El "funciona en mi máquina" clásico de DNS: vos ya tenés la **respuesta vieja
+  cacheada** (en el SO, en el navegador o en tu resolver) y el otro no. No es
+  magia ni mala suerte: es el TTL todavía corriendo. `dig` siempre pregunta de
+  nuevo, por eso es mejor que confiar en el navegador para debuggear.
+</Callout>
+
+## El criterio
+
+Cuando un dominio "no anda", DNS es la primera parada:
+
+```text
+1. dig +short nombre      → ¿resuelve a algo? ¿a la IP correcta?
+2. dig +trace nombre      → ¿en qué salto se rompe la cadena?
+3. miro el TTL            → ¿un cambio reciente todavía está cacheado?
+4. comparo resolvers      → dig @1.1.1.1 nombre vs el de mi ISP
+```
+
+<Callout type="concepto">
+  DNS no "está lento": está cacheado. Casi todo problema de DNS es una de dos
+  cosas: el registro está mal, o estás viendo una respuesta vieja que todavía no
+  expiró. Saber leer el TTL te dice cuál de las dos.
+</Callout>

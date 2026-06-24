@@ -1,0 +1,151 @@
+---
+title: "systemd y journalctl: por qué un servicio no arranca"
+description: "Un servicio falla y el reflejo es reiniciar a ciegas. Acá aprendés a leer el estado real con systemctl y a encontrar la causa en los logs con journalctl."
+path: "linux-real"
+order: 3
+level: "intermediate"
+estimatedMinutes: 25
+prerequisites:
+  - "Una terminal en Linux (con systemd) o WSL2 con systemd activado"
+  - "Saber moverte por el filesystem y leer permisos"
+objectives:
+  - "Leer el estado de un servicio con systemctl status y entender cada campo"
+  - "Encontrar la causa de una falla en journalctl, no adivinarla"
+  - "Distinguir 'no arrancó' de 'arrancó y se murió' de 'está deshabilitado'"
+  - "Filtrar logs por unidad, por tiempo y por prioridad"
+evidence:
+  - "La salida de systemctl status del servicio fallando, con la línea que explica por qué"
+  - "El comando de journalctl que usaste para aislar el error"
+  - "Writeup de 2 líneas: cuál era la causa y cómo la confirmaste en los logs"
+commands:
+  - "systemctl status <servicio>"
+  - "journalctl -u <servicio> -b --no-pager"
+  - "journalctl -p err -b"
+challenge: "Tomá un servicio que falle (o creá uno de juguete que apunte a un binario inexistente). Usá systemctl + journalctl para encontrar la causa exacta. Escribí dos líneas: qué decía el log y qué cambiarías para arreglarlo."
+nextLabs:
+  - "linux-real/permisos-usuarios-procesos"
+  - "cloud-produccion/cloudtrail-quien-hizo-que"
+tags:
+  - "linux"
+  - "systemd"
+  - "debugging"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+Un servicio no levanta y el reflejo es `restart` una y otra vez, como quien golpea la tele. systemd ya te está diciendo qué pasó: el problema es que casi nadie lee la respuesta completa. Este lab es sobre leerla.
+
+<Callout type="concepto">
+  **systemd** es el primer proceso que arranca (PID 1) y gestiona el resto como
+  **units**. Un servicio es una unit `.service`. **systemctl** la controla
+  (start, stop, status) y **journalctl** lee sus logs. No son dos mundos: son la
+  misma historia contada en dos comandos.
+</Callout>
+
+## Paso 1: leer el estado, no inventarlo
+
+`systemctl status` no es solo un "verde o rojo". Cada línea importa:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+systemctl status nginx --no-pager
+```
+
+</TerminalBlock>
+
+```text
+● nginx.service - A high performance web server
+     Loaded: loaded (/lib/systemd/system/nginx.service; enabled; preset: enabled)
+     Active: failed (Result: exit-code) since Tue 2026-06-24 18:02:11; 5s ago
+    Process: 5821 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=1/FAILURE)
+```
+
+- **Loaded**: si la unit existe y si está `enabled` (arranca sola al bootear) o `disabled`.
+- **Active**: el estado real. `active (running)`, `failed`, `inactive (dead)`, `activating`.
+- **Process / ExecStartPre**: qué comando corrió y con qué código salió. `status=1/FAILURE` es la pista grande.
+
+<Callout type="error">
+  Tres fallas que parecen iguales y no lo son: **`inactive (dead)`** = nunca
+  arrancó (¿lo iniciaste?). **`failed`** = intentó y se murió (mirá el exit
+  code). **`disabled`** = no va a arrancar solo al próximo boot, aunque hoy esté
+  corriendo. Reiniciar no arregla ninguna si no sabés cuál es.
+</Callout>
+
+## Paso 2: la causa está en el journal
+
+`status` te muestra las últimas líneas. Para la historia completa de **esa** unit:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# Logs de un servicio, solo del boot actual (-b), sin paginador
+journalctl -u nginx -b --no-pager
+
+# Las últimas 50 líneas y seguir en vivo mientras reintentás
+journalctl -u nginx -n 50 -f
+```
+
+</TerminalBlock>
+
+La clave es `-u <unit>`: filtra el ruido de todo el sistema y te deja solo lo del servicio. Ahí suele estar la línea real, del tipo `bind() to 0.0.0.0:80 failed (98: Address already in use)` o `permission denied`.
+
+<Callout type="comando">
+  `-b` limita al **boot actual** (`-b -1` es el boot anterior). `-p err` filtra
+  por prioridad (de `emerg` a `debug`). `--since "10 min ago"` acota por tiempo.
+  Combinalos: `journalctl -u nginx -b -p err` va directo a los errores de esa
+  unit en este arranque.
+</Callout>
+
+## Paso 3: un caso clásico para reproducir
+
+Creá un servicio de juguete que apunte a un binario que no existe y mirá cómo systemd lo reporta:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# Unit mínima que va a fallar a propósito
+sudo tee /etc/systemd/system/roto.service >/dev/null <<'EOF'
+[Service]
+ExecStart=/usr/local/bin/no-existe-este-binario
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl start roto.service     # no va a levantar
+systemctl status roto.service --no-pager
+journalctl -u roto.service -b --no-pager
+```
+
+</TerminalBlock>
+
+Vas a ver algo como `status=203/EXEC`: systemd no pudo _ejecutar_ el binario. El código te dice la familia del problema sin que adivines.
+
+```text
+203/EXEC      no pudo ejecutar el binario (no existe, sin permiso, mal path)
+200/CHDIR     el WorkingDirectory no existe
+1/FAILURE     el programa arrancó y salió con error (mirá su log)
+```
+
+<Callout type="error">
+  Cuando termines, limpiá el juguete: `sudo systemctl stop roto.service`, borrá
+  `/etc/systemd/system/roto.service` y `sudo systemctl daemon-reload`. Un
+  sistema lleno de units rotas también es ruido cuando lo necesités de verdad.
+</Callout>
+
+## El criterio
+
+Debuggear un servicio es un flujo corto y repetible:
+
+```text
+1. systemctl status <unit>   → ¿failed, inactive o disabled? ¿qué exit code?
+2. journalctl -u <unit> -b   → ¿qué línea explica el fallo?
+3. arreglo el origen          (path, permiso, puerto, config)
+4. systemctl restart <unit>  → y verifico con status, no por fe
+```
+
+<Callout type="concepto">
+  La diferencia entre quien "reinicia y reza" y quien resuelve no es saber más
+  comandos: es leer el estado y el log **antes** de tocar nada. systemd ya hizo
+  el diagnóstico; tu trabajo es leerlo.
+</Callout>
