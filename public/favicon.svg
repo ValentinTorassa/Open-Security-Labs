@@ -1,7 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect width="64" height="64" rx="13" fill="#0b0f11"/>
-  <rect x="1.5" y="1.5" width="61" height="61" rx="11.5" fill="none" stroke="#1a2228" stroke-width="1.5"/>
-  <!-- prompt -->
-  <path d="M15 24 L24 32 L15 40" fill="none" stroke="#56d364" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="29" y="37" width="20" height="4.5" rx="2.25" fill="#39c5cf"/>
+<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="256" height="256" rx="56" fill="#0d1117"/>
+
+  <!-- feet (yellow) -->
+  <path d="M96 196 C84 196 76 208 80 220 C84 230 104 230 110 222 C114 216 112 200 106 197 C103 195 99 196 96 196 Z" fill="#e3b341" stroke="#e6edf3" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M160 196 C172 196 180 208 176 220 C172 230 152 230 146 222 C142 216 144 200 150 197 C153 195 157 196 160 196 Z" fill="#e3b341" stroke="#e6edf3" stroke-width="4" stroke-linejoin="round"/>
+
+  <!-- body -->
+  <path d="M128 44 C170 44 198 80 198 130 C198 156 192 176 182 192 C172 206 152 214 128 214 C104 214 84 206 74 192 C64 176 58 156 58 130 C58 80 86 44 128 44 Z" fill="#0d1117" stroke="#e6edf3" stroke-width="4"/>
+
+  <!-- white face -->
+  <path d="M128 88 C121 75 108 69 96 71 C78 74 70 92 72 110 C74 132 96 150 128 150 C160 150 182 132 184 110 C186 92 178 74 160 71 C148 69 135 75 128 88 Z" fill="#e6edf3"/>
+
+  <!-- eyes -->
+  <circle cx="110" cy="106" r="7" fill="#0d1117"/>
+  <circle cx="146" cy="106" r="7" fill="#0d1117"/>
+
+  <!-- beak (yellow) -->
+  <path d="M120 118 L136 118 L128 131 Z" fill="#e3b341"/>
+
+  <!-- flippers -->
+  <path d="M70 150 C56 168 58 194 78 202 C90 198 96 186 95 170 C94 158 90 150 82 147 C77 145 73 147 70 150 Z" fill="#0d1117" stroke="#e6edf3" stroke-width="4"/>
+  <path d="M186 150 C200 168 198 194 178 202 C166 198 160 186 161 170 C162 158 166 150 174 147 C179 145 183 147 186 150 Z" fill="#0d1117" stroke="#e6edf3" stroke-width="4"/>
+
+  <!-- laptop base lip -->
+  <rect x="88" y="192" width="80" height="14" rx="4" fill="#0d1117" stroke="#56d364" stroke-width="4"/>
+  <!-- laptop screen -->
+  <rect x="80" y="124" width="96" height="70" rx="9" fill="#0d1117" stroke="#56d364" stroke-width="4"/>
+  <text x="92" y="169" font-family="'JetBrains Mono','Courier New',monospace" font-size="30" font-weight="700" fill="#56d364">&gt;_</text>
 </svg>
