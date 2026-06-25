@@ -1,4 +1,4 @@
-# VT Security Labs
+# Open Security Labs
 
 > No podés defender sistemas que no entendés cómo funcionan.
 
@@ -6,11 +6,7 @@ Plataforma educativa **abierta** y **en español** para aprender Linux, redes,
 backend, arquitectura, cloud, producción, DevSecOps, agentes de IA y
 ciberseguridad **entendiendo los sistemas de verdad**.
 
-Cada módulo es un **lab práctico**: leés, corrés comandos en tu máquina,
-completás un reto y dejás **evidencia** (comandos, writeups, diagramas,
-screenshots, repos). Sin hype, sin promesas de bootcamp.
-
-Es un proyecto de [VT Security](https://www.youtube.com/@vtcibersecurity), el
+Creado por [VT Security](https://www.youtube.com/@vtcibersecurity), el
 espacio de Valentín Torassa Colombero (Rosario, Argentina).
 
 ---
@@ -53,8 +49,8 @@ LatAm, con un tono directo y técnico.
 Necesitás **Node.js 18+** y npm.
 
 ```bash
-git clone <url-del-repo> vt-security-labs
-cd vt-security-labs
+git clone <url-del-repo> open-security-labs
+cd open-security-labs
 npm install
 npm run dev
 ```
@@ -142,4 +138,4 @@ este material, adaptarlo y compartirlo, manteniendo la atribución.
 
 ---
 
-VT Security · Hecho en Argentina 🇦🇷 · La evidencia se construye haciendo.
+VT Security · Creado en Argentina 🇦🇷 · La evidencia se construye haciendo.

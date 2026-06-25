@@ -1,0 +1,60 @@
+---
+import { contributors, avatarUrl, profileUrl } from "../data/contributors";
+
+const acks = [...contributors].sort((a, b) => b.commits - a.commits);
+const totalCommits = acks.reduce((n, c) => n + c.commits, 0);
+---
+
+<section id="agradecimientos" class="scroll-mt-20 py-16">
+  <div class="mb-2 flex items-baseline gap-3.5">
+    <span class="text-term-green font-mono text-sm">// 05</span>
+    <h2 class="text-base-50 font-mono text-3xl font-bold tracking-tight">
+      Gente que construyó esto
+    </h2>
+  </div>
+  <p class="text-base-400 mb-10 max-w-2xl text-base leading-relaxed">
+    Open Security Labs es open source y existe gracias a quienes escriben labs,
+    corrigen errores y mejoran el material. {acks.length}
+    {acks.length === 1 ? "persona" : "personas"} y {totalCommits} commits hasta hoy.
+  </p>
+
+  <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {
+      acks.map((c) => (
+        <li>
+          <a
+            href={profileUrl(c.github)}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="card group flex items-center gap-4 p-4 hover:-translate-y-0.5"
+          >
+            <img
+              src={avatarUrl(c.github, 64)}
+              alt={`Avatar de ${c.name}`}
+              width="40"
+              height="40"
+              loading="lazy"
+              decoding="async"
+              class="border-base-700 h-10 w-10 flex-none rounded-full border bg-black"
+            />
+            <div class="min-w-0">
+              <p class="text-base-50 group-hover:text-term-green truncate font-mono text-sm font-semibold">
+                {c.name}
+              </p>
+              <p class="text-base-400 truncate text-xs">{c.role}</p>
+            </div>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  <p class="text-base-500 mt-6 font-mono text-xs">
+    <a
+      href="/contribuir#agradecimientos"
+      class="hover:text-term-green underline underline-offset-4 transition-colors"
+    >
+      Ver lista completa y cómo sumarte →
+    </a>
+  </p>
+</section>

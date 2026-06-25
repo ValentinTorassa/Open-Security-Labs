@@ -3,7 +3,7 @@
 ## Nuestro compromiso
 
 Como integrantes, colaboradores y responsables de este proyecto, nos
-comprometemos a que participar en la comunidad de **VT Security Labs** sea una
+comprometemos a que participar en la comunidad de **Open Security Labs** sea una
 experiencia libre de acoso para todas las personas, sin importar edad, tamaño
 corporal, discapacidad visible o invisible, etnia, identidad o expresión de
 género, nivel de experiencia, educación, situación socioeconómica,

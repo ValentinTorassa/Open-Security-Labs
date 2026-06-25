@@ -1,7 +1,7 @@
 // Certificaciones para preparar, con dominios reales y un examen de práctica.
 // Escalable: agregá una entrada y aparece sola en /certificaciones.
 //
-// Nota: VT Security Labs no está afiliado a AWS ni a CompTIA. Los nombres y
+// Nota: Open Security Labs no está afiliado a AWS ni a CompTIA. Los nombres y
 // marcas son propiedad de sus dueños. Estas son preguntas de práctica propias,
 // no preguntas reales del examen.
 
@@ -41,7 +41,7 @@ export interface Certification {
   outcomes: string[];
   /** Dominios del examen con su peso. */
   domains: { name: string; weight: number }[];
-  /** Rutas de VT Security Labs que preparan para esta certi. */
+  /** Rutas de Open Security Labs que preparan para esta certi. */
   relatedPaths: PathSlug[];
   /** Examen de práctica (preguntas propias). */
   exam: ExamQuestion[];

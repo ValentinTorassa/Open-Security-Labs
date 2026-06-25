@@ -2,7 +2,7 @@
 
 ## Naturaleza del proyecto
 
-**VT Security Labs** es un proyecto **educativo y open source**. No es un
+**Open Security Labs** es un proyecto **educativo y open source**. No es un
 servicio en producción ni maneja datos de usuarios: es un sitio estático con
 contenido de aprendizaje. Aun así, la seguridad importa, sobre todo la del
 **contenido** que se publica.

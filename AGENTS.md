@@ -4,7 +4,7 @@ Guía para agentes de IA y colaboradores humanos que trabajen en este repositori
 
 ## Contexto
 
-**VT Security Labs** es un repositorio **público y educativo**. Todo lo que
+**Open Security Labs** es un repositorio **público y educativo**. Todo lo que
 entra acá puede ser leído, indexado y reutilizado por cualquiera. Tratá cada
 commit como una publicación.
 

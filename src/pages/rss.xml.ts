@@ -8,7 +8,7 @@ export async function GET(context: APIContext) {
   const sorted = labs.sort((a, b) => a.data.order - b.data.order);
 
   return rss({
-    title: "VT Security Labs",
+    title: "Open Security Labs",
     description:
       "Labs prácticos en español para entender Linux, redes, backend, cloud y ciberseguridad de verdad.",
     site: context.site ?? "https://securitylabs.valentorassa.com",

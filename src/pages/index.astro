@@ -4,6 +4,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Icon from "../components/Icon.astro";
 import PathCard from "../components/PathCard.astro";
 import CertCard from "../components/CertCard.astro";
+import Agradecimientos from "../components/Agradecimientos.astro";
 import { paths } from "../data/paths";
 import { certifications } from "../data/certifications";
 
@@ -67,10 +68,10 @@ const audience = [
 ];
 
 const youtube = "https://www.youtube.com/@vtcibersecurity";
-const repo = "https://github.com/ValentinTorassa/VT-Security-Labs";
+const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
 ---
 
-<BaseLayout title="VT Security Labs" width="wide">
+<BaseLayout title="Open Security Labs" width="wide">
   <!-- Grilla ambiental + glow radial verde detrás del hero (decorativos). -->
   <div
     class="bg-grid pointer-events-none fixed inset-0 -z-10"
@@ -97,7 +98,7 @@ const repo = "https://github.com/ValentinTorassa/VT-Security-Labs";
         <span
           class="bg-term-green h-1.5 w-1.5 rounded-full"
           style="box-shadow:0 0 8px var(--color-term-green);"></span>
-        plataforma educativa abierta · español
+        plataforma educativa abierta · español · by VT Security
       </div>
 
       <h1
@@ -314,7 +315,7 @@ const repo = "https://github.com/ValentinTorassa/VT-Security-Labs";
       </h2>
     </div>
     <p class="text-base-400 mb-10 max-w-2xl text-base leading-relaxed">
-      VT Labs es gratis y no emite títulos propios. Pero te da la <span
+      Open Security Labs es gratis y no emite títulos propios. Pero te da la <span
         class="text-base-100">base real</span
       > para encarar las certificaciones que el mercado pide — sin estudiar de memoria.
       Cada ruta apunta a una.
@@ -324,7 +325,7 @@ const repo = "https://github.com/ValentinTorassa/VT-Security-Labs";
       {certifications.map((cert) => <CertCard cert={cert} />)}
     </div>
     <p class="text-base-500 mt-6 text-xs leading-relaxed">
-      VT Security Labs no está afiliado a estas organizaciones; cada logo y
+      Open Security Labs no está afiliado a estas organizaciones; cada logo y
       marca pertenece a su dueño.
     </p>
   </section>
@@ -433,6 +434,9 @@ const repo = "https://github.com/ValentinTorassa/VT-Security-Labs";
       </div>
     </div>
   </section>
+
+  <!-- ===================== AGRADECIMIENTOS ===================== -->
+  <Agradecimientos />
 </BaseLayout>
 
 <script>

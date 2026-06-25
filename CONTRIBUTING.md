@@ -1,4 +1,4 @@
-# Contribuir a VT Security Labs
+# Contribuir a Open Security Labs
 
 ¡Gracias por querer sumar! Esto se construye en público y tu aporte —corregir un
 error, mejorar una explicación o escribir un lab nuevo— es bienvenido.
@@ -16,8 +16,8 @@ seguridad) y [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md).
 ## Cómo empezar
 
 ```bash
-git clone <url-del-repo> vt-security-labs
-cd vt-security-labs
+git clone <url-del-repo> open-security-labs
+cd open-security-labs
 npm install
 npm run dev
 ```

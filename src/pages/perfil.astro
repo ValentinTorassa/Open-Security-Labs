@@ -27,7 +27,7 @@ const badgesData = JSON.stringify(
 
 <BaseLayout
   title="Tu perfil"
-  description="Tu progreso en VT Security Labs vive en tu navegador. Sin login, sin tracking. Llevátelo a otro dispositivo con un token portable."
+  description="Tu progreso en Open Security Labs vive en tu navegador. Sin login, sin tracking. Llevátelo a otro dispositivo con un token portable."
   width="default"
 >
   <section class="py-12">
@@ -123,7 +123,7 @@ const badgesData = JSON.stringify(
       </div>
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-base-400 font-mono text-xs">VT Security Labs</p>
+          <p class="text-base-400 font-mono text-xs">Open Security Labs</p>
           <p class="text-base-50 mt-0.5 font-mono text-lg font-bold">
             @<span data-card-user>anónimo</span>
           </p>
@@ -405,7 +405,7 @@ const badgesData = JSON.stringify(
     async () => {
       const s = render();
       const user = getUsername() || "anónimo";
-      const text = `@${user} en VT Security Labs: ${s.pct}% del catálogo · ${s.labsDone} labs · ${s.rutasDone} rutas · ${s.examsDone} exámenes. securitylabs.valentorassa.com`;
+      const text = `@${user} en Open Security Labs: ${s.pct}% del catálogo · ${s.labsDone} labs · ${s.rutasDone} rutas · ${s.examsDone} exámenes. securitylabs.valentorassa.com`;
       try {
         await navigator.clipboard.writeText(text);
         showMsg("✓ Resumen copiado al portapapeles.", true);
@@ -441,7 +441,7 @@ const badgesData = JSON.stringify(
       const mono = "'JetBrains Mono Variable', ui-monospace, monospace";
       ctx.fillStyle = "#5a6b75";
       ctx.font = `28px ${mono}`;
-      ctx.fillText("VT Security Labs", 64, 100);
+      ctx.fillText("Open Security Labs", 64, 100);
 
       ctx.fillStyle = "#f1f5f6";
       ctx.font = `bold 72px ${mono}`;

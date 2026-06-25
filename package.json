@@ -1,9 +1,9 @@
 {
-  "name": "vt-security-labs",
+  "name": "open-security-labs",
   "version": "0.1.0",
   "type": "module",
   "private": true,
-  "description": "Plataforma educativa abierta de VT Security: labs prácticos en español para entender Linux, redes, backend, cloud y ciberseguridad de verdad.",
+  "description": "Open Security Labs: proyecto educativo open source creado por VT Security. Labs prácticos en español para entender Linux, redes, backend, cloud y ciberseguridad de verdad.",
   "license": "Apache-2.0",
   "author": "Valentín Torassa Colombero (VT Security)",
   "homepage": "https://valentorassa.com",

@@ -27,7 +27,7 @@ const {
 } = Astro.props;
 
 const fullTitle =
-  title === "VT Security Labs" ? title : `${title} · VT Security Labs`;
+  title === "Open Security Labs" ? title : `${title} · Open Security Labs`;
 
 const mainWidth =
   width === "wide"
@@ -44,7 +44,7 @@ const ogImage = new URL(image, site);
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "VT Security Labs",
+  name: "Open Security Labs",
   url: site.href,
   description,
   inLanguage: "es-AR",
@@ -82,12 +82,12 @@ const jsonLd = {
     <link
       rel="alternate"
       type="application/rss+xml"
-      title="VT Security Labs"
+      title="Open Security Labs"
       href={new URL("/rss.xml", site).href}
     />
 
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="VT Security Labs" />
+    <meta property="og:site_name" content="Open Security Labs" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:locale" content="es_AR" />
