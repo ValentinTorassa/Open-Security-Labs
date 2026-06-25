@@ -7,7 +7,7 @@ backend, arquitectura, cloud, producción, DevSecOps, agentes de IA y
 ciberseguridad **entendiendo los sistemas de verdad**.
 
 Creado por [VT Security](https://www.youtube.com/@vtcibersecurity), el
-espacio de Valentín Torassa Colombero (Rosario, Argentina).
+espacio de Valentín Torassa Colombero.
 
 ---
 
