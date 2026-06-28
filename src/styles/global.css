@@ -199,7 +199,7 @@
     color: var(--color-base-400);
   }
 
-  /* Botones reutilizables: una sola fuente de verdad para el acento + glow. */
+  /* Botones reutilizables: una sola fuente de verdad para el acento. */
   .btn-primary {
     display: inline-flex;
     align-items: center;
@@ -213,8 +213,6 @@
     white-space: nowrap;
     background-color: var(--color-term-green);
     color: var(--color-base-950);
-    box-shadow: 0 0 22px
-      color-mix(in srgb, var(--color-term-green) 30%, transparent);
     transition:
       transform 0.15s ease,
       filter 0.15s ease;
@@ -261,10 +259,9 @@
     display: inline;
   }
 
-  /* Resplandor verde reutilizable (chips, avatares "live", etc.). */
+  /* Mantiene compatibilidad con markup existente sin sumar glow decorativo. */
   .glow-green {
-    box-shadow: 0 0 22px
-      color-mix(in srgb, var(--color-term-green) 30%, transparent);
+    box-shadow: none;
   }
 
   /* Insignias: estado bloqueado vs ganado (lo togglea el script de /perfil). */

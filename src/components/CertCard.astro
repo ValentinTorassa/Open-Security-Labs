@@ -20,11 +20,6 @@ const stats = [
   class="card group relative flex flex-col overflow-hidden p-5 hover:-translate-y-0.5"
   style={`--accent: ${cert.accent}`}
 >
-  <span
-    class="pointer-events-none absolute inset-x-0 top-0 h-px opacity-70"
-    style="background: linear-gradient(to right, transparent, var(--accent), transparent)"
-    aria-hidden="true"></span>
-
   <div class="flex items-center gap-3.5">
     <CredentialBadge icon={cert.icon} accent={cert.accent} size={52} />
     <div class="min-w-0">
