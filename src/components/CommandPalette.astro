@@ -84,7 +84,8 @@ const items = [...pageItems, ...pathItems, ...labItems];
 
 <div
   data-cmdk-root
-  class="fixed inset-0 z-50 hidden items-start justify-center px-4 pt-16 sm:pt-[12vh]"
+  class="fixed inset-x-0 top-0 z-50 hidden items-start justify-center overflow-y-auto px-4 py-4 sm:py-[12vh]"
+  style="height: var(--cmdk-height, 100dvh);"
   role="dialog"
   aria-modal="true"
   aria-label="Buscar en el sitio"
@@ -95,11 +96,23 @@ const items = [...pageItems, ...pathItems, ...labItems];
   >
   </div>
   <div
-    class="border-base-700 bg-base-900 relative w-full max-w-xl overflow-hidden rounded-xl border shadow-2xl"
+    class="border-base-700 bg-base-900 relative w-full max-w-xl overflow-hidden rounded-xl border"
+    style="max-height: calc(var(--cmdk-height, 100dvh) - 2rem);"
   >
     <div class="border-base-800 flex items-center gap-2 border-b px-4">
-      <span class="text-term-green font-mono text-sm" aria-hidden="true">/</span
+      <svg
+        class="text-term-green h-4 w-4 shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
       >
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.3-4.3"></path>
+      </svg>
       <input
         data-cmdk-input
         type="text"
@@ -114,7 +127,12 @@ const items = [...pageItems, ...pathItems, ...labItems];
         >esc</kbd
       >
     </div>
-    <ul data-cmdk-list class="max-h-[400px] overflow-y-auto p-2" role="listbox">
+    <ul
+      data-cmdk-list
+      class="overflow-y-auto p-2"
+      style="max-height: min(400px, calc(var(--cmdk-height, 100dvh) - 11rem));"
+      role="listbox"
+    >
     </ul>
     <p
       data-cmdk-empty
@@ -123,14 +141,12 @@ const items = [...pageItems, ...pathItems, ...labItems];
       Sin resultados.
     </p>
     <div
-      class="border-base-800 text-base-500 flex items-center gap-3 border-t px-4 py-2 font-mono text-[0.65rem]"
+      class="border-base-800 text-base-500 hidden items-center gap-3 border-t px-4 py-2 font-mono text-[0.65rem] sm:flex"
     >
       <span><kbd class="text-base-300">↑↓</kbd> navegar</span>
       <span><kbd class="text-base-300">↵</kbd> abrir</span>
       <span class="ml-auto"
-        ><kbd class="text-base-300" data-kbd-shortcut>Ctrl K</kbd> / <kbd
-          class="text-base-300">/</kbd
-        ></span
+        ><kbd class="text-base-300" data-kbd-shortcut>Ctrl K</kbd></span
       >
     </div>
   </div>
@@ -153,8 +169,8 @@ const items = [...pageItems, ...pathItems, ...labItems];
   };
 
   // Etiqueta del atajo según el sistema: ⌘ en Mac, Ctrl en Linux/Windows.
-  const isMac = /mac|iphone|ipad|ipod/i.test(
-    navigator.platform || navigator.userAgent,
+  const isMac = /macintosh|mac os x|iphone|ipad|ipod/i.test(
+    navigator.userAgent,
   );
   const modLabel = isMac ? "⌘K" : "Ctrl K";
   document.querySelectorAll("[data-kbd-shortcut]").forEach((el) => {
@@ -176,19 +192,35 @@ const items = [...pageItems, ...pathItems, ...labItems];
     const items: Item[] = JSON.parse(dataEl.textContent || "[]");
     let active = 0;
     let results: Item[] = [];
+    const isOpen = () => !root.classList.contains("hidden");
+
+    const syncViewport = () => {
+      const height = window.visualViewport?.height ?? window.innerHeight;
+      root.style.setProperty("--cmdk-height", `${height}px`);
+    };
+
+    const onViewportResize = () => {
+      if (!isOpen()) return;
+      syncViewport();
+    };
+
+    window.visualViewport?.addEventListener("resize", onViewportResize);
+    window.addEventListener("resize", onViewportResize);
 
     const open = () => {
+      syncViewport();
       root.classList.remove("hidden");
       root.classList.add("flex");
+      document.body.style.overflow = "hidden";
       input.value = "";
       render("");
-      input.focus();
+      requestAnimationFrame(() => input.focus({ preventScroll: true }));
     };
     const close = () => {
       root.classList.add("hidden");
       root.classList.remove("flex");
+      document.body.style.overflow = "";
     };
-    const isOpen = () => !root.classList.contains("hidden");
 
     function score(it: Item, q: string): number {
       if (!q) return 1;
@@ -250,18 +282,9 @@ const items = [...pageItems, ...pathItems, ...labItems];
     document.addEventListener("keydown", (e) => {
       const k = e.key.toLowerCase();
       const mod = e.metaKey || e.ctrlKey;
-      const typing =
-        document.activeElement instanceof HTMLInputElement ||
-        document.activeElement instanceof HTMLTextAreaElement;
-
       if (mod && k === "k") {
         e.preventDefault();
         isOpen() ? close() : open();
-        return;
-      }
-      if (k === "/" && !typing && !isOpen()) {
-        e.preventDefault();
-        open();
         return;
       }
       if (!isOpen()) return;

@@ -18,7 +18,7 @@ const isActive = (href: string) =>
   class="border-base-800 bg-base-950/80 sticky top-0 z-40 border-b backdrop-blur"
 >
   <div
-    class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-5 sm:px-6"
+    class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6"
   >
     <a
       href="/"
@@ -43,12 +43,9 @@ const isActive = (href: string) =>
       </span>
     </a>
 
-    <div class="flex min-w-0 items-center gap-1">
+    <div class="flex min-w-0 items-center gap-2">
       <!-- Nav Desktop -->
-      <nav
-        class="hidden items-center gap-2 md:flex"
-        aria-label="Principal"
-      >
+      <nav class="hidden items-center gap-2 md:flex" aria-label="Principal">
         {
           links.map((l) => (
             <a
@@ -71,9 +68,20 @@ const isActive = (href: string) =>
         type="button"
         data-cmdk-open
         aria-label="Buscar (Ctrl K)"
-        class="border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex shrink-0 items-center gap-2 rounded-md border px-2 py-1.5 font-mono text-sm transition-colors"
+        class="border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-lg border font-mono text-sm transition-colors sm:w-auto sm:px-2.5"
       >
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <svg
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          ><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"
+          ></path></svg
+        >
         <kbd class="hidden text-[0.65rem] sm:inline" data-kbd-shortcut
           >Ctrl K</kbd
         >
@@ -83,7 +91,7 @@ const isActive = (href: string) =>
         type="button"
         data-theme-toggle
         aria-label="Cambiar tema claro/oscuro"
-        class="theme-toggle border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex shrink-0 items-center rounded-md border p-1.5 transition-colors"
+        class="theme-toggle border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors"
       >
         <svg
           class="i-sun h-4 w-4"
@@ -117,57 +125,89 @@ const isActive = (href: string) =>
         type="button"
         data-mobile-menu-open
         aria-label="Abrir menú"
-        class="border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex shrink-0 items-center rounded-md border p-1.5 transition-colors md:hidden"
+        class="border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors md:hidden"
       >
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>
+        <svg
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="4" x2="20" y1="12" y2="12"></line><line
+            x1="4"
+            x2="20"
+            y1="6"
+            y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line>
         </svg>
       </button>
     </div>
   </div>
-
 </header>
 
-  <!-- Mobile Menu Overlay -->
-  <div
-    data-mobile-menu
-    class="bg-base-950/95 fixed inset-0 z-[100] flex hidden flex-col px-5 py-5 backdrop-blur-md transition-opacity md:hidden"
-  >
-    <div class="flex items-center justify-between">
-      <a href="/" class="flex items-center gap-2.5">
-        <img src="/penguin-icon.png" alt="" width="28" height="28" class="border-base-700 bg-base-800 h-7 w-7 rounded-md border" />
-        <span class="text-base-50 font-mono text-sm font-semibold tracking-tight">Open Security</span>
-      </a>
-      <button
-        type="button"
-        data-mobile-menu-close
-        aria-label="Cerrar menú"
-        class="border-base-700 text-base-400 hover:text-base-100 rounded-md border p-1.5"
+<!-- Mobile Menu Overlay -->
+<div
+  data-mobile-menu
+  class="bg-base-950/95 fixed inset-0 z-[100] flex hidden flex-col px-5 py-5 backdrop-blur-md transition-opacity md:hidden"
+  style="height: 100dvh;"
+>
+  <div class="flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2.5">
+      <img
+        src="/penguin-icon.png"
+        alt=""
+        width="28"
+        height="28"
+        class="border-base-700 bg-base-800 h-7 w-7 rounded-md border"
+      />
+      <span class="text-base-50 font-mono text-sm font-semibold tracking-tight"
+        >Open Security</span
       >
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-        </svg>
-      </button>
-    </div>
-    <nav class="mt-10 flex flex-col gap-6">
-      {
-        links.map((l) => (
-          <a
-            href={l.href}
-            class:list={[
-              "text-lg font-mono transition-colors",
-              isActive(l.href) ? "text-term-green font-bold" : "text-base-200 hover:text-base-50 font-medium"
-            ]}
-          >
-            {l.label}
-          </a>
-        ))
-      }
-    </nav>
-    <div class="mt-auto border-t border-base-800 pt-6 pb-4">
-      <p class="text-xs font-mono text-base-500">VT Security Labs &copy; {new Date().getFullYear()}</p>
-    </div>
+    </a>
+    <button
+      type="button"
+      data-mobile-menu-close
+      aria-label="Cerrar menú"
+      class="border-base-700 text-base-400 hover:text-base-100 rounded-md border p-1.5"
+    >
+      <svg
+        class="h-4 w-4"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>
+      </svg>
+    </button>
   </div>
+  <nav class="mt-10 flex flex-col gap-6">
+    {
+      links.map((l) => (
+        <a
+          href={l.href}
+          class:list={[
+            "font-mono text-lg transition-colors",
+            isActive(l.href)
+              ? "text-term-green font-bold"
+              : "text-base-200 hover:text-base-50 font-medium",
+          ]}
+        >
+          {l.label}
+        </a>
+      ))
+    }
+  </nav>
+  <div class="border-base-800 mt-auto border-t pt-6 pb-4">
+    <p class="text-base-500 font-mono text-xs">
+      Open Security Labs by VT Security &copy; {new Date().getFullYear()}
+    </p>
+  </div>
+</div>
 
 <script>
   const btn = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
@@ -188,8 +228,12 @@ const isActive = (href: string) =>
 
   // Mobile menu logic
   const mobileMenu = document.querySelector<HTMLElement>("[data-mobile-menu]");
-  const openBtn = document.querySelector<HTMLButtonElement>("[data-mobile-menu-open]");
-  const closeBtn = document.querySelector<HTMLButtonElement>("[data-mobile-menu-close]");
+  const openBtn = document.querySelector<HTMLButtonElement>(
+    "[data-mobile-menu-open]",
+  );
+  const closeBtn = document.querySelector<HTMLButtonElement>(
+    "[data-mobile-menu-close]",
+  );
 
   openBtn?.addEventListener("click", () => {
     mobileMenu?.classList.remove("hidden");
