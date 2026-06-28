@@ -59,7 +59,25 @@ const examFacts = [
     <header
       class="border-base-800 flex flex-wrap items-start gap-4 border-b pb-8"
     >
-      <CredentialBadge icon={cert.icon} accent={cert.accent} size={64} />
+      {
+        cert.badgeImage ? (
+          <span
+            class="border-base-800 bg-base-950 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-3xl border p-3 shadow-[0_22px_55px_rgba(0,0,0,0.25)] ring-1 ring-white/10 sm:h-28 sm:w-28"
+            aria-hidden="true"
+          >
+            <img
+              src={cert.badgeImage}
+              alt=""
+              width="112"
+              height="112"
+              decoding="async"
+              class="h-full w-full object-contain"
+            />
+          </span>
+        ) : (
+          <CredentialBadge icon={cert.icon} accent={cert.accent} size={64} />
+        )
+      }
       <div class="min-w-0 flex-1">
         <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
           <span
