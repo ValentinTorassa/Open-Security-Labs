@@ -17,6 +17,8 @@ export interface Certification {
   vendor: string;
   /** Iniciales para el badge, ej: AWS / C+. */
   badge: string;
+  /** Arte oficial público del badge, si existe. */
+  badgeImage?: string;
   level: string;
   icon: IconName;
   /** Color de marca del vendor. */
@@ -54,6 +56,7 @@ export const certifications: Certification[] = [
     code: "CLF-C02",
     vendor: "Amazon Web Services",
     badge: "AWS",
+    badgeImage: "/certifications/aws-cloud-practitioner.png",
     level: "Fundamental",
     icon: "cloud",
     accent: "#ff9900",
@@ -147,6 +150,7 @@ export const certifications: Certification[] = [
     code: "SY0-701",
     vendor: "CompTIA",
     badge: "S+",
+    badgeImage: "/certifications/comptia-security-plus.png",
     level: "Asociado",
     icon: "shield",
     accent: "#c80f2e",
@@ -241,6 +245,7 @@ export const certifications: Certification[] = [
     code: "N10-009",
     vendor: "CompTIA",
     badge: "N+",
+    badgeImage: "/certifications/comptia-network-plus.png",
     level: "Asociado",
     icon: "network",
     accent: "#c80f2e",
@@ -327,6 +332,7 @@ export const certifications: Certification[] = [
     code: "XK0-005",
     vendor: "CompTIA",
     badge: "L+",
+    badgeImage: "/certifications/comptia-linux-plus.png",
     level: "Asociado",
     icon: "terminal",
     accent: "#c80f2e",
@@ -408,6 +414,7 @@ export const certifications: Certification[] = [
     code: "SAA-C03",
     vendor: "Amazon Web Services",
     badge: "AWS",
+    badgeImage: "/certifications/aws-solutions-architect-associate.png",
     level: "Asociado",
     icon: "server",
     accent: "#ff9900",

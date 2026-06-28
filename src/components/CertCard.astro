@@ -20,8 +20,27 @@ const stats = [
   class="card group relative flex flex-col overflow-hidden p-5 hover:-translate-y-0.5"
   style={`--accent: ${cert.accent}`}
 >
-  <div class="flex items-center gap-3.5">
-    <CredentialBadge icon={cert.icon} accent={cert.accent} size={52} />
+  <div class="flex items-center gap-4">
+    {
+      cert.badgeImage ? (
+        <span
+          class="border-base-800 bg-base-950 flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border p-2.5 shadow-[0_18px_45px_rgba(0,0,0,0.24)] ring-1 ring-white/10"
+          aria-hidden="true"
+        >
+          <img
+            src={cert.badgeImage}
+            alt=""
+            width="80"
+            height="80"
+            loading="lazy"
+            decoding="async"
+            class="h-full w-full object-contain"
+          />
+        </span>
+      ) : (
+        <CredentialBadge icon={cert.icon} accent={cert.accent} size={52} />
+      )
+    }
     <div class="min-w-0">
       <p class="truncate font-mono text-xs" style="color: var(--accent)">
         {cert.code} · {cert.level}
