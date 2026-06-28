@@ -4,6 +4,7 @@ const links = [
   { href: "/rutas", label: "Rutas" },
   { href: "/labs", label: "Labs" },
   { href: "/certificaciones", label: "Certis" },
+  { href: "/portafolio", label: "Portafolio" },
   { href: "/perfil", label: "Perfil" },
   { href: "/contribuir", label: "Contribuir" },
   { href: "/about", label: "Acerca" },
@@ -45,7 +46,7 @@ const isActive = (href: string) =>
 
     <div class="flex min-w-0 items-center gap-2">
       <!-- Nav Desktop -->
-      <nav class="hidden items-center gap-2 md:flex" aria-label="Principal">
+      <nav class="hidden items-center gap-2 lg:flex" aria-label="Principal">
         {
           links.map((l) => (
             <a
@@ -125,7 +126,7 @@ const isActive = (href: string) =>
         type="button"
         data-mobile-menu-open
         aria-label="Abrir menú"
-        class="border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors md:hidden"
+        class="border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors lg:hidden"
       >
         <svg
           class="h-4 w-4"
@@ -150,7 +151,7 @@ const isActive = (href: string) =>
 <!-- Mobile Menu Overlay -->
 <div
   data-mobile-menu
-  class="bg-base-950/95 fixed inset-0 z-[100] flex hidden flex-col px-5 py-5 backdrop-blur-md transition-opacity md:hidden"
+  class="bg-base-950/95 fixed inset-0 z-[100] flex hidden flex-col px-5 py-5 backdrop-blur-md transition-opacity lg:hidden"
   style="height: 100dvh;"
 >
   <div class="flex items-center justify-between">

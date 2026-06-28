@@ -1,0 +1,318 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Icon from "../components/Icon.astro";
+import { portfolioProjects } from "../data/portfolio";
+import { getPath } from "../data/paths";
+
+const presentationChecklist = [
+  {
+    title: "README que se entiende",
+    body: "Contexto, objetivo, alcance, cómo correrlo, evidencia y decisiones. Si alguien entra al repo, no debería adivinar qué está mirando.",
+  },
+  {
+    title: "Evidencia reproducible",
+    body: "Comandos, screenshots, diagramas, tests o logs sintéticos. No alcanza con decir que funciona: dejá rastros claros.",
+  },
+  {
+    title: "Límites explícitos",
+    body: "Qué no cubre, qué datos son ficticios, qué harías distinto en producción y qué tradeoffs aceptaste.",
+  },
+];
+---
+
+<BaseLayout
+  title="Portafolio"
+  description="Roadmap de proyectos para armar un portafolio técnico de ciberseguridad, backend, Linux, cloud y DevSecOps con evidencia real."
+  width="wide"
+>
+  <section class="py-10">
+    <div
+      class="border-base-700 bg-base-950 relative overflow-hidden rounded-[1.75rem] border p-6 sm:p-8 lg:p-10"
+    >
+      <div
+        class="pointer-events-none absolute inset-0 opacity-70"
+        style="background: radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--color-term-green) 18%, transparent), transparent 30%), radial-gradient(circle at 88% 14%, color-mix(in srgb, var(--color-term-blue) 16%, transparent), transparent 28%), linear-gradient(135deg, color-mix(in srgb, var(--color-base-850) 78%, transparent), transparent 58%);"
+        aria-hidden="true"
+      >
+      </div>
+      <div
+        class="pointer-events-none absolute inset-0 opacity-[0.18]"
+        style="background-image: linear-gradient(to right, var(--color-base-600) 1px, transparent 1px), linear-gradient(to bottom, var(--color-base-600) 1px, transparent 1px); background-size: 28px 28px; mask-image: radial-gradient(circle at 50% 20%, #000, transparent 72%); -webkit-mask-image: radial-gradient(circle at 50% 20%, #000, transparent 72%);"
+        aria-hidden="true"
+      >
+      </div>
+
+      <div class="relative grid gap-8 lg:grid-cols-[1fr_22rem] lg:items-end">
+        <div>
+          <p class="rule-label">Portafolio técnico</p>
+          <h1
+            class="text-base-50 mt-3 max-w-4xl font-mono text-4xl leading-tight font-extrabold tracking-[-0.04em] sm:text-5xl"
+          >
+            Construí evidencia, no una lista de herramientas.
+          </h1>
+          <p class="text-base-300 mt-5 max-w-3xl text-lg leading-relaxed">
+            Un buen portafolio no dice "sé ciberseguridad" o "sé backend".
+            Muestra repos, writeups, diagramas, tests, logs y decisiones
+            técnicas. Estos proyectos están pensados para demostrar criterio sin
+            tocar datos reales ni sistemas de terceros.
+          </p>
+        </div>
+
+        <div
+          class="border-base-700 bg-base-900/75 rounded-2xl border p-5 shadow-[0_24px_70px_rgba(0,0,0,0.25)] backdrop-blur"
+        >
+          <p class="text-base-500 font-mono text-xs">portfolio.manifest</p>
+          <div class="mt-4 space-y-3 font-mono text-sm">
+            <div class="flex items-center justify-between gap-4">
+              <span class="text-base-400">briefs</span>
+              <span class="text-term-green">{portfolioProjects.length}</span>
+            </div>
+            <div class="flex items-center justify-between gap-4">
+              <span class="text-base-400">evidencia</span>
+              <span class="text-term-amber">repo/writeup/logs</span>
+            </div>
+            <div class="flex items-center justify-between gap-4">
+              <span class="text-base-400">scope</span>
+              <span class="text-term-blue">local/ficticio</span>
+            </div>
+          </div>
+          <div class="border-base-800 mt-5 border-t pt-4">
+            <p class="text-base-300 text-sm leading-relaxed">
+              Elegí uno, hacelo chico, documentá los límites y dejá algo que se
+              pueda revisar sin una reunión de media hora.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid gap-6 pb-12 lg:grid-cols-[17rem_1fr]">
+    <aside class="hidden lg:block">
+      <div
+        class="border-base-800 bg-base-900/80 sticky top-24 rounded-2xl border p-4 backdrop-blur"
+      >
+        <p class="text-base-500 font-mono text-xs">// mapa del roadmap</p>
+        <nav class="mt-4 space-y-1" aria-label="Proyectos de portafolio">
+          {
+            portfolioProjects.map((project, index) => (
+              <a
+                href={`#${project.slug}`}
+                class="group hover:bg-base-850/70 flex items-center gap-3 rounded-lg px-2.5 py-2 transition-colors"
+                style={`--accent: ${project.accent}`}
+              >
+                <span class="font-mono text-xs" style="color: var(--accent)">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span class="min-w-0">
+                  <span class="text-base-200 block truncate text-sm transition-colors group-hover:text-[color:var(--accent)]">
+                    {project.title}
+                  </span>
+                  <span class="text-base-500 block truncate font-mono text-[0.68rem]">
+                    {project.role}
+                  </span>
+                </span>
+              </a>
+            ))
+          }
+        </nav>
+      </div>
+    </aside>
+
+    <div class="space-y-6">
+      {
+        portfolioProjects.map((project, index) => (
+          <article
+            id={project.slug}
+            class="border-base-700 bg-base-900/65 relative scroll-mt-24 overflow-hidden rounded-[1.35rem] border"
+            style={`--accent: ${project.accent}`}
+          >
+            <div
+              class="absolute inset-y-0 left-0 w-1"
+              style="background: var(--accent)"
+              aria-hidden="true"
+            />
+            <div class="p-5 sm:p-6 lg:p-7">
+              <header class="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-start">
+                <div class="flex gap-4">
+                  <span
+                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border"
+                    style="border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent)"
+                  >
+                    <Icon name={project.icon} size={23} strokeWidth={1.6} />
+                  </span>
+                  <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+                      <span style="color: var(--accent)">
+                        BRIEF_{String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span class="text-base-600">/</span>
+                      <span class="text-base-400">{project.role}</span>
+                    </div>
+                    <h2 class="text-base-50 mt-2 text-2xl font-bold tracking-tight">
+                      {project.title}
+                    </h2>
+                    <p class="text-base-300 mt-2 max-w-3xl leading-relaxed">
+                      {project.summary}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 lg:justify-end">
+                  <span class="border-base-700 bg-base-850/70 text-base-300 rounded-full border px-3 py-1 font-mono text-[0.7rem]">
+                    {project.difficulty}
+                  </span>
+                  <span class="border-base-700 bg-base-850/70 text-base-300 rounded-full border px-3 py-1 font-mono text-[0.7rem]">
+                    {project.timebox}
+                  </span>
+                </div>
+              </header>
+
+              <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+                <div>
+                  <div class="border-base-800 bg-base-950/35 rounded-xl border p-4">
+                    <h3 class="text-base-100 font-mono text-sm font-semibold">
+                      Por qué sirve
+                    </h3>
+                    <p class="text-base-400 mt-2 text-sm leading-relaxed">
+                      {project.why}
+                    </p>
+                  </div>
+
+                  <div class="mt-5">
+                    <h3
+                      class="font-mono text-sm font-semibold"
+                      style="color: var(--accent)"
+                    >
+                      Qué construir
+                    </h3>
+                    <ol class="mt-3 grid gap-2">
+                      {project.build.map((item, itemIndex) => (
+                        <li class="border-base-800 bg-base-850/35 flex gap-3 rounded-lg border px-3 py-2.5 text-sm leading-relaxed">
+                          <span class="text-base-500 font-mono text-xs">
+                            {String(itemIndex + 1).padStart(2, "0")}
+                          </span>
+                          <span class="text-base-300">{item}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                </div>
+
+                <div class="space-y-4">
+                  <div
+                    class="rounded-xl border p-4"
+                    style="border-color: color-mix(in srgb, var(--color-term-amber) 32%, var(--color-base-800)); background: color-mix(in srgb, var(--color-term-amber) 7%, var(--color-base-950));"
+                  >
+                    <h3 class="text-term-amber font-mono text-sm font-semibold">
+                      Evidencia
+                    </h3>
+                    <ul class="mt-3 space-y-2 text-sm leading-relaxed">
+                      {project.evidence.map((item) => (
+                        <li class="flex gap-2.5">
+                          <span
+                            class="text-term-amber font-mono"
+                            aria-hidden="true"
+                          >
+                            $
+                          </span>
+                          <span class="text-base-300">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div class="border-base-800 bg-base-850/35 rounded-xl border p-4">
+                    <h3 class="text-base-100 font-mono text-sm font-semibold">
+                      Entregables
+                    </h3>
+                    <ul class="mt-3 space-y-2 text-sm leading-relaxed">
+                      {project.deliverables.map((item) => (
+                        <li class="flex gap-2.5">
+                          <span class="text-term-green" aria-hidden="true">
+                            ✓
+                          </span>
+                          <span class="text-base-400">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div class="border-base-800 mt-6 grid gap-5 border-t pt-5 lg:grid-cols-[1fr_auto] lg:items-start">
+                <div>
+                  <h3 class="text-base-100 font-mono text-sm font-semibold">
+                    Evitá
+                  </h3>
+                  <ul class="text-base-400 mt-3 grid gap-2 text-sm leading-relaxed md:grid-cols-3">
+                    {project.avoid.map((item) => (
+                      <li class="flex gap-2.5">
+                        <span class="text-term-red" aria-hidden="true">
+                          !
+                        </span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div class="flex flex-wrap gap-2 lg:justify-end">
+                  {project.relatedPaths.map((slug) => {
+                    const path = getPath(slug);
+                    if (!path) return null;
+                    return (
+                      <a
+                        href={`/rutas/${path.slug}`}
+                        class="border-base-700 bg-base-800/50 text-base-300 hover:border-term-green/50 hover:text-term-green rounded border px-2.5 py-1 font-mono text-xs transition-colors"
+                      >
+                        {path.short}
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="pb-14">
+    <div
+      class="border-base-700 bg-base-950 relative overflow-hidden rounded-[1.35rem] border p-6 sm:p-8"
+    >
+      <div
+        class="absolute inset-x-0 top-0 h-px"
+        style="background: linear-gradient(90deg, transparent, var(--color-term-green), var(--color-term-blue), transparent);"
+        aria-hidden="true"
+      >
+      </div>
+      <p class="rule-label">Presentación</p>
+      <h2 class="text-base-50 mt-3 font-mono text-2xl font-bold">
+        Cómo hacer que el repo hable por vos
+      </h2>
+      <p class="text-base-300 mt-3 max-w-2xl leading-relaxed">
+        El objetivo no es que el proyecto sea enorme. Es que sea claro,
+        verificable y honesto sobre sus límites.
+      </p>
+
+      <div class="mt-6 grid gap-4 md:grid-cols-3">
+        {
+          presentationChecklist.map((item, index) => (
+            <div class="border-base-800 bg-base-900/55 rounded-xl border p-4">
+              <p class="text-term-green font-mono text-xs">
+                {String(index + 1).padStart(2, "0")}
+              </p>
+              <h3 class="text-base-100 mt-2 font-semibold">{item.title}</h3>
+              <p class="text-base-400 mt-2 text-sm leading-relaxed">
+                {item.body}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</BaseLayout>
