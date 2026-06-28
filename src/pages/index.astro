@@ -83,7 +83,7 @@ const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
   <!-- ===================== HERO : TERMINAL ===================== -->
   <section
     id="top"
-    class="grid items-center gap-8 py-8 lg:grid-cols-[1.02fr_0.98fr] lg:py-12"
+    class="hero-frame mt-4 grid items-center gap-8 px-4 py-5 sm:mt-6 sm:px-6 sm:py-7 lg:grid-cols-[1.02fr_0.98fr] lg:px-8 lg:py-8"
   >
     <div>
       <h1
@@ -99,7 +99,14 @@ const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
         >. Sin hype, sin promesas de bootcamp.
       </p>
 
-      <div class="mt-8 flex flex-wrap gap-3">
+      <div class="mt-6 flex flex-wrap gap-2 font-mono text-[0.7rem]">
+        <span class="hero-token">open source</span>
+        <span class="hero-token">educational labs</span>
+        <span class="hero-token">systems-first</span>
+        <span class="hero-token">community-built</span>
+      </div>
+
+      <div class="mt-6 flex flex-wrap gap-3">
         <a href="#rutas" class="btn-primary">
           <span class="opacity-60">$</span> empezar a aprender
         </a>
@@ -131,17 +138,19 @@ const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
       </div>
     </div>
 
-    <!-- Ventana de terminal flotante -->
-    <div
-      class="overflow-hidden rounded-xl border border-[#30363d] bg-[#0a0e14]"
-    >
+    <!-- Terminal como objeto principal del hero. -->
+    <div class="terminal-object overflow-hidden rounded-xl">
       <div
-        class="border-base-700 flex items-center border-b bg-[#161b22] px-3.5 py-3"
+        class="terminal-object__header border-base-700 flex items-center justify-between gap-4 border-b px-3.5 py-3"
       >
         <span class="text-base-400 font-mono text-xs">open@labs: ~/rutas</span>
+        <span
+          class="text-base-500 hidden font-mono text-[0.68rem] tracking-[0.14em] uppercase sm:inline"
+          >read → run → prove</span
+        >
       </div>
       <div
-        class="text-base-200 px-4 py-5 font-mono text-[13.5px] leading-[1.85]"
+        class="terminal-object__body text-base-200 px-4 py-5 font-mono text-[13.5px] leading-[1.85]"
       >
         <div>
           <span class="text-term-green">open@labs</span><span
