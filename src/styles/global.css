@@ -408,6 +408,8 @@
 
   /* Card base reutilizable */
   .card {
+    position: relative;
+    overflow: hidden;
     background-color: color-mix(
       in srgb,
       var(--color-base-850) 80%,
@@ -418,11 +420,44 @@
     transition:
       border-color 0.2s ease,
       transform 0.2s ease,
-      background-color 0.2s ease;
+      background-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      circle at 18% 0%,
+      color-mix(
+        in srgb,
+        var(--accent, var(--color-term-green)) 14%,
+        transparent
+      ),
+      transparent 38%
+    );
+    opacity: 0;
+    transition: opacity 0.2s ease;
   }
 
   .card:hover {
-    border-color: var(--color-base-500);
+    border-color: color-mix(
+      in srgb,
+      var(--accent, var(--color-term-green)) 42%,
+      var(--color-base-500)
+    );
+    box-shadow: 0 18px 50px
+      color-mix(
+        in srgb,
+        var(--accent, var(--color-term-green)) 12%,
+        transparent
+      );
+  }
+
+  .card:hover::before {
+    opacity: 1;
   }
 }
 
