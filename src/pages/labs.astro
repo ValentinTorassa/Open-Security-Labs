@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import LabCard from "../components/LabCard.astro";
+import LabLevel from "../components/LabLevel.astro";
 import { paths } from "../data/paths";
 
 const labs = await getCollection("labs", ({ data }) => !data.draft);
@@ -21,9 +22,9 @@ const sorted = [...labs].sort((a, b) => {
 const totalMin = labs.reduce((acc, l) => acc + l.data.estimatedMinutes, 0);
 
 const levels = [
-  { value: "beginner", label: "Inicial" },
-  { value: "intermediate", label: "Intermedio" },
-  { value: "advanced", label: "Avanzado" },
+  { value: "beginner" as const },
+  { value: "intermediate" as const },
+  { value: "advanced" as const },
 ];
 
 const chip =
@@ -138,7 +139,7 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
               data-filter="level"
               data-value={l.value}
             >
-              {l.label}
+              <LabLevel level={l.value} />
             </button>
           ))
         }

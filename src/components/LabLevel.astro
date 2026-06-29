@@ -1,0 +1,35 @@
+---
+type Level = "beginner" | "intermediate" | "advanced";
+
+interface Props {
+  level: Level;
+}
+
+const { level } = Astro.props;
+
+const levels = {
+  beginner: { label: "Inicial", active: 1 },
+  intermediate: { label: "Intermedio", active: 2 },
+  advanced: { label: "Avanzado", active: 3 },
+} satisfies Record<Level, { label: string; active: number }>;
+
+const meta = levels[level];
+const bars = [1, 2, 3];
+---
+
+<span class="inline-flex items-center gap-1.5">
+  <span class="inline-flex h-3 items-end gap-0.5" aria-hidden="true">
+    {
+      bars.map((bar) => (
+        <span
+          class:list={[
+            "block w-1 rounded-[1px]",
+            bar <= meta.active ? "bg-sky-400" : "bg-sky-400/25",
+          ]}
+          style={`height: ${bar * 4}px`}
+        />
+      ))
+    }
+  </span>
+  <span>{meta.label}</span>
+</span>

@@ -2,6 +2,7 @@
 import type { CollectionEntry } from "astro:content";
 import { getPath } from "../data/paths";
 import { getContributor, avatarUrl } from "../data/contributors";
+import LabLevel from "./LabLevel.astro";
 
 interface Props {
   lab: CollectionEntry<"labs">;
@@ -15,11 +16,6 @@ const path = getPath(data.path);
 const contributor = getContributor(data.contributor);
 const contributorName = contributor?.name ?? data.contributor;
 
-const levelLabel: Record<string, string> = {
-  beginner: "Inicial",
-  intermediate: "Intermedio",
-  advanced: "Avanzado",
-};
 const accent = path?.accent ?? "#56d364";
 ---
 
@@ -72,7 +68,7 @@ const accent = path?.accent ?? "#56d364";
     <span
       class="border-base-700 bg-base-800/60 text-base-400 rounded border px-2 py-0.5 font-mono text-[0.7rem]"
     >
-      {levelLabel[data.level]}
+      <LabLevel level={data.level} />
     </span>
     {
       data.tags

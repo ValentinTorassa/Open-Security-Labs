@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import LabLevel from "./LabLevel.astro";
 
 interface Props {
   /** IDs de labs, ej: "redes-internet/una-request-no-es-magia". */
@@ -28,7 +29,8 @@ const nextLabs = ids
                 {lab.data.title}
               </span>
               <span class="text-base-400 mt-0.5 block font-mono text-xs">
-                {lab.data.estimatedMinutes} min · {lab.data.level}
+                {lab.data.estimatedMinutes} min ·{" "}
+                <LabLevel level={lab.data.level} />
               </span>
             </span>
             <span

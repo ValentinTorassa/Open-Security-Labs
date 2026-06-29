@@ -6,6 +6,7 @@ import Objectives from "./Objectives.astro";
 import EvidenceBox from "./EvidenceBox.astro";
 import ChallengeBox from "./ChallengeBox.astro";
 import NextLabLinks from "./NextLabLinks.astro";
+import LabLevel from "./LabLevel.astro";
 
 interface Props {
   lab: CollectionEntry<"labs">;
@@ -14,12 +15,6 @@ const { lab } = Astro.props;
 const { data } = lab;
 const path = getPath(data.path);
 const accent = path?.accent ?? "#56d364";
-
-const levelLabel: Record<string, string> = {
-  beginner: "Inicial",
-  intermediate: "Intermedio",
-  advanced: "Avanzado",
-};
 ---
 
 <article class="py-10" style={`--accent: ${accent}`}>
@@ -50,7 +45,7 @@ const levelLabel: Record<string, string> = {
         {path?.title ?? data.path}
       </span>
       <span class="border-base-700 text-base-400 rounded border px-2 py-0.5">
-        {levelLabel[data.level]}
+        <LabLevel level={data.level} />
       </span>
       <span class="text-base-400">· {data.estimatedMinutes} min</span>
     </div>
