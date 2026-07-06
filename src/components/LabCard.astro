@@ -16,6 +16,12 @@ const path = getPath(data.path);
 const contributor = getContributor(data.contributor);
 const contributorName = contributor?.name ?? data.contributor;
 
+const levelSearchLabel: Record<string, string> = {
+  beginner: "inicial beginner basico",
+  intermediate: "intermedio intermediate medio",
+  advanced: "avanzado advanced dificil",
+};
+
 const accent = path?.accent ?? "#56d364";
 ---
 
@@ -26,9 +32,12 @@ const accent = path?.accent ?? "#56d364";
   data-lab-card
   data-lab-id={lab.id}
   data-title={data.title.toLowerCase()}
+  data-description={data.description.toLowerCase()}
   data-path={data.path}
   data-level={data.level}
+  data-level-label={levelSearchLabel[data.level]}
   data-tags={data.tags.join(" ").toLowerCase()}
+  data-contributor={contributorName.toLowerCase()}
 >
   <div class="flex items-center justify-between gap-2">
     {

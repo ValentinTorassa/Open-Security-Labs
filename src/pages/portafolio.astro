@@ -18,12 +18,24 @@ const presentationChecklist = [
     body: "Qué no cubre, qué datos son ficticios, qué harías distinto en producción y qué tradeoffs aceptaste.",
   },
 ];
+
+const site = Astro.site ?? new URL("https://securitylabs.valentorassa.com");
+const portfolioJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: "Portafolio técnico",
+  url: new URL("/portafolio", site).href,
+  inLanguage: "es-AR",
+  numberOfItems: portfolioProjects.length,
+  about: portfolioProjects.map((project) => project.title),
+};
 ---
 
 <BaseLayout
   title="Portafolio"
   description="Roadmap de proyectos para armar un portafolio técnico de ciberseguridad, backend, Linux, cloud y DevSecOps con evidencia real."
   width="wide"
+  jsonLd={portfolioJsonLd}
 >
   <section class="py-10">
     <div

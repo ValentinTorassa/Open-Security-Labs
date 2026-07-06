@@ -6,6 +6,26 @@ import { paths } from "../data/paths";
 import { badges } from "../data/badges";
 
 const labs = await getCollection("labs", ({ data }) => !data.draft);
+const pathOrder = new Map(paths.map((p) => [p.slug, p.order]));
+const sortedLabs = [...labs].sort((a, b) => {
+  const pa = pathOrder.get(a.data.path) ?? 99;
+  const pb = pathOrder.get(b.data.path) ?? 99;
+  return pa - pb || a.data.order - b.data.order;
+});
+const firstLab =
+  sortedLabs.find((l) => l.data.level === "beginner") ?? sortedLabs[0];
+const firstLabHref = firstLab ? `/labs/${firstLab.id}` : "/labs";
+
+const avatarOptions = [
+  { id: "penguin", emoji: "🐧", label: "Pingüino", accent: "#56d364" },
+  { id: "shield", emoji: "🛡️", label: "Defensa", accent: "#58a6ff" },
+  { id: "brain", emoji: "🧠", label: "Criterio", accent: "#bc8cff" },
+  { id: "bolt", emoji: "⚡", label: "Energía", accent: "#e3b341" },
+  { id: "satellite", emoji: "🛰️", label: "Redes", accent: "#39c5cf" },
+  { id: "lock", emoji: "🔐", label: "Permisos", accent: "#ff7b72" },
+  { id: "cloud", emoji: "☁️", label: "Cloud", accent: "#79c0ff" },
+  { id: "shell", emoji: "🐚", label: "Shell", accent: "#7ee787" },
+];
 
 // Datos por ruta para calcular progreso en el cliente (sin backend).
 const rutas = [...paths]
@@ -20,6 +40,7 @@ const rutas = [...paths]
 
 const totalLabs = labs.length;
 const rutasData = JSON.stringify(rutas);
+const avatarsData = JSON.stringify(avatarOptions);
 const badgesData = JSON.stringify(
   badges.map((b) => ({ id: b.id, rule: b.rule })),
 );
@@ -40,24 +61,83 @@ const badgesData = JSON.stringify(
       token y pegalo allá.
     </p>
 
+    <div data-zero-state class="card mt-8 p-5">
+      <p class="text-base-100 font-mono text-base font-semibold">
+        Todavía no empezaste.
+      </p>
+      <p class="text-base-400 mt-2 max-w-2xl text-sm leading-relaxed">
+        Hacé un lab corto, marcá la evidencia y recién ahí tu perfil empieza a
+        tener sentido. Si ya tenés progreso en otro navegador, importá tu token.
+      </p>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <a href={firstLabHref} class="btn-primary text-xs">Hacer primer lab</a>
+        <a href="/rutas" class="btn-ghost text-xs">Ver rutas</a>
+        <button type="button" data-zero-import class="btn-ghost text-xs">
+          Importar token
+        </button>
+      </div>
+    </div>
+
     <!-- Identidad -->
     <div class="card mt-8 p-5">
-      <label for="vtsl-username" class="rule-label mb-2 block">Tu alias</label>
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="text-term-green font-mono text-sm">@</span>
-        <input
-          id="vtsl-username"
-          type="text"
-          maxlength="32"
-          placeholder="elegí un alias…"
-          data-username
-          class="border-base-600 bg-base-850 text-base-50 placeholder:text-base-500 focus:border-term-green flex-1 rounded-md border px-3 py-2 font-mono text-sm outline-none"
-        />
+      <div class="grid gap-5 sm:grid-cols-[auto_1fr] sm:items-start">
+        <div
+          data-avatar-preview
+          class="border-base-700 bg-base-950/60 grid h-24 w-24 place-items-center rounded-2xl border text-5xl shadow-[0_18px_55px_rgba(0,0,0,0.24)]"
+        >
+          <span data-avatar-preview-emoji>🐧</span>
+        </div>
+
+        <div class="w-full">
+          <label for="vtsl-username" class="rule-label mb-2 block"
+            >Tu alias</label
+          >
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-term-green font-mono text-sm">@</span>
+            <input
+              id="vtsl-username"
+              type="text"
+              maxlength="32"
+              placeholder="elegí un alias…"
+              data-username
+              class="border-base-600 bg-base-850 text-base-50 placeholder:text-base-500 focus:border-term-green flex-1 rounded-md border px-3 py-2 font-mono text-sm outline-none"
+            />
+          </div>
+          <p class="text-base-500 mt-2 font-mono text-xs">
+            Solo cosmético. Aparece en tu tarjeta para compartir; no se envía a
+            ningún lado.
+          </p>
+        </div>
       </div>
-      <p class="text-base-500 mt-2 font-mono text-xs">
-        Solo cosmético. Aparece en tu tarjeta para compartir; no se envía a
-        ningún lado.
-      </p>
+
+      <div class="mt-6">
+        <p class="rule-label mb-3">Tu avatar</p>
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-4" data-avatar-options>
+          {
+            avatarOptions.map((avatar) => (
+              <button
+                type="button"
+                data-avatar-option
+                data-avatar-id={avatar.id}
+                data-avatar-emoji={avatar.emoji}
+                data-avatar-label={avatar.label}
+                data-avatar-accent={avatar.accent}
+                aria-pressed="false"
+                class="border-base-700 bg-base-850/60 text-base-300 hover:border-term-green/50 hover:text-base-50 flex items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors"
+              >
+                <span
+                  class="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-xl"
+                  style={`background: color-mix(in srgb, ${avatar.accent} 16%, transparent)`}
+                  aria-hidden="true"
+                >
+                  {avatar.emoji}
+                </span>
+                <span class="font-mono text-xs">{avatar.label}</span>
+              </button>
+            ))
+          }
+        </div>
+      </div>
     </div>
 
     <!-- Stats -->
@@ -121,21 +201,28 @@ const badgesData = JSON.stringify(
         class="bg-term-green/60 pointer-events-none absolute inset-x-0 top-0 h-px"
       >
       </div>
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-base-400 font-mono text-xs">Open Security Labs</p>
-          <p class="text-base-50 mt-0.5 font-mono text-lg font-bold">
-            @<span data-card-user>anónimo</span>
-          </p>
+      <div class="text-center">
+        <div
+          data-card-avatar-tile
+          class="border-base-700 bg-base-950/70 mx-auto grid h-20 w-20 place-items-center rounded-2xl border text-5xl"
+        >
+          <span data-card-avatar-emoji>🐧</span>
         </div>
-        <div class="text-right">
-          <p class="text-term-green font-mono text-4xl font-bold" data-card-pct>
-            0%
-          </p>
-          <p class="text-base-400 font-mono text-xs">completado</p>
-        </div>
+        <p class="text-base-400 mt-4 font-mono text-xs">Open Security Labs</p>
+        <p
+          class="text-base-50 mx-auto mt-1 max-w-full truncate font-mono text-xl font-bold"
+        >
+          @<span data-card-user>anónimo</span>
+        </p>
+        <p
+          class="text-term-green mt-4 font-mono text-5xl font-bold"
+          data-card-pct
+        >
+          0%
+        </p>
+        <p class="text-base-400 font-mono text-xs">completado</p>
       </div>
-      <div class="mt-5 flex gap-4 font-mono text-xs">
+      <div class="mt-5 flex justify-center gap-4 font-mono text-xs">
         <span class="text-base-300"
           ><span class="text-term-green" data-card-labs>0</span> labs</span
         >
@@ -205,6 +292,12 @@ const badgesData = JSON.stringify(
   <script
     is:inline
     type="application/json"
+    data-avatars-json
+    set:html={avatarsData}
+  />
+  <script
+    is:inline
+    type="application/json"
     data-badges-json
     set:html={badgesData}
   />
@@ -217,6 +310,9 @@ const badgesData = JSON.stringify(
     onProgress,
     getUsername,
     setUsername,
+    getAvatar,
+    setAvatar,
+    resetProfile,
     exportToken,
     importToken,
   } from "../scripts/progress";
@@ -236,6 +332,12 @@ const badgesData = JSON.stringify(
     | { kind: "route"; route: string }
     | { kind: "allLabs" };
   type BadgeDef = { id: string; rule: BadgeRule };
+  type AvatarOption = {
+    id: string;
+    emoji: string;
+    label: string;
+    accent: string;
+  };
 
   const raw = document.querySelector<HTMLElement>("[data-rutas-json]");
   const rutas: Ruta[] = raw ? JSON.parse(raw.textContent ?? "[]") : [];
@@ -245,8 +347,57 @@ const badgesData = JSON.stringify(
   const badgeDefs: BadgeDef[] = badgesRaw
     ? JSON.parse(badgesRaw.textContent ?? "[]")
     : [];
+  const avatarsRaw = document.querySelector<HTMLElement>("[data-avatars-json]");
+  const avatars: AvatarOption[] = avatarsRaw
+    ? JSON.parse(avatarsRaw.textContent ?? "[]")
+    : [];
 
   const $ = <T extends HTMLElement>(s: string) => document.querySelector<T>(s);
+  const zeroState = $<HTMLElement>("[data-zero-state]");
+
+  const avatarButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>("[data-avatar-option]"),
+  );
+  const avatarPreview = $<HTMLElement>("[data-avatar-preview]");
+  const avatarPreviewEmoji = $<HTMLElement>("[data-avatar-preview-emoji]");
+  const cardAvatarTile = $<HTMLElement>("[data-card-avatar-tile]");
+  const cardAvatarEmoji = $<HTMLElement>("[data-card-avatar-emoji]");
+
+  const avatarById = (id: string) =>
+    avatars.find((avatar) => avatar.id === id) ?? avatars[0];
+
+  function paintAvatar() {
+    const avatar = avatarById(getAvatar());
+    if (!avatar) return;
+    [avatarPreview, cardAvatarTile].forEach((el) => {
+      if (!el) return;
+      el.style.borderColor = `color-mix(in srgb, ${avatar.accent} 45%, transparent)`;
+      el.style.background = `radial-gradient(circle at 30% 20%, color-mix(in srgb, ${avatar.accent} 24%, transparent), transparent 58%), color-mix(in srgb, ${avatar.accent} 9%, var(--color-base-950))`;
+      el.style.boxShadow = `0 18px 55px color-mix(in srgb, ${avatar.accent} 18%, transparent)`;
+    });
+    if (avatarPreviewEmoji) avatarPreviewEmoji.textContent = avatar.emoji;
+    if (cardAvatarEmoji) cardAvatarEmoji.textContent = avatar.emoji;
+    avatarButtons.forEach((button) => {
+      const selected = button.dataset.avatarId === avatar.id;
+      button.setAttribute("aria-pressed", String(selected));
+      button.dataset.selected = String(selected);
+      button.style.borderColor = selected
+        ? `color-mix(in srgb, ${avatar.accent} 60%, transparent)`
+        : "";
+      button.style.background = selected
+        ? `color-mix(in srgb, ${avatar.accent} 12%, transparent)`
+        : "";
+      button.classList.toggle("text-base-50", selected);
+      button.classList.toggle("text-base-300", !selected);
+    });
+  }
+
+  avatarButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      setAvatar(button.dataset.avatarId ?? "penguin");
+      paintAvatar();
+    });
+  });
 
   // ---- Username ----
   const userInput = $<HTMLInputElement>("[data-username]");
@@ -317,6 +468,7 @@ const badgesData = JSON.stringify(
     setText("[data-stat-pct]", `${pct}%`);
 
     setText("[data-card-user]", getUsername() || "anónimo");
+    paintAvatar();
     setText("[data-card-pct]", `${pct}%`);
     setText("[data-card-labs]", String(labsDone));
     setText("[data-card-rutas]", String(rutasDone));
@@ -345,6 +497,7 @@ const badgesData = JSON.stringify(
       if (el) el.dataset.earned = got ? "true" : "false";
     });
     setText("[data-badges-count]", String(badgesDone));
+    zeroState?.classList.toggle("hidden", labsDone > 0);
 
     return { labsDone, rutasDone, examsDone, pct };
   }
@@ -378,12 +531,18 @@ const badgesData = JSON.stringify(
       if (importToken(token)) {
         showMsg("✓ Progreso importado y fusionado.", true);
         if (userInput) userInput.value = getUsername();
+        paintAvatar();
         render();
       } else {
         showMsg("✕ Token inválido. ¿Lo copiaste completo?", false);
       }
     },
   );
+
+  $<HTMLButtonElement>("[data-zero-import]")?.addEventListener("click", () => {
+    box?.focus();
+    box?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
 
   // ---- Reset ----
   $<HTMLButtonElement>("[data-reset]")?.addEventListener("click", () => {
@@ -392,9 +551,10 @@ const badgesData = JSON.stringify(
       r.labIds.forEach((id) => localStorage.removeItem(`vtsl:done:${id}`));
       localStorage.removeItem(`vtsl:exam:ruta:${r.slug}`);
     });
-    localStorage.removeItem("vtsl:user");
+    resetProfile();
     if (userInput) userInput.value = "";
     if (box) box.value = "";
+    paintAvatar();
     window.dispatchEvent(new CustomEvent("vtsl:progress"));
     showMsg("Progreso borrado.", true);
   });
@@ -405,7 +565,8 @@ const badgesData = JSON.stringify(
     async () => {
       const s = render();
       const user = getUsername() || "anónimo";
-      const text = `@${user} en Open Security Labs: ${s.pct}% del catálogo · ${s.labsDone} labs · ${s.rutasDone} rutas · ${s.examsDone} exámenes. securitylabs.valentorassa.com`;
+      const avatar = avatarById(getAvatar());
+      const text = `${avatar?.emoji ?? "🐧"} @${user} en Open Security Labs: ${s.pct}% del catálogo · ${s.labsDone} labs · ${s.rutasDone} rutas · ${s.examsDone} exámenes. securitylabs.valentorassa.com`;
       try {
         await navigator.clipboard.writeText(text);
         showMsg("✓ Resumen copiado al portapapeles.", true);
@@ -421,6 +582,7 @@ const badgesData = JSON.stringify(
     () => {
       const s = render();
       const user = getUsername() || "anónimo";
+      const avatar = avatarById(getAvatar());
       const W = 1200;
       const H = 630;
       const canvas = document.createElement("canvas");
@@ -439,20 +601,46 @@ const badgesData = JSON.stringify(
       ctx.fillRect(0, 0, W, 6);
 
       const mono = "'JetBrains Mono Variable', ui-monospace, monospace";
+      ctx.textAlign = "center";
+
       ctx.fillStyle = "#5a6b75";
       ctx.font = `28px ${mono}`;
-      ctx.fillText("Open Security Labs", 64, 100);
+      ctx.fillText("Open Security Labs", W / 2, 78);
+
+      if (avatar) {
+        const avatarGrad = ctx.createRadialGradient(
+          W / 2,
+          188,
+          8,
+          W / 2,
+          188,
+          82,
+        );
+        avatarGrad.addColorStop(0, avatar.accent);
+        avatarGrad.addColorStop(1, "#101820");
+        ctx.fillStyle = avatarGrad;
+        ctx.beginPath();
+        ctx.roundRect(W / 2 - 88, 100, 176, 176, 32);
+        ctx.fill();
+        ctx.strokeStyle = avatar.accent;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.font = `96px ${mono}`;
+        ctx.textBaseline = "middle";
+        ctx.fillText(avatar.emoji, W / 2, 190);
+        ctx.textBaseline = "alphabetic";
+      }
 
       ctx.fillStyle = "#f1f5f6";
       ctx.font = `bold 72px ${mono}`;
-      ctx.fillText(`@${user}`, 64, 190);
+      ctx.fillText(`@${user}`, W / 2, 360);
 
       ctx.fillStyle = "#56d364";
-      ctx.font = `bold 200px ${mono}`;
-      ctx.fillText(`${s.pct}%`, 64, 420);
+      ctx.font = `bold 160px ${mono}`;
+      ctx.fillText(`${s.pct}%`, W / 2, 505);
       ctx.fillStyle = "#5a6b75";
       ctx.font = `32px ${mono}`;
-      ctx.fillText("del catálogo completado", 70, 470);
+      ctx.fillText("del catálogo completado", W / 2, 550);
 
       ctx.font = `36px ${mono}`;
       const line = [
@@ -460,16 +648,24 @@ const badgesData = JSON.stringify(
         ["#39c5cf", `${s.rutasDone} rutas`],
         ["#e3b341", `${s.examsDone} exámenes`],
       ] as const;
-      let x = 64;
+      const gap = 50;
+      const totalWidth = line.reduce(
+        (width, [, label], idx) =>
+          width + ctx.measureText(label).width + (idx > 0 ? gap : 0),
+        0,
+      );
+      let x = W / 2 - totalWidth / 2;
+      ctx.textAlign = "left";
       line.forEach(([color, label]) => {
         ctx.fillStyle = color as string;
-        ctx.fillText(label, x, 560);
+        ctx.fillText(label, x, 590);
         x += ctx.measureText(label).width + 50;
       });
 
       ctx.fillStyle = "#3b4750";
-      ctx.font = `26px ${mono}`;
-      ctx.fillText("securitylabs.valentorassa.com", 64, 600);
+      ctx.font = `22px ${mono}`;
+      ctx.textAlign = "center";
+      ctx.fillText("securitylabs.valentorassa.com", W / 2, 620);
 
       const url = canvas.toDataURL("image/png");
       const a = document.createElement("a");

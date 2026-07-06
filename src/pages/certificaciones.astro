@@ -4,12 +4,23 @@ import CertCard from "../components/CertCard.astro";
 import { certifications } from "../data/certifications";
 
 const totalQuestions = certifications.reduce((a, c) => a + c.exam.length, 0);
+const site = Astro.site ?? new URL("https://securitylabs.valentorassa.com");
+const certsJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: "Certificaciones",
+  url: new URL("/certificaciones", site).href,
+  inLanguage: "es-AR",
+  numberOfItems: certifications.length,
+  about: certifications.map((cert) => cert.name),
+};
 ---
 
 <BaseLayout
   title="Certificaciones"
   description="Preparación y exámenes de práctica para AWS Cloud Practitioner, CompTIA Security+, Network+, Linux+ y AWS Solutions Architect. En español, con explicaciones."
   width="wide"
+  jsonLd={certsJsonLd}
 >
   <section class="py-12">
     <p class="rule-label">Preparación para certificaciones</p>
@@ -29,6 +40,9 @@ const totalQuestions = certifications.reduce((a, c) => a + c.exam.length, 0);
       <span
         ><span class="text-term-green">{totalQuestions}</span> preguntas de práctica</span
       >
+      <span
+        ><span class="text-term-green">julio 2026</span> última revisión</span
+      >
     </div>
 
     <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -40,7 +54,8 @@ const totalQuestions = certifications.reduce((a, c) => a + c.exam.length, 0);
     >
       Open Security Labs no está afiliado a AWS ni a CompTIA. Los nombres,
       códigos y marcas pertenecen a sus dueños. Las preguntas son propias y de
-      práctica: no reproducen preguntas reales del examen.
+      práctica: no reproducen preguntas reales del examen. Antes de rendir,
+      validá siempre la guía oficial y la versión vigente del examen.
     </p>
   </section>
 </BaseLayout>

@@ -1,0 +1,113 @@
+---
+title: "API HTTP base: método, recurso, status y content-type"
+description: "Antes de JWT, roles o microservicios, una API es una conversación HTTP. Este lab te da el mapa mínimo para leer y diseñar endpoints sin adivinar."
+path: "backend-arquitectura"
+order: 0
+level: "beginner"
+estimatedMinutes: 30
+prerequisites:
+  - "Saber usar una terminal con curl"
+  - "Idea básica de cliente y servidor"
+objectives:
+  - "Separar método, recurso, headers y body"
+  - "Elegir status codes por intención, no por costumbre"
+  - "Distinguir errores de input, permisos y servidor"
+  - "Diseñar una matriz chica de endpoints"
+evidence:
+  - "Matriz de endpoints con método, recurso, status esperado y body"
+  - "Salida de curl -i contra una URL pública o local"
+  - "Writeup: por qué cada endpoint usa ese método y no otro"
+commands:
+  - "curl -i"
+  - "curl -X POST"
+  - "curl -H 'Content-Type: application/json'"
+challenge: "Diseñá una API de notas con 5 endpoints. Para cada uno definí método, ruta, status exitoso, dos errores esperados y qué Content-Type devuelve."
+nextLabs:
+  - "backend-arquitectura/jwt-no-es-autorizacion"
+  - "redes-internet/status-codes-4xx-vs-5xx"
+tags:
+  - "backend"
+  - "http"
+  - "apis"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+Una API no empieza en JWT ni en arquitectura hexagonal. Empieza con una request: método, ruta, headers, body y una respuesta con status, headers y body.
+
+<Callout type="concepto">
+  HTTP es un contrato. El cliente expresa una intención y el servidor responde
+  qué pasó. Si ese contrato es ambiguo, después autorización, retries y logging
+  se vuelven confusos.
+</Callout>
+
+## Leé una respuesta completa
+
+`curl -i` muestra headers además del body. Usá una URL pública segura o tu propio servicio local.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+curl -i https://example.com
+```
+
+</TerminalBlock>
+
+La primera línea te dice protocolo y status. Después vienen headers como `Content-Type`, `Cache-Control` o `Server`.
+
+## Método + recurso
+
+Un endpoint debería poder leerse como una frase:
+
+```text
+GET    /notes          listar notas
+POST   /notes          crear nota
+GET    /notes/{id}     ver una nota
+PATCH  /notes/{id}     modificar parte de una nota
+DELETE /notes/{id}     borrar una nota
+```
+
+<Callout type="error">
+  Si todo es `POST /do-action`, perdés semántica. Los clientes no saben qué se
+  puede cachear, reintentar o auditar. El método importa porque expresa
+  intención.
+</Callout>
+
+## Status codes como diseño
+
+No uses `200` para todo. Una API más clara separa casos:
+
+```text
+caso                         status razonable
+creación correcta             201 Created
+sin body, operación exitosa   204 No Content
+input inválido                400 Bad Request
+no autenticado                401 Unauthorized
+sin permiso                   403 Forbidden
+recurso inexistente           404 Not Found
+conflicto de estado           409 Conflict
+fallo inesperado              500 Internal Server Error
+```
+
+## Content-Type no es decoración
+
+Si mandás JSON, decilo. Si respondés JSON, decilo también.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+curl -i -X POST https://api.example.test/notes \
+  -H "Content-Type: application/json" \
+  -d '{"title":"nota de juguete"}'
+```
+
+</TerminalBlock>
+
+No hace falta que esa URL exista: la evidencia puede ser el diseño de la request y una matriz de endpoints. Si la corrés contra una API propia, usá datos ficticios.
+
+<Callout type="evidencia">
+  Tu entrega debería mostrar una tabla: método, ruta, intención, status feliz,
+  errores esperados y ejemplo de body. Eso ya obliga a pensar el contrato antes
+  de escribir controladores.
+</Callout>

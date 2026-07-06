@@ -1,0 +1,88 @@
+---
+title: "SBOM básico: inventario de dependencias que sí sirve"
+description: "Qué es un SBOM, cuándo ayuda, qué no resuelve y cómo usarlo como evidencia de supply chain sin vender humo."
+path: "devsecops-agentes"
+order: 4
+level: "intermediate"
+estimatedMinutes: 30
+prerequisites:
+  - "Tener un proyecto de juguete con package.json o dependencias similares"
+  - "Idea básica de dependencias directas y transitivas"
+objectives:
+  - "Entender qué contiene un SBOM"
+  - "Distinguir CycloneDX, SPDX y lockfiles"
+  - "Usar un SBOM como evidencia revisable"
+  - "Reconocer límites: inventario no es remediación"
+evidence:
+  - "SBOM generado o ejemplo sintético"
+  - "Tabla con 5 dependencias: directa/transitiva, versión y uso"
+  - "Writeup: qué harías ante una dependencia vulnerable"
+commands:
+  - "npm ls --depth=0"
+  - "npm audit --omit=dev"
+challenge: "Elegí un proyecto de juguete. Listá dependencias directas, marcá cuáles son runtime y cuáles dev, y escribí qué dato necesitarías para decidir si una vulnerabilidad aplica."
+nextLabs:
+  - "devsecops-agentes/github-actions-secrets-en-logs"
+  - "devsecops-agentes/agente-no-deberia-tocar-archivos-a-ciegas"
+tags:
+  - "sbom"
+  - "supply-chain"
+  - "devsecops"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+Un SBOM no hace tu software seguro. Es un inventario: qué componentes tenés, con qué versiones y, según el formato, con metadatos útiles. Sin inventario, cuando aparece una vulnerabilidad, empezás preguntando "¿usamos eso?".
+
+<Callout type="concepto">
+  **SBOM** significa Software Bill of Materials. Pensalo como una lista de
+  materiales: no arregla una pieza rota, pero te dice si esa pieza está en tu
+  producto y dónde mirar.
+</Callout>
+
+## Primer inventario con npm
+
+Para un proyecto Node, empezá por algo simple:
+
+<TerminalBlock title="vt@labs:~/proyecto">
+
+```bash
+npm ls --depth=0
+npm audit --omit=dev
+```
+
+</TerminalBlock>
+
+Esto no reemplaza un SBOM formal, pero te obliga a separar dependencias directas, transitivas y entorno de ejecución.
+
+## Qué debería responder
+
+```text
+pregunta                         dato que necesitás
+¿usamos la librería vulnerable?   nombre y versión
+¿está en runtime o dev?           scope/dependency type
+¿llega a producción?              build/deploy path
+¿hay fix disponible?              versión corregida
+¿rompe actualizar?                tests / changelog / compatibilidad
+```
+
+<Callout type="error">
+  "Tenemos SBOM" no significa "estamos seguros". Si nadie lo mira, no se
+  actualiza o no se conecta con decisiones de remediación, es un archivo muerto.
+</Callout>
+
+## Evidencia útil
+
+Tu entrega puede ser una tabla:
+
+```text
+paquete     directo/transitivo   runtime/dev   versión   por qué está
+astro       directo              runtime       x.y.z     framework del sitio
+prettier    directo              dev           x.y.z     formato de código
+```
+
+<Callout type="evidencia">
+  Un buen SBOM se puede revisar y accionar. La evidencia no es solo generarlo:
+  es explicar qué harías cuando una dependencia importante aparece vulnerable.
+</Callout>

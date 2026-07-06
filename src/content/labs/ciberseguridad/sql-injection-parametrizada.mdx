@@ -1,0 +1,80 @@
+---
+title: "SQL injection defensiva: queries parametrizadas"
+description: "Un lab seguro para entender por qué concatenar input en SQL rompe el límite entre datos y código, y cómo lo corrigen las consultas parametrizadas."
+path: "ciberseguridad"
+order: 5
+level: "intermediate"
+estimatedMinutes: 35
+prerequisites:
+  - "Entender formularios o APIs simples"
+  - "Idea básica de SQL SELECT/WHERE"
+objectives:
+  - "Distinguir datos de código SQL"
+  - "Reconocer concatenación peligrosa"
+  - "Diseñar queries parametrizadas"
+  - "Documentar el bug desde la defensa"
+evidence:
+  - "Pseudocódigo vulnerable y corregido"
+  - "Tabla source → sink → impacto → mitigación"
+  - "Writeup con tests de input normal e input malicioso de juguete"
+commands:
+  - "sqlite3"
+challenge: "Tomá una búsqueda de usuarios por email. Escribí la versión vulnerable por concatenación y la versión segura con parámetro. Explicá qué parte deja de interpretarse como SQL."
+nextLabs:
+  - "backend-arquitectura/api-http-base"
+  - "ciberseguridad/threat-modeling-app-chica"
+tags:
+  - "sql"
+  - "owasp"
+  - "defensivo"
+---
+
+import Callout from "../../../components/Callout.astro";
+
+SQL injection ocurre cuando input no confiable deja de ser dato y pasa a formar parte del programa SQL. La defensa no es "filtrar palabras raras": es mantener separados código y datos.
+
+<Callout type="concepto">
+  Una query parametrizada manda la estructura SQL por un lado y los valores por
+  otro. El motor trata el input como dato, no como instrucciones nuevas.
+</Callout>
+
+## El patrón vulnerable
+
+```text
+email = request.query.email
+sql = "SELECT id, email FROM users WHERE email = '" + email + "'"
+db.query(sql)
+```
+
+El problema es que `email` termina dentro del texto SQL. Si el usuario controla ese valor, controla parte de la query.
+
+<Callout type="error">
+  Escapar strings a mano es frágil. Siempre aparece otro contexto, encoding o
+  caso borde. La defensa estándar es usar parámetros del driver o del ORM.
+</Callout>
+
+## La versión segura
+
+```text
+email = request.query.email
+sql = "SELECT id, email FROM users WHERE email = ?"
+db.query(sql, [email])
+```
+
+El `?` no se reemplaza concatenando strings. El driver manda el valor como parámetro.
+
+## Cómo documentarlo
+
+```text
+source:      request.query.email
+sink malo:   string SQL concatenado
+impacto:     el input puede cambiar la lógica de la consulta
+mitigación:  parámetro del driver + validación de formato
+test bueno:  email normal devuelve un usuario
+test malo:   input raro no cambia la estructura de la query
+```
+
+<Callout type="evidencia">
+  La evidencia puede ser pseudocódigo y tests de juguete. No hace falta explotar
+  bases reales. La idea es demostrar que entendés el límite código/dato.
+</Callout>

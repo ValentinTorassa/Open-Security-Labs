@@ -1,0 +1,87 @@
+---
+title: "VPC y Security Groups: quién puede hablar con quién"
+description: "Modelo mental de red cloud sin levantar infraestructura real: subnets, rutas, security groups y reglas de entrada/salida con ejemplos ficticios."
+path: "cloud-produccion"
+order: 4
+level: "intermediate"
+estimatedMinutes: 35
+prerequisites:
+  - "Entender IPs, puertos y CIDR básico"
+  - "Haber visto conceptos base de AWS"
+objectives:
+  - "Dibujar una VPC mínima con subnets públicas y privadas"
+  - "Distinguir route table, NACL y security group"
+  - "Escribir reglas de SG con mínimo privilegio"
+  - "Detectar reglas demasiado amplias"
+evidence:
+  - "Diagrama de VPC con subnets y flujo de tráfico"
+  - "Tabla de reglas permitidas y denegadas"
+  - "Writeup: qué regla abrirías y cuál no"
+commands:
+  - "aws ec2 describe-security-groups"
+  - "aws ec2 describe-route-tables"
+challenge: "Diseñá una app web ficticia con ALB público, backend privado y base de datos privada. Escribí las reglas mínimas de security group entre los tres."
+nextLabs:
+  - "redes-internet/leer-un-cidr-sin-calculadora"
+  - "cloud-produccion/s3-bucket-publico-sin-querer"
+tags:
+  - "aws"
+  - "vpc"
+  - "networking"
+---
+
+import Callout from "../../../components/Callout.astro";
+import Mermaid from "../../../components/Mermaid.astro";
+
+En cloud, muchas brechas no empiezan con un exploit: empiezan con "abrí 0.0.0.0/0 porque no andaba". Este lab te obliga a dibujar quién necesita hablar con quién.
+
+<Mermaid
+  caption="Arquitectura mínima: solo el balanceador es público; backend y base viven privados."
+  code={`flowchart LR
+  I[Internet] -->|443| ALB[ALB público]
+  ALB -->|8080| API[Backend privado]
+  API -->|5432| DB[(DB privada)]`}
+/>
+
+## Security Group como firewall de intención
+
+Una regla buena dice origen, puerto y motivo:
+
+```text
+destino   puerto   origen      motivo
+ALB       443      0.0.0.0/0   tráfico HTTPS público
+API       8080     sg-alb      solo el balanceador llama al backend
+DB        5432     sg-api      solo la API habla con la DB
+```
+
+<Callout type="concepto">
+  Referenciar otro security group suele ser más claro que abrir un CIDR amplio.
+  La pregunta es: "¿qué componente necesita hablar con este?", no "¿qué rango me
+  queda cómodo?".
+</Callout>
+
+## Reglas que deberían hacer ruido
+
+```text
+0.0.0.0/0 hacia SSH/RDP
+0.0.0.0/0 hacia base de datos
+backend aceptando tráfico directo desde internet
+egress abierto sin razón en componentes sensibles
+```
+
+No toda regla amplia es vulnerabilidad inmediata, pero toda regla amplia necesita justificación.
+
+## Evidencia sin cuenta real
+
+Podés documentarlo como diseño, sin desplegar:
+
+```text
+sg-alb inbound:  443 desde 0.0.0.0/0
+sg-api inbound:  8080 desde sg-alb
+sg-db inbound:   5432 desde sg-api
+```
+
+<Callout type="evidencia">
+  Si usás salidas reales de AWS CLI, redactá IDs de VPC, subnets, cuentas, ARNs
+  y nombres internos. La evidencia que importa es el razonamiento de flujo.
+</Callout>

@@ -1,0 +1,110 @@
+---
+title: "Outbox: transacciones, eventos y fallos parciales"
+description: "Un lab avanzado para entender por qué guardar datos y publicar eventos no es una sola operación, y cómo el patrón outbox reduce duplicados y pérdidas."
+path: "backend-arquitectura"
+order: 5
+level: "advanced"
+estimatedMinutes: 45
+prerequisites:
+  - "Entender APIs, idempotencia y reintentos"
+  - "Idea básica de bases de datos y colas"
+objectives:
+  - "Reconocer el fallo entre commit de DB y publish de evento"
+  - "Diseñar una tabla outbox mínima"
+  - "Aplicar idempotencia en consumidores"
+  - "Documentar garantías y límites del patrón"
+evidence:
+  - "Diagrama del flujo pedido → outbox → worker → broker"
+  - "Pseudocódigo de transacción y worker"
+  - "Tabla con fallos parciales y comportamiento esperado"
+commands:
+  - "sqlite3"
+  - "curl -X POST"
+challenge: "Diseñá una tabla outbox para el evento OrderCreated. Escribí qué pasa si falla el publish después del commit y cómo evitás procesar dos veces el mismo evento."
+nextLabs:
+  - "backend-arquitectura/idempotencia-y-reintentos"
+  - "devsecops-agentes/github-actions-secrets-en-logs"
+tags:
+  - "backend"
+  - "arquitectura"
+  - "eventos"
+---
+
+import Callout from "../../../components/Callout.astro";
+
+Crear una orden y publicar `OrderCreated` suena como una operación. En realidad son dos sistemas: tu base de datos y tu broker. Entre uno y otro hay una grieta donde viven los fallos parciales.
+
+<Callout type="concepto">
+  El patrón **outbox** guarda el cambio de negocio y el evento pendiente en la
+  misma transacción de base de datos. Después, un worker publica eventos desde
+  la outbox y marca lo publicado. No elimina todos los problemas, pero cambia
+  una pérdida silenciosa por trabajo reintentable.
+</Callout>
+
+## El fallo clásico
+
+```text
+1. insertar orden en DB            OK
+2. commit                          OK
+3. publicar OrderCreated al broker FALLA
+```
+
+La orden existe, pero nadie se enteró. Si el email, la facturación o el inventario dependían del evento, tu sistema queda inconsistente.
+
+## Tabla outbox mínima
+
+```sql
+CREATE TABLE outbox_events (
+  id TEXT PRIMARY KEY,
+  aggregate_type TEXT NOT NULL,
+  aggregate_id TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  payload TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TEXT NOT NULL,
+  published_at TEXT
+);
+```
+
+En la misma transacción:
+
+```text
+begin
+  insertar orden
+  insertar outbox_events(id, aggregate_id, event_type, payload)
+commit
+```
+
+<Callout type="comando">
+  La propiedad importante no es la tabla en sí: es que orden y evento pendiente
+  se escriben bajo el mismo commit. Si uno entra, entra el otro.
+</Callout>
+
+## Worker reintentable
+
+```text
+loop:
+  eventos = buscar pending limit 100
+  por cada evento:
+    publicar al broker con event.id como idempotency key
+    marcar published
+```
+
+Si el worker muere, vuelve a buscar pendientes. Si publica dos veces, el consumidor debe deduplicar por `event.id`.
+
+## Garantías honestas
+
+```text
+problema                    respuesta
+publish falla               queda pending y se reintenta
+worker muere                otro worker retoma
+evento duplicado            consumidor deduplica por id
+orden rollback              no queda evento huérfano
+broker recibe pero ack falla posible duplicado, no pérdida
+```
+
+<Callout type="error">
+  Outbox no te da "exactly once" mágico. Te da una base para **at-least-once**
+  con deduplicación. Si el consumidor no es idempotente, moviste el bug de
+  lugar.
+</Callout>

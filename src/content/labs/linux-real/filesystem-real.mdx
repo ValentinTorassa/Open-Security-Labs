@@ -1,0 +1,120 @@
+---
+title: "Filesystem real: /etc, /var/log y /proc sin memorizar"
+description: "Un recorrido práctico por las carpetas que más vas a tocar en Linux: configuración, logs, procesos, discos y rutas. La idea no es memorizar nombres, es saber dónde mirar."
+path: "linux-real"
+order: 0
+level: "beginner"
+estimatedMinutes: 25
+prerequisites:
+  - "Una terminal Linux o WSL"
+  - "Permisos de lectura sobre tu propio sistema"
+objectives:
+  - "Distinguir configuración, logs, binarios, home y runtime"
+  - "Inspeccionar archivos sin modificarlos"
+  - "Usar /proc para mirar procesos y datos del kernel"
+  - "Dejar evidencia de un recorrido read-only por el filesystem"
+evidence:
+  - "Tabla con 8 rutas importantes y qué tipo de información guardan"
+  - "Salida de comandos read-only como pwd, ls, stat, df y du"
+  - "Writeup corto: dónde mirarías config, logs y procesos ante un incidente"
+commands:
+  - "pwd"
+  - "ls -lah"
+  - "stat"
+  - "df -h"
+  - "du -sh"
+  - "ls /proc/$$"
+challenge: "Elegí un servicio o proceso de tu máquina, sin modificar nada: ubicá su binario, un archivo de configuración probable, un lugar donde buscarías logs y su entrada en /proc. Documentá el recorrido."
+nextLabs:
+  - "linux-real/permisos-usuarios-procesos"
+  - "linux-real/permisos-en-octal"
+tags:
+  - "linux"
+  - "filesystem"
+  - "debugging"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+Linux parece enorme hasta que entendés el mapa. No necesitás memorizar cada carpeta: necesitás saber qué tipo de información vive en cada zona y cómo inspeccionarla sin romper nada.
+
+<Callout type="concepto">
+  El filesystem es una interfaz de debugging. Configuración, logs, binarios,
+  dispositivos, procesos y estado del sistema aparecen como archivos o carpetas.
+  Si sabés leerlo, dejás de depender de paneles mágicos.
+</Callout>
+
+## El mapa mínimo
+
+Estas rutas aparecen todo el tiempo:
+
+```text
+ruta        qué suele guardar
+/etc        configuración del sistema y servicios
+/var/log    logs persistentes
+/home       datos de usuarios
+/usr/bin    binarios instalados por paquetes
+/bin        binarios básicos del sistema
+/tmp        archivos temporales
+/proc       procesos y estado del kernel en vivo
+/dev        dispositivos expuestos como archivos
+```
+
+No edites nada todavía. Este lab es read-only.
+
+## Mirá dónde estás parado
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+pwd
+ls -lah
+stat .
+```
+
+</TerminalBlock>
+
+`pwd` te dice la ruta actual. `ls -lah` muestra permisos, dueño, tamaño y fechas. `stat` te da metadata más precisa del archivo o directorio.
+
+<Callout type="comando">
+  Antes de cambiar permisos o mover archivos, mirá dueño, grupo, modo y fecha.
+  Mucho debugging de Linux empieza con "¿quién puede leer o ejecutar esto?".
+</Callout>
+
+## Discos y tamaño
+
+Cuando algo falla por espacio, no alcanza con "el disco está lleno". Querés saber qué filesystem está lleno y qué carpeta pesa.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+df -h
+du -sh "$HOME" 2>/dev/null
+```
+
+</TerminalBlock>
+
+`df -h` mira filesystems montados. `du -sh` suma el tamaño de una carpeta. Son preguntas distintas.
+
+## /proc: procesos como archivos
+
+`/proc` no es una carpeta normal. Expone estado vivo del kernel y de procesos. Tu shell actual tiene un PID, y `$$` lo representa.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+echo "mi shell tiene PID $$"
+ls -lah /proc/$$
+readlink /proc/$$/exe
+```
+
+</TerminalBlock>
+
+Ahí podés ver el ejecutable, variables, límites, file descriptors y más. No hace falta tocar nada: leer ya te da contexto.
+
+<Callout type="evidencia">
+  Armá una tabla con estas columnas: ruta, qué contiene, comando que usaste, qué
+  aprendiste. Si podés explicar `/etc`, `/var/log` y `/proc`, ya tenés un mapa
+  práctico para incidentes chicos.
+</Callout>

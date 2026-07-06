@@ -57,6 +57,8 @@ export function countDone(ids: string[]): number {
 // el usuario lo lleve de un dispositivo a otro si quiere.
 
 const USER = "vtsl:user";
+const AVATAR = "vtsl:avatar";
+export const DEFAULT_AVATAR = "penguin";
 
 export function getUsername(): string {
   return store()?.getItem(USER) ?? "";
@@ -71,7 +73,28 @@ export function setUsername(name: string): void {
   emit();
 }
 
-type Snapshot = { u?: string; labs: string[]; exams: string[] };
+export function getAvatar(): string {
+  return store()?.getItem(AVATAR) ?? DEFAULT_AVATAR;
+}
+
+export function setAvatar(id: string): void {
+  const s = store();
+  if (!s) return;
+  const clean = id.trim().slice(0, 32);
+  if (clean) s.setItem(AVATAR, clean);
+  else s.removeItem(AVATAR);
+  emit();
+}
+
+export function resetProfile(): void {
+  const s = store();
+  if (!s) return;
+  s.removeItem(USER);
+  s.removeItem(AVATAR);
+  emit();
+}
+
+type Snapshot = { u?: string; a?: string; labs: string[]; exams: string[] };
 
 function snapshot(): Snapshot {
   const s = store();
@@ -88,7 +111,13 @@ function snapshot(): Snapshot {
     }
   }
   const u = getUsername();
-  return u ? { u, labs, exams } : { labs, exams };
+  const a = getAvatar();
+  return {
+    ...(u ? { u } : {}),
+    ...(a !== DEFAULT_AVATAR ? { a } : {}),
+    labs,
+    exams,
+  };
 }
 
 // base64 unicode-safe del snapshot.
@@ -112,6 +141,7 @@ export function importToken(token: string): boolean {
     data.labs.forEach((id) => s.setItem(LAB + id, "1"));
     data.exams.forEach((key) => s.setItem(EXAM + key, "1"));
     if (data.u && !getUsername()) s.setItem(USER, data.u.slice(0, 32));
+    if (data.a) s.setItem(AVATAR, data.a.slice(0, 32));
     emit();
     return true;
   } catch {

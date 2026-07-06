@@ -5,7 +5,6 @@ import "../styles/global.css";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import CommandPalette from "../components/CommandPalette.astro";
-import Analytics from "@vercel/analytics/astro";
 
 interface Props {
   title: string;
@@ -15,7 +14,7 @@ interface Props {
   /** Imagen para compartir en redes (relativa al sitio). */
   image?: string;
   /** Structured data adicional (p. ej. TechArticle de un lab). */
-  jsonLd?: Record<string, unknown>;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 const {
@@ -54,6 +53,12 @@ const jsonLd = {
     url: "https://valentorassa.com",
   },
 };
+
+const extraJsonLdItems = Array.isArray(extraJsonLd)
+  ? extraJsonLd
+  : extraJsonLd
+    ? [extraJsonLd]
+    : [];
 ---
 
 <!doctype html>
@@ -93,10 +98,12 @@ const jsonLd = {
     <meta property="og:locale" content="es_AR" />
     <meta property="og:url" content={canonical.href} />
     <meta property="og:image" content={ogImage.href} />
+    <meta property="og:image:alt" content={description} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage.href} />
+    <meta name="twitter:image:alt" content={description} />
 
     <script
       is:inline
@@ -104,13 +111,13 @@ const jsonLd = {
       set:html={JSON.stringify(jsonLd)}
     />
     {
-      extraJsonLd && (
+      extraJsonLdItems.map((item) => (
         <script
           is:inline
           type="application/ld+json"
-          set:html={JSON.stringify(extraJsonLd)}
+          set:html={JSON.stringify(item)}
         />
-      )
+      ))
     }
   </head>
   <body class="bg-base-950 min-h-screen antialiased">
@@ -132,6 +139,5 @@ const jsonLd = {
 
     <Footer />
     <CommandPalette />
-    <Analytics />
   </body>
 </html>

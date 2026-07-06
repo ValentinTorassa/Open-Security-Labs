@@ -1,0 +1,101 @@
+---
+title: "XSS local defensivo: source, sink y output encoding"
+description: "Un lab local para entender XSS sin tocar sitios ajenos: de dónde entra el dato, dónde se interpreta como HTML y cómo cortarlo con APIs seguras."
+path: "ciberseguridad"
+order: 0
+level: "beginner"
+estimatedMinutes: 30
+prerequisites:
+  - "Un navegador moderno"
+  - "Una terminal con Python 3 opcional para servir archivos locales"
+objectives:
+  - "Distinguir source, sink y contexto"
+  - "Ver por qué innerHTML con input no confiable es peligroso"
+  - "Aplicar textContent como mitigación simple"
+  - "Documentar el bug y el fix sin atacar terceros"
+evidence:
+  - "Archivo HTML local vulnerable y versión corregida"
+  - "Screenshot o nota mostrando que el payload queda como texto"
+  - "Writeup con source, sink, impacto y mitigación"
+commands:
+  - "python3 -m http.server 8000"
+challenge: "Armá una mini página local que lea ?name= de la URL. Primero renderizalo mal con innerHTML, después corregilo con textContent. Explicá source, sink y fix."
+nextLabs:
+  - "backend-arquitectura/api-http-base"
+  - "ciberseguridad/threat-modeling-app-chica"
+tags:
+  - "xss"
+  - "web"
+  - "defensivo"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+XSS no es "pegar un script en una web". Es un bug de contexto: un dato que debía ser tratado como texto termina siendo interpretado como HTML o JavaScript. En este lab lo ves en local, sin tocar sitios ajenos.
+
+<Callout type="concepto">
+  Tres palabras ordenan el problema: **source** es de dónde entra el dato,
+  **sink** es dónde lo usás, y **contexto** define cómo lo interpreta el
+  navegador.
+</Callout>
+
+## Página vulnerable de juguete
+
+Creá un archivo local `xss-demo.html` con una idea como esta:
+
+```html
+<div id="saludo"></div>
+<script>
+  const params = new URLSearchParams(location.search);
+  const name = params.get("name") ?? "mundo";
+  document.querySelector("#saludo").innerHTML = `Hola ${name}`;
+</script>
+```
+
+El source es `location.search`. El sink es `innerHTML`. El problema es que `innerHTML` interpreta HTML.
+
+<TerminalBlock title="vt@labs:~/xss-local">
+
+```bash
+python3 -m http.server 8000
+```
+
+</TerminalBlock>
+
+Abrí `http://localhost:8000/xss-demo.html?name=Valen` y después probá un valor con etiquetas HTML. No uses sitios de terceros: esto es tu archivo local.
+
+## El fix mínimo
+
+Si querés mostrar texto, usá una API que escriba texto:
+
+```html
+<script>
+  const params = new URLSearchParams(location.search);
+  const name = params.get("name") ?? "mundo";
+  document.querySelector("#saludo").textContent = `Hola ${name}`;
+</script>
+```
+
+Ahora el navegador no interpreta el contenido como HTML: lo muestra como texto.
+
+<Callout type="error">
+  Sanitizar a mano con reemplazos rápidos suele fallar. La primera defensa es
+  elegir el sink correcto. Si no necesitás HTML, no uses `innerHTML`.
+</Callout>
+
+## Evidencia esperada
+
+Documentá el bug con esta tabla:
+
+```text
+source:     query string (?name=...)
+sink malo:  innerHTML
+impacto:    input no confiable se interpreta como markup
+fix:        textContent para renderizar texto
+```
+
+<Callout type="evidencia">
+  Un buen writeup defensivo explica el flujo del dato y el cambio que elimina el
+  bug. No necesita payloads contra servicios reales ni instrucciones ofensivas.
+</Callout>

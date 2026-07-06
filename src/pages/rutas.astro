@@ -6,12 +6,51 @@ import { paths } from "../data/paths";
 
 const labs = await getCollection("labs", ({ data }) => !data.draft);
 const labsFor = (slug: string) => labs.filter((l) => l.data.path === slug);
+const pathOrder = new Map(paths.map((p) => [p.slug, p.order]));
+const firstLab = [...labs]
+  .sort((a, b) => {
+    const pa = pathOrder.get(a.data.path) ?? 99;
+    const pb = pathOrder.get(b.data.path) ?? 99;
+    return pa - pb || a.data.order - b.data.order;
+  })
+  .find((l) => l.data.level === "beginner");
+const firstLabHref = firstLab ? `/labs/${firstLab.id}` : "/labs";
+
+const quickStarts = [
+  {
+    label: "Vengo de cero",
+    href: firstLabHref,
+    body: "Hacé un primer lab corto y conseguí evidencia rápido.",
+  },
+  {
+    label: "Soy dev/backend",
+    href: "/rutas/backend-arquitectura",
+    body: "Arrancá por APIs, permisos, sesiones y modos de falla.",
+  },
+  {
+    label: "Quiero cloud/security",
+    href: "/rutas/cloud-produccion",
+    body: "Seguí por IAM, logs, redes cloud y blast radius.",
+  },
+];
+
+const site = Astro.site ?? new URL("https://securitylabs.valentorassa.com");
+const rutasJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: "Rutas de aprendizaje",
+  url: new URL("/rutas", site).href,
+  inLanguage: "es-AR",
+  numberOfItems: paths.length,
+  about: paths.map((path) => path.title),
+};
 ---
 
 <BaseLayout
   title="Rutas de aprendizaje"
   description="Seis rutas para entender los sistemas de verdad: Linux, redes, backend, cloud, ciberseguridad y DevSecOps con agentes."
   width="wide"
+  jsonLd={rutasJsonLd}
 >
   <section class="py-12">
     <p class="rule-label">Rutas de aprendizaje</p>
@@ -23,6 +62,21 @@ const labsFor = (slug: string) => labs.filter((l) => l.data.path === slug);
       máquina. Empezá por la que te sirva hoy. Es open source: si algo falta o
       está mal, lo podés mejorar vos.
     </p>
+
+    <div class="mt-8 grid gap-3 md:grid-cols-3">
+      {
+        quickStarts.map((item) => (
+          <a href={item.href} class="card group p-4 hover:-translate-y-0.5">
+            <span class="text-base-100 group-hover:text-term-green block font-mono text-sm font-semibold">
+              {item.label}
+            </span>
+            <span class="text-base-400 mt-1 block text-sm leading-relaxed">
+              {item.body}
+            </span>
+          </a>
+        ))
+      }
+    </div>
 
     <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {

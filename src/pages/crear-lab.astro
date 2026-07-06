@@ -1,0 +1,763 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Icon from "../components/Icon.astro";
+import { paths } from "../data/paths";
+
+const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
+const pathOptions = paths.map((path) => ({
+  slug: path.slug,
+  title: path.title,
+  short: path.short,
+  accent: path.accent,
+}));
+---
+
+<BaseLayout
+  title="Crear lab"
+  description="Editor simple para proponer labs a Open Security Labs sin escribir un MDX desde cero. Generá el archivo y abrilo en GitHub para mandar una PR."
+  width="wide"
+>
+  <section class="py-12">
+    <div
+      class="border-base-700 bg-base-950 relative overflow-hidden rounded-[1.75rem] border p-6 sm:p-8 lg:p-10"
+    >
+      <div
+        class="pointer-events-none absolute inset-0 opacity-80"
+        style="background: radial-gradient(circle at 15% 0%, color-mix(in srgb, var(--color-term-green) 18%, transparent), transparent 32%), radial-gradient(circle at 85% 10%, color-mix(in srgb, var(--color-term-blue) 14%, transparent), transparent 30%);"
+        aria-hidden="true"
+      >
+      </div>
+      <div class="relative max-w-3xl">
+        <p class="rule-label">Lab Studio</p>
+        <h1
+          class="text-base-50 mt-3 font-mono text-4xl leading-tight font-extrabold tracking-[-0.04em] sm:text-5xl"
+        >
+          Creá un lab sin pelearte con MDX.
+        </h1>
+        <p class="text-base-300 mt-5 text-lg leading-relaxed">
+          Completá lo esencial, mirá el archivo generado y abrilo en GitHub. Ahí
+          iniciás sesión, GitHub crea el fork si hace falta y podés mandar la
+          PR.
+        </p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a href="#editor" class="btn-primary">Abrir editor</a>
+          <a href="#idea-lab" class="btn-ghost">Tengo una idea</a>
+          <a href="#contribuir-lab" class="btn-ghost">Cómo mandar la PR</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8 grid gap-4 md:grid-cols-3">
+      <a href="#editor" class="card group p-4 hover:-translate-y-0.5">
+        <Icon name="file-text" size={20} strokeWidth={1.7} />
+        <p
+          class="text-base-100 group-hover:text-term-green mt-3 font-mono text-sm font-semibold"
+        >
+          Crear lab con editor
+        </p>
+        <p class="text-base-400 mt-1 text-sm leading-relaxed">
+          Para labs simples: contenido, comandos, objetivos y evidencia. El MDX
+          sale armado.
+        </p>
+        <span class="text-term-green mt-3 block font-mono text-xs"
+          >usar editor →</span
+        >
+      </a>
+      <a href="#idea-lab" class="card group p-4 hover:-translate-y-0.5">
+        <Icon name="lightbulb" size={20} strokeWidth={1.7} />
+        <p
+          class="text-base-100 group-hover:text-term-green mt-3 font-mono text-sm font-semibold"
+        >
+          Proponer una idea
+        </p>
+        <p class="text-base-400 mt-1 text-sm leading-relaxed">
+          Si no querés implementarla, abrí un issue con el problema, audiencia y
+          evidencia esperada.
+        </p>
+        <span class="text-term-green mt-3 block font-mono text-xs"
+          >abrir idea →</span
+        >
+      </a>
+      <a href="#clonar-repo" class="card group p-4 hover:-translate-y-0.5">
+        <Icon name="workflow" size={20} strokeWidth={1.7} />
+        <p
+          class="text-base-100 group-hover:text-term-green mt-3 font-mono text-sm font-semibold"
+        >
+          Clonar para algo grande
+        </p>
+        <p class="text-base-400 mt-1 text-sm leading-relaxed">
+          Visuales, ejercicios interactivos, tools o componentes nuevos conviene
+          hacerlos desde el repo.
+        </p>
+        <span class="text-term-green mt-3 block font-mono text-xs"
+          >ver flujo →</span
+        >
+      </a>
+    </div>
+
+    <div
+      id="editor"
+      class="mt-10 grid min-w-0 gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]"
+    >
+      <form class="card min-w-0 space-y-5 p-5" data-lab-form>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="block">
+            <span class="rule-label mb-2 block">Ruta</span>
+            <select
+              data-field="path"
+              class="border-base-700 bg-base-850 text-base-100 focus:border-term-green w-full rounded-lg border px-3 py-2.5 font-mono text-sm outline-none"
+            >
+              {
+                pathOptions.map((path) => (
+                  <option value={path.slug}>{path.title}</option>
+                ))
+              }
+            </select>
+          </label>
+
+          <label class="block">
+            <span class="rule-label mb-2 block">Nivel</span>
+            <select
+              data-field="level"
+              class="border-base-700 bg-base-850 text-base-100 focus:border-term-green w-full rounded-lg border px-3 py-2.5 font-mono text-sm outline-none"
+            >
+              <option value="beginner">Inicial</option>
+              <option value="intermediate">Intermedio</option>
+              <option value="advanced">Avanzado</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="block">
+          <span class="rule-label mb-2 block">Prerequisitos</span>
+          <textarea
+            data-field="prerequisites"
+            rows="3"
+            placeholder="Uno por línea. Ej: Una terminal con curl instalado"
+            class="border-base-700 bg-base-850 text-base-100 placeholder:text-base-500 focus:border-term-green w-full resize-y rounded-lg border px-3 py-2.5 text-sm outline-none"
+          ></textarea>
+        </label>
+
+        <label class="block">
+          <span class="rule-label mb-2 block">Título</span>
+          <input
+            data-field="title"
+            type="text"
+            placeholder="Ej: TLS sin magia"
+            class="border-base-700 bg-base-850 text-base-100 placeholder:text-base-500 focus:border-term-green w-full rounded-lg border px-3 py-2.5 font-mono text-sm outline-none"
+          />
+        </label>
+
+        <label class="block">
+          <span class="rule-label mb-2 block">Descripción corta</span>
+          <textarea
+            data-field="description"
+            rows="2"
+            placeholder="Qué aprende alguien y por qué importa."
+            class="border-base-700 bg-base-850 text-base-100 placeholder:text-base-500 focus:border-term-green w-full resize-y rounded-lg border px-3 py-2.5 text-sm outline-none"
+          ></textarea>
+        </label>
+
+        <div class="grid gap-4 sm:grid-cols-3">
+          <label class="block">
+            <span class="rule-label mb-2 block">Minutos</span>
+            <input
+              data-field="minutes"
+              type="number"
+              min="10"
+              max="180"
+              value="30"
+              class="border-base-700 bg-base-850 text-base-100 focus:border-term-green w-full rounded-lg border px-3 py-2.5 font-mono text-sm outline-none"
+            />
+          </label>
+          <label class="block sm:col-span-2">
+            <span class="rule-label mb-2 block">Tags</span>
+            <input
+              data-field="tags"
+              type="text"
+              placeholder="linux, redes, aws"
+              class="border-base-700 bg-base-850 text-base-100 placeholder:text-base-500 focus:border-term-green w-full rounded-lg border px-3 py-2.5 font-mono text-sm outline-none"
+            />
+          </label>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="block">
+            <span class="rule-label mb-2 block">Objetivos</span>
+            <textarea
+              data-field="objectives"
+              rows="5"
+              placeholder="Uno por línea"
+              class="border-base-700 bg-base-850 text-base-100 placeholder:text-base-500 focus:border-term-green w-full resize-y rounded-lg border px-3 py-2.5 text-sm outline-none"
+            ></textarea>
+          </label>
+          <label class="block">
+            <span class="rule-label mb-2 block">Evidencia</span>
+            <textarea
+              data-field="evidence"
+              rows="5"
+              placeholder="Qué va a entregar quien haga el lab"
+              class="border-base-700 bg-base-850 text-base-100 placeholder:text-base-500 focus:border-term-green w-full resize-y rounded-lg border px-3 py-2.5 text-sm outline-none"
+            ></textarea>
+          </label>
+        </div>
+
+        <label class="block">
+          <span class="rule-label mb-2 block">Comandos clave</span>
+          <textarea
+            data-field="commands"
+            rows="3"
+            placeholder="Uno por línea. Ej: curl -Iv https://example.com"
+            class="border-base-700 bg-base-850 text-base-100 placeholder:text-base-500 focus:border-term-green w-full resize-y rounded-lg border px-3 py-2.5 font-mono text-sm outline-none"
+          ></textarea>
+        </label>
+
+        <label class="block">
+          <span class="rule-label mb-2 block">Explicación del lab</span>
+          <textarea
+            data-field="body"
+            rows="7"
+            placeholder="Escribí la explicación central. Después la podés mejorar en GitHub."
+            class="border-base-700 bg-base-850 text-base-100 placeholder:text-base-500 focus:border-term-green w-full resize-y rounded-lg border px-3 py-2.5 text-sm leading-relaxed outline-none"
+          ></textarea>
+        </label>
+
+        <label class="block">
+          <span class="rule-label mb-2 block">Reto final</span>
+          <textarea
+            data-field="challenge"
+            rows="3"
+            placeholder="Una consigna concreta que obligue a aplicar lo aprendido."
+            class="border-base-700 bg-base-850 text-base-100 placeholder:text-base-500 focus:border-term-green w-full resize-y rounded-lg border px-3 py-2.5 text-sm outline-none"
+          ></textarea>
+        </label>
+
+        <label class="block">
+          <span class="rule-label mb-2 block">Tu GitHub handle</span>
+          <input
+            data-field="contributor"
+            type="text"
+            placeholder="TuUsuarioDeGitHub"
+            class="border-base-700 bg-base-850 text-base-100 placeholder:text-base-500 focus:border-term-green w-full rounded-lg border px-3 py-2.5 font-mono text-sm outline-none"
+          />
+        </label>
+      </form>
+
+      <aside class="min-w-0 space-y-4 xl:sticky xl:top-24 xl:self-start">
+        <div class="card p-5">
+          <p class="rule-label">Archivo generado</p>
+          <p
+            class="text-base-100 mt-2 font-mono text-sm break-all"
+            data-file-name
+          >
+            src/content/labs/linux-real/mi-lab.mdx
+          </p>
+          <p class="text-base-500 mt-2 text-xs leading-relaxed">
+            GitHub va a pedir login. Si no tenés permisos sobre el repo, te guía
+            para crear un fork y abrir la PR desde la web.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <button type="button" class="btn-ghost text-xs" data-copy-mdx>
+              Copiar MDX
+            </button>
+            <a
+              href={repo}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn-primary text-xs"
+              data-github-link
+            >
+              Conectar GitHub y proponer PR
+            </a>
+          </div>
+          <p class="mt-3 hidden font-mono text-xs" data-editor-msg></p>
+        </div>
+
+        <div
+          class="border-base-700 bg-base-950 overflow-hidden rounded-xl border"
+        >
+          <div
+            class="border-base-800 flex items-center justify-between border-b px-4 py-3"
+          >
+            <p class="text-base-400 font-mono text-xs">preview.mdx</p>
+            <span class="text-term-green font-mono text-[0.65rem]">live</span>
+          </div>
+          <pre
+            class="text-base-200 max-h-[34rem] overflow-auto p-4 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap"><code data-mdx-output /></pre>
+        </div>
+      </aside>
+    </div>
+
+    <section id="idea-lab" class="scroll-mt-20 pt-12">
+      <div class="grid gap-5 lg:grid-cols-[0.85fr_1fr]">
+        <div class="card p-5">
+          <p class="rule-label">Idea de lab</p>
+          <h2 class="text-base-50 mt-3 font-mono text-2xl font-bold">
+            No hace falta que lo implementes vos.
+          </h2>
+          <p class="text-base-300 mt-3 leading-relaxed">
+            Si viste un tema que falta, una duda frecuente o un caso real que se
+            podría convertir en lab, abrí un issue. Alguien puede tomar esa idea
+            después.
+          </p>
+          <div class="mt-5 grid gap-3 text-sm">
+            <div class="border-base-800 bg-base-950/45 rounded-lg border p-3">
+              <p class="text-term-green font-mono text-xs">buena idea</p>
+              <p class="text-base-400 mt-1">
+                Problema concreto + contexto + qué evidencia dejaría el lab.
+              </p>
+            </div>
+            <div class="border-base-800 bg-base-950/45 rounded-lg border p-3">
+              <p class="text-term-red font-mono text-xs">mala idea</p>
+              <p class="text-base-400 mt-1">
+                “Hagan algo de Kubernetes” sin caso, objetivo ni criterio de
+                práctica.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <form class="card space-y-4 p-5" data-idea-form>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <label class="block">
+              <span class="rule-label mb-2 block">Ruta sugerida</span>
+              <select
+                data-idea-field="path"
+                class="border-base-700 bg-base-850 text-base-100 focus:border-term-green w-full rounded-lg border px-3 py-2.5 font-mono text-sm outline-none"
+              >
+                {
+                  pathOptions.map((path) => (
+                    <option value={path.slug}>{path.title}</option>
+                  ))
+                }
+                <option value="__new__">Nueva ruta</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="rule-label mb-2 block">Título de la idea</span>
+              <input
+                data-idea-field="title"
+                type="text"
+                placeholder="Ej: Lab de logs y detección en Linux"
+                class="border-base-700 bg-base-850 text-base-100 placeholder:text-base-500 focus:border-term-green w-full rounded-lg border px-3 py-2.5 font-mono text-sm outline-none"
+              />
+            </label>
+          </div>
+          <label class="hidden" data-new-route-field>
+            <span class="rule-label mb-2 block">Nueva ruta sugerida</span>
+            <input
+              data-idea-field="newPath"
+              type="text"
+              placeholder="Ej: Observabilidad y logs"
+              class="border-base-700 bg-base-850 text-base-100 placeholder:text-base-500 focus:border-term-green w-full rounded-lg border px-3 py-2.5 font-mono text-sm outline-none"
+            />
+            <span class="text-base-500 mt-2 block text-xs">
+              Si esta idea no entra en las rutas actuales, proponé acá el nombre
+              de una ruta nueva.
+            </span>
+          </label>
+          <label class="block">
+            <span class="rule-label mb-2 block">¿Qué debería enseñar?</span>
+            <textarea
+              data-idea-field="goal"
+              rows="3"
+              placeholder="Qué problema real resuelve, para quién sirve y qué concepto tiene que quedar claro."
+              class="border-base-700 bg-base-850 text-base-100 placeholder:text-base-500 focus:border-term-green w-full resize-y rounded-lg border px-3 py-2.5 text-sm outline-none"
+            ></textarea>
+          </label>
+          <label class="block">
+            <span class="rule-label mb-2 block">Evidencia esperada</span>
+            <textarea
+              data-idea-field="evidence"
+              rows="3"
+              placeholder="Ej: comandos, writeup, diagrama, screenshot, repo de juguete."
+              class="border-base-700 bg-base-850 text-base-100 placeholder:text-base-500 focus:border-term-green w-full resize-y rounded-lg border px-3 py-2.5 text-sm outline-none"
+            ></textarea>
+          </label>
+          <div class="flex flex-wrap gap-2">
+            <a
+              href={`${repo}/issues/new`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn-primary text-xs"
+              data-idea-link
+            >
+              Abrir issue con esta idea
+            </a>
+            <a
+              href={`${repo}/issues`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn-ghost text-xs"
+            >
+              Ver issues existentes
+            </a>
+          </div>
+          <p class="text-base-500 font-mono text-xs">
+            GitHub te va a pedir login. No necesitás mandar código para proponer
+            una idea.
+          </p>
+        </form>
+      </div>
+    </section>
+
+    <section id="contribuir-lab" class="scroll-mt-20 pt-12">
+      <div
+        class="border-base-700 bg-base-900 relative overflow-hidden rounded-2xl border p-6 sm:p-8"
+      >
+        <div
+          class="pointer-events-none absolute inset-0 opacity-70"
+          style="background: linear-gradient(135deg, color-mix(in srgb, var(--color-term-green) 10%, transparent), transparent 48%), radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--color-term-amber) 13%, transparent), transparent 34%);"
+          aria-hidden="true"
+        >
+        </div>
+        <div
+          class="relative grid gap-7 lg:grid-cols-[1fr_0.8fr] lg:items-start"
+        >
+          <div>
+            <p class="rule-label">Contribuí con un lab</p>
+            <h2 class="text-base-50 mt-3 font-mono text-2xl font-bold">
+              Del creador a una Pull Request revisable.
+            </h2>
+            <p class="text-base-300 mt-3 leading-relaxed">
+              El editor te evita arrancar de cero, pero el criterio sigue siendo
+              lo importante: ejemplo seguro, evidencia clara y explicación que
+              alguien pueda reproducir en su máquina.
+            </p>
+
+            <div class="mt-5 flex flex-wrap gap-3">
+              <a href="#editor" class="btn-primary text-xs">Volver al editor</a>
+              <a href="#idea-lab" class="btn-ghost text-xs">Proponer idea</a>
+              <a href="/contribuir" class="btn-ghost text-xs">Guía completa</a>
+              <a
+                href={`${repo}/issues`}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn-ghost text-xs"
+              >
+                Ver ideas abiertas
+              </a>
+            </div>
+          </div>
+
+          <div class="grid gap-3">
+            <div class="border-base-800 bg-base-950/45 rounded-xl border p-4">
+              <p class="text-term-green font-mono text-xs">check_01</p>
+              <p class="text-base-100 mt-1 font-semibold">Seguro y local</p>
+              <p class="text-base-400 mt-1 text-sm leading-relaxed">
+                Sin secretos, datos reales, targets externos ni credenciales de
+                verdad. Usá ejemplos de juguete.
+              </p>
+            </div>
+            <div class="border-base-800 bg-base-950/45 rounded-xl border p-4">
+              <p class="text-term-blue font-mono text-xs">check_02</p>
+              <p class="text-base-100 mt-1 font-semibold">Con evidencia</p>
+              <p class="text-base-400 mt-1 text-sm leading-relaxed">
+                El lab termina con comandos, writeup, diagrama, captura o repo
+                reproducible.
+              </p>
+            </div>
+            <div class="border-base-800 bg-base-950/45 rounded-xl border p-4">
+              <p class="text-term-amber font-mono text-xs">check_03</p>
+              <p class="text-base-100 mt-1 font-semibold">
+                Directo y revisable
+              </p>
+              <p class="text-base-400 mt-1 text-sm leading-relaxed">
+                Explicá el mecanismo, los tradeoffs y cómo validar que se hizo
+                bien. Sin hype ni relleno.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="clonar-repo" class="scroll-mt-20 pt-8">
+      <div class="card p-6 sm:p-7">
+        <div class="grid gap-6 lg:grid-cols-[1fr_0.95fr] lg:items-start">
+          <div>
+            <p class="rule-label">Cuando el editor no alcanza</p>
+            <h2 class="text-base-50 mt-3 font-mono text-2xl font-bold">
+              Para visuales, ejercicios y tools, cloná el repo.
+            </h2>
+            <p class="text-base-300 mt-3 leading-relaxed">
+              El editor sirve para labs de contenido. Si querés sumar una tool,
+              un juego, una visualización, un componente interactivo o cambios
+              de diseño, conviene trabajar local: probás, corrés checks y mandás
+              una PR más sólida.
+            </p>
+            <div class="mt-5 flex flex-wrap gap-2">
+              <a
+                href={repo}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn-primary text-xs"
+              >
+                Abrir repo
+              </a>
+              <a href="/contribuir" class="btn-ghost text-xs">Ver guía</a>
+            </div>
+          </div>
+          <div
+            class="border-base-800 bg-base-950 overflow-hidden rounded-xl border"
+          >
+            <div class="border-base-800 border-b px-4 py-3">
+              <p class="text-base-400 font-mono text-xs">terminal</p>
+            </div>
+            <pre
+              class="text-base-200 overflow-auto p-4 font-mono text-xs leading-relaxed"><code>git clone https://github.com/ValentinTorassa/Open-Security-Labs.git
+cd Open-Security-Labs
+npm install
+npm run dev
+npm run check
+npm run build</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <script
+    is:inline
+    type="application/json"
+    data-paths-json
+    set:html={JSON.stringify(pathOptions)}
+  />
+</BaseLayout>
+
+<script>
+  type PathOption = {
+    slug: string;
+    title: string;
+    short: string;
+    accent: string;
+  };
+
+  const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
+  const branch = "main";
+  const pathsRaw = document.querySelector<HTMLElement>("[data-paths-json]");
+  const pathOptions: PathOption[] = pathsRaw
+    ? JSON.parse(pathsRaw.textContent ?? "[]")
+    : [];
+
+  const fields = Array.from(
+    document.querySelectorAll<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >("[data-field]"),
+  );
+  const output = document.querySelector<HTMLElement>("[data-mdx-output]");
+  const fileName = document.querySelector<HTMLElement>("[data-file-name]");
+  const copy = document.querySelector<HTMLButtonElement>("[data-copy-mdx]");
+  const github =
+    document.querySelector<HTMLAnchorElement>("[data-github-link]");
+  const msg = document.querySelector<HTMLElement>("[data-editor-msg]");
+  const ideaFields = Array.from(
+    document.querySelectorAll<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >("[data-idea-field]"),
+  );
+  const ideaLink =
+    document.querySelector<HTMLAnchorElement>("[data-idea-link]");
+  const newRouteField = document.querySelector<HTMLElement>(
+    "[data-new-route-field]",
+  );
+
+  function val(name: string): string {
+    return (
+      fields.find((field) => field.dataset.field === name)?.value.trim() ?? ""
+    );
+  }
+
+  function ideaVal(name: string): string {
+    return (
+      ideaFields
+        .find((field) => field.dataset.ideaField === name)
+        ?.value.trim() ?? ""
+    );
+  }
+
+  function lines(value: string): string[] {
+    return value
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+  }
+
+  function yamlString(value: string): string {
+    return JSON.stringify(value || "Pendiente");
+  }
+
+  function yamlList(items: string[], fallback: string): string {
+    const list = items.length ? items : [fallback];
+    return list.map((item) => `  - ${yamlString(item)}`).join("\n");
+  }
+
+  function slugify(value: string): string {
+    return (value || "mi-lab")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 72);
+  }
+
+  function buildMdx(): { mdx: string; filePath: string; title: string } {
+    const title = val("title") || "Mi lab nuevo";
+    const description =
+      val("description") ||
+      "Un lab práctico para entender un concepto con evidencia.";
+    const path = val("path") || pathOptions[0]?.slug || "linux-real";
+    const level = val("level") || "beginner";
+    const minutes = Number(val("minutes") || "30");
+    const slug = slugify(title);
+    const objectives = lines(val("objectives"));
+    const evidence = lines(val("evidence"));
+    const commands = lines(val("commands"));
+    const tags = lines(val("tags").replaceAll(",", "\n"));
+    const contributor = val("contributor") || "TuUsuarioDeGitHub";
+    const body =
+      val("body") ||
+      "Explicá el problema real, el concepto de fondo y el recorrido práctico del lab. Evitá datos reales y mantené el ejemplo local o de juguete.";
+    const challenge =
+      val("challenge") ||
+      "Completá el ejercicio, guardá evidencia y escribí en dos líneas qué aprendiste.";
+    const commandBlock = commands.length
+      ? `\n## Comandos útiles\n\n<TerminalBlock title="vt@labs:~">\n\n\`\`\`bash\n${commands.join("\n")}\n\`\`\`\n\n</TerminalBlock>\n`
+      : "";
+    const objectivesBlock = (
+      objectives.length
+        ? objectives
+        : ["Entender el concepto", "Practicarlo en un entorno seguro"]
+    )
+      .map((item) => `- ${item}`)
+      .join("\n");
+    const evidenceBlock = (
+      evidence.length
+        ? evidence
+        : ["Writeup corto con comandos, notas o diagrama"]
+    )
+      .map((item) => `- ${item}`)
+      .join("\n");
+    const filePath = `src/content/labs/${path}/${slug}.mdx`;
+    const mdx = `---
+title: ${yamlString(title)}
+description: ${yamlString(description)}
+path: ${yamlString(path)}
+order: 100
+level: ${yamlString(level)}
+estimatedMinutes: ${Number.isFinite(minutes) && minutes > 0 ? Math.round(minutes) : 30}
+prerequisites:
+${yamlList(lines(val("prerequisites")), "Una terminal o navegador para practicar")}
+objectives:
+${yamlList(objectives, "Entender el concepto central del lab")}
+evidence:
+${yamlList(evidence, "Writeup corto con evidencia del ejercicio")}
+commands:
+${yamlList(commands, "comando-de-ejemplo")}
+challenge: ${yamlString(challenge)}
+nextLabs: []
+tags:
+${yamlList(tags, "lab")}
+contributor: ${yamlString(contributor)}
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+${body}
+
+<Callout type="concepto">
+  Este lab tiene que ser defensivo, reproducible y seguro. Usá datos ficticios,
+  ejemplos locales y evidencia clara.
+</Callout>
+
+## Objetivos
+
+${objectivesBlock}
+${commandBlock}
+## Evidencia esperada
+
+${evidenceBlock}
+
+## Reto final
+
+${challenge}
+`;
+    return { mdx, filePath, title };
+  }
+
+  function showMsg(text: string, ok = true) {
+    if (!msg) return;
+    msg.textContent = text;
+    msg.className = `mt-3 font-mono text-xs ${ok ? "text-term-green" : "text-term-red"}`;
+    msg.classList.remove("hidden");
+  }
+
+  function render() {
+    const { mdx, filePath, title } = buildMdx();
+    if (output) output.textContent = mdx;
+    if (fileName) fileName.textContent = filePath;
+    if (github) {
+      const url = new URL(`${repo}/new/${branch}`);
+      url.searchParams.set("filename", filePath);
+      url.searchParams.set("value", mdx);
+      url.searchParams.set("message", `add lab: ${title}`);
+      github.href = url.href;
+    }
+  }
+
+  function renderIdea() {
+    if (!ideaLink) return;
+    const path = ideaVal("path") || pathOptions[0]?.slug || "linux-real";
+    const isNewRoute = path === "__new__";
+    const newPathTitle = ideaVal("newPath") || "Nueva ruta por definir";
+    const newPathSlug = slugify(newPathTitle);
+    const route = pathOptions.find((item) => item.slug === path);
+    const routeLabel = isNewRoute
+      ? `Nueva ruta propuesta: ${newPathTitle} (${newPathSlug})`
+      : `${route?.title ?? path} (${path})`;
+    const title = ideaVal("title") || "Idea de lab";
+    const goal =
+      ideaVal("goal") || "Explicar el problema, audiencia y concepto central.";
+    const evidence =
+      ideaVal("evidence") ||
+      "Writeup, comandos, diagrama o evidencia reproducible.";
+    const issue = new URL(`${repo}/issues/new`);
+    issue.searchParams.set("title", `Idea de lab: ${title}`);
+    issue.searchParams.set(
+      "body",
+      `## Ruta sugerida\n${routeLabel}\n\n## Qué debería enseñar\n${goal}\n\n## Evidencia esperada\n${evidence}\n\n## Notas\nNo necesito implementar este lab ahora. Dejo la idea para que alguien pueda tomarla, discutirla o convertirla en PR.`,
+    );
+    issue.searchParams.set("labels", "enhancement");
+    ideaLink.href = issue.href;
+    newRouteField?.classList.toggle("hidden", !isNewRoute);
+  }
+
+  fields.forEach((field) => field.addEventListener("input", render));
+  fields.forEach((field) => field.addEventListener("change", render));
+  ideaFields.forEach((field) => field.addEventListener("input", renderIdea));
+  ideaFields.forEach((field) => field.addEventListener("change", renderIdea));
+
+  copy?.addEventListener("click", async () => {
+    const { mdx } = buildMdx();
+    try {
+      await navigator.clipboard.writeText(mdx);
+      showMsg("MDX copiado. Pegalo en GitHub si el link queda muy largo.");
+    } catch {
+      showMsg(
+        "No pude copiar automáticamente. Seleccioná el preview y copialo a mano.",
+        false,
+      );
+    }
+  });
+
+  github?.addEventListener("click", () => {
+    showMsg(
+      "Abriendo GitHub. Si te pide login, conectate y seguí el flujo de fork/PR.",
+    );
+  });
+
+  render();
+  renderIdea();
+</script>

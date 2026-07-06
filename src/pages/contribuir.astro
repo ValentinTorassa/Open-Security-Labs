@@ -5,6 +5,7 @@ import { contributors, avatarUrl, profileUrl } from "../data/contributors";
 // Más commits primero.
 const acks = [...contributors].sort((a, b) => b.commits - a.commits);
 const totalCommits = acks.reduce((n, c) => n + c.commits, 0);
+const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
 ---
 
 <BaseLayout
@@ -21,6 +22,34 @@ const totalCommits = acks.reduce((n, c) => n + c.commits, 0);
       Esto es open source y se construye en público. Si encontrás algo que está
       mal o querés enseñar un tema, tu aporte es bienvenido.
     </p>
+
+    <div class="mt-6 flex flex-wrap gap-3">
+      <a href="/crear-lab" class="btn-primary">Crear lab con el editor</a>
+      <a
+        href={repo}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn-ghost"
+      >
+        Abrir repo en GitHub
+      </a>
+      <a
+        href={`${repo}/issues`}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn-ghost"
+      >
+        Ver issues
+      </a>
+      <a
+        href={`${repo}/blob/main/CONTRIBUTING.md`}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn-ghost"
+      >
+        Guía completa
+      </a>
+    </div>
 
     <div class="lab-prose prose prose-invert mt-10 max-w-none">
       <h2>Reglas básicas</h2>
@@ -182,6 +211,32 @@ contributor: "TuUsuarioDeGitHub"  # opcional; default: el mantenedor
         <code class="mono">AGENTS.md</code> y
         <code class="mono">SECURITY.md</code> en el repositorio.
       </p>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <a
+          href={`${repo}/blob/main/CONTRIBUTING.md`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-ghost text-xs"
+        >
+          CONTRIBUTING.md
+        </a>
+        <a
+          href={`${repo}/blob/main/SECURITY.md`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-ghost text-xs"
+        >
+          SECURITY.md
+        </a>
+        <a
+          href={`${repo}/blob/main/AGENTS.md`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-ghost text-xs"
+        >
+          AGENTS.md
+        </a>
+      </div>
     </div>
   </section>
 </BaseLayout>
