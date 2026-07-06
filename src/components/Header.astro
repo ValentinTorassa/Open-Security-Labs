@@ -1,13 +1,12 @@
 ---
 const links = [
   { href: "/", label: "Inicio" },
+  { href: "/labs", label: "Aprender" },
   { href: "/rutas", label: "Rutas" },
-  { href: "/labs", label: "Labs" },
-  { href: "/certificaciones", label: "Certis" },
+  { href: "/certificaciones", label: "Certificaciones" },
   { href: "/portafolio", label: "Portafolio" },
   { href: "/perfil", label: "Perfil" },
-  { href: "/contribuir", label: "Contribuir" },
-  { href: "/about", label: "Acerca" },
+  { href: "/crear-lab", label: "Crear lab" },
 ];
 
 const path = Astro.url.pathname;
@@ -126,6 +125,8 @@ const isActive = (href: string) =>
         type="button"
         data-mobile-menu-open
         aria-label="Abrir menú"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
         class="border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors lg:hidden"
       >
         <svg
@@ -150,6 +151,7 @@ const isActive = (href: string) =>
 
 <!-- Mobile Menu Overlay -->
 <div
+  id="mobile-menu"
   data-mobile-menu
   class="bg-base-950/95 fixed inset-0 z-[100] flex hidden flex-col px-5 py-5 backdrop-blur-md transition-opacity lg:hidden"
   style="height: 100dvh;"
@@ -236,13 +238,30 @@ const isActive = (href: string) =>
     "[data-mobile-menu-close]",
   );
 
+  const setMobileMenu = (open: boolean) => {
+    mobileMenu?.classList.toggle("hidden", !open);
+    document.body.style.overflow = open ? "hidden" : "";
+    openBtn?.setAttribute("aria-expanded", String(open));
+  };
+
   openBtn?.addEventListener("click", () => {
-    mobileMenu?.classList.remove("hidden");
-    document.body.style.overflow = "hidden";
+    setMobileMenu(true);
   });
 
   closeBtn?.addEventListener("click", () => {
-    mobileMenu?.classList.add("hidden");
-    document.body.style.overflow = "";
+    setMobileMenu(false);
+    openBtn?.focus();
+  });
+
+  mobileMenu?.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => setMobileMenu(false));
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || mobileMenu?.classList.contains("hidden")) {
+      return;
+    }
+    setMobileMenu(false);
+    openBtn?.focus();
   });
 </script>

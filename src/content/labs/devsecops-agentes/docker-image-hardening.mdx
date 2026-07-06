@@ -1,0 +1,97 @@
+---
+title: "Docker image hardening: non-root, capabilities y filesystem"
+description: "Controles prácticos para reducir daño si un contenedor se compromete: usuario no-root, capacidades mínimas, filesystem read-only y secretos fuera de la imagen."
+path: "devsecops-agentes"
+order: 5
+level: "advanced"
+estimatedMinutes: 40
+prerequisites:
+  - "Saber construir una imagen Docker simple"
+  - "Entender usuarios y permisos básicos en Linux"
+objectives:
+  - "Identificar riesgos de correr como root"
+  - "Reducir capabilities innecesarias"
+  - "Separar secretos de la imagen"
+  - "Diseñar un checklist de hardening reproducible"
+evidence:
+  - "Dockerfile vulnerable y versión endurecida"
+  - "Checklist de controles aplicados"
+  - "Writeup: qué riesgo reduce cada control"
+commands:
+  - "docker build"
+  - "docker run --read-only"
+  - "docker run --cap-drop=ALL"
+challenge: "Tomá una imagen de juguete. Proponé un Dockerfile que cree usuario no-root y un comando docker run con cap-drop y read-only. Explicá qué podría romper y cómo lo detectarías."
+nextLabs:
+  - "ciberseguridad/docker-socket-to-host"
+  - "devsecops-agentes/sbom-basico"
+tags:
+  - "docker"
+  - "hardening"
+  - "devsecops"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+Un contenedor no es una VM mágica. Comparte kernel con el host y tiene permisos. Hardening es reducir qué puede hacer el proceso si algo sale mal.
+
+<Callout type="concepto">
+  El objetivo no es hacer el contenedor invulnerable. Es bajar el impacto: menos
+  privilegios, menos escritura, menos capacidades y menos secretos expuestos.
+</Callout>
+
+## Dockerfile más seguro
+
+Patrón mínimo:
+
+```dockerfile
+FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY . .
+RUN addgroup -S app && adduser -S app -G app
+USER app
+CMD ["node", "server.js"]
+```
+
+No alcanza para producción, pero evita correr la app como root dentro del contenedor.
+
+## Runtime con menos permisos
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+docker run --rm \
+  --read-only \
+  --cap-drop=ALL \
+  --tmpfs /tmp \
+  app-de-juguete:local
+```
+
+</TerminalBlock>
+
+Puede romper apps que escriben en disco o necesitan capabilities. Eso no es malo: te muestra dependencias ocultas.
+
+<Callout type="error">
+  No metas secretos en la imagen. Si quedan en una layer, el secreto viaja con
+  el artefacto. Usá variables/secret managers del entorno y documentá
+  placeholders.
+</Callout>
+
+## Checklist de evidencia
+
+```text
+control             evidencia
+USER no-root         Dockerfile con USER app
+capabilities         runbook con --cap-drop=ALL y excepciones justificadas
+filesystem           --read-only + tmpfs donde haga falta
+secretos             no hay .env ni tokens en layers
+docker socket        no montado salvo caso justificado y defensivo
+```
+
+<Callout type="evidencia">
+  El valor está en explicar tradeoffs. Si `--read-only` rompe logs locales,
+  documentá dónde escribe la app y cómo lo resolverías sin abrir todo el FS.
+</Callout>

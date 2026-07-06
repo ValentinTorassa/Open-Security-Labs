@@ -1,0 +1,86 @@
+---
+title: "Blast radius y costo: game day con incidente sintético"
+description: "Un lab avanzado para pensar producción: qué se rompe, cuánto cuesta, cómo se limita el impacto y qué evidencia necesitás para decidir."
+path: "cloud-produccion"
+order: 5
+level: "advanced"
+estimatedMinutes: 45
+prerequisites:
+  - "Entender IAM, logs y redes cloud"
+  - "Haber diseñado una arquitectura cloud mínima"
+objectives:
+  - "Definir blast radius técnico y económico"
+  - "Diseñar límites de permisos, red y costo"
+  - "Preparar un game day seguro con datos ficticios"
+  - "Documentar señales de detección y rollback"
+evidence:
+  - "Escenario de incidente sintético"
+  - "Tabla de controles que reducen blast radius"
+  - "Checklist de logs, alarmas, costos y cleanup"
+commands:
+  - "aws budgets describe-budgets"
+  - "aws cloudtrail lookup-events"
+challenge: "Inventá un incidente: credencial de CI filtrada o bucket mal configurado. Definí qué puede tocar, cuánto podría costar, qué alarma lo detecta y qué paso corta el impacto."
+nextLabs:
+  - "cloud-produccion/cloudtrail-quien-hizo-que"
+  - "devsecops-agentes/github-actions-secrets-en-logs"
+tags:
+  - "cloud"
+  - "produccion"
+  - "incidentes"
+---
+
+import Callout from "../../../components/Callout.astro";
+
+Un incidente no se mide solo por "entraron o no entraron". Se mide por cuánto pudieron tocar, cuánto costó, cuánto tardaste en verlo y qué tan rápido pudiste cortar el daño.
+
+<Callout type="concepto">
+  **Blast radius** es el radio de impacto. Incluye permisos, red, datos, costo,
+  regiones, cuentas y dependencias. Reducirlo es diseñar para que un fallo no se
+  convierta en caída total.
+</Callout>
+
+## Escenario sintético
+
+```text
+incidente: token de CI ficticio filtrado
+actor: alguien intenta usarlo fuera del pipeline
+riesgo: crear recursos caros o leer storage privado
+datos: solo buckets/labs de juguete
+```
+
+No necesitás filtrar nada real para practicar. El ejercicio es pensar límites.
+
+## Controles por capa
+
+```text
+capa        control
+IAM         rol de CI con permisos mínimos y condición por repo/rama
+red         recursos privados sin entrada directa desde internet
+datos       buckets privados, cifrado y acceso por rol
+costo       budget + alarma + cleanup plan
+logs        CloudTrail para llamadas de API sensibles
+operación   runbook para rotar credenciales y revocar sesiones
+```
+
+<Callout type="error">
+  Un rol con `AdministratorAccess` convierte cualquier filtración chica en
+  incidente grande. La pregunta de diseño es: si esta credencial cae, ¿qué es lo
+  máximo que puede hacer?
+</Callout>
+
+## Tabla de game day
+
+```text
+paso                  señal esperada                  corte
+uso fuera de CI        CloudTrail AssumeRole raro       revocar sesión/rol
+creación de recurso    evento Create* no esperado       SCP/permiso/budget
+lectura de bucket      GetObject fuera del patrón       bloquear policy
+costo sube             alarma de budget                 apagar recursos lab
+```
+
+<Callout type="evidencia">
+  Entregá el game day como documento: escenario, supuestos, límites, señales,
+  comandos de verificación y cleanup. No ejecutes pruebas destructivas en
+  cuentas reales.
+</Callout>

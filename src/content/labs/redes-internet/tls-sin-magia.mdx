@@ -1,0 +1,98 @@
+---
+title: "TLS sin magia: certificado, SNI, cadena y expiración"
+description: "Qué mira tu cliente cuando valida HTTPS: nombre del sitio, certificado, cadena de confianza, fechas y errores comunes."
+path: "redes-internet"
+order: 5
+level: "intermediate"
+estimatedMinutes: 30
+prerequisites:
+  - "Haber hecho el lab de una request no es magia"
+  - "Tener curl y openssl disponibles"
+objectives:
+  - "Leer issuer, subject, SAN y fechas de un certificado"
+  - "Entender por qué SNI importa en hosts compartidos"
+  - "Distinguir certificado vencido, nombre incorrecto y CA no confiable"
+  - "Dejar evidencia sin capturar secretos"
+evidence:
+  - "Salida de openssl s_client redactada a los campos importantes"
+  - "Tabla con subject, issuer, SAN y expiración"
+  - "Writeup: qué error esperarías si el nombre no coincide"
+commands:
+  - "openssl s_client -servername example.com -connect example.com:443"
+  - "openssl x509 -noout -subject -issuer -dates"
+  - "curl -Iv https://example.com"
+challenge: "Elegí un dominio público, inspeccioná su certificado y escribí qué nombre valida el navegador, quién lo emitió y cuándo vence."
+nextLabs:
+  - "redes-internet/dns-paso-a-paso"
+  - "cloud-produccion/vpc-security-groups"
+tags:
+  - "tls"
+  - "https"
+  - "certificados"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+HTTPS no significa "seguro" por magia. Significa que el cliente pudo negociar TLS y validar un certificado para el nombre que quería visitar. Si entendés esa validación, los errores dejan de ser misteriosos.
+
+<Callout type="concepto">
+  TLS responde tres preguntas prácticas: ¿estoy hablando con el nombre
+  correcto?, ¿el certificado viene de una cadena confiable?, ¿la conexión queda
+  cifrada e íntegra después del handshake?
+</Callout>
+
+## Mirá el certificado
+
+`openssl s_client` abre la conexión TLS y te muestra la cadena. `-servername` manda SNI: el nombre que el cliente quiere validar.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+openssl s_client -servername example.com -connect example.com:443 </dev/null 2>/dev/null \
+  | openssl x509 -noout -subject -issuer -dates
+```
+
+</TerminalBlock>
+
+Campos clave:
+
+```text
+subject   para quién fue emitido
+issuer    quién lo emitió
+notBefore desde cuándo vale
+notAfter  hasta cuándo vale
+SAN       nombres válidos del certificado
+```
+
+<Callout type="error">
+  El `Common Name` ya no alcanza como fuente principal. Hoy se valida contra SAN
+  (`Subject Alternative Name`). Si el dominio no está ahí, el navegador debería
+  rechazarlo aunque el certificado "parezca" correcto.
+</Callout>
+
+## Curl como diagnóstico rápido
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+curl -Iv https://example.com
+```
+
+</TerminalBlock>
+
+Buscá líneas de TLS, issuer y `expire date`. Si falla, no saltes directo a `-k`: primero entendé qué validación falló.
+
+## Errores comunes
+
+```text
+certificado vencido        fecha actual > notAfter
+nombre incorrecto          dominio no aparece en SAN
+CA no confiable            cadena no llega a una raíz confiable
+SNI ausente o incorrecto   el servidor entrega otro certificado
+```
+
+<Callout type="evidencia">
+  Guardá solo los campos relevantes. No necesitás pegar toda la cadena ni datos
+  internos. Para dominios propios o laborales, redactá nombres privados.
+</Callout>

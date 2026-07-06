@@ -20,6 +20,10 @@ const sorted = [...labs].sort((a, b) => {
 });
 
 const totalMin = labs.reduce((acc, l) => acc + l.data.estimatedMinutes, 0);
+const totalPractice =
+  totalMin >= 60
+    ? `~${Math.round(totalMin / 60)} h de práctica`
+    : `~${totalMin} min de práctica`;
 
 const levels = [
   { value: "beginner" as const },
@@ -30,12 +34,24 @@ const levels = [
 const chip =
   "shrink-0 rounded-full border px-3 py-1 font-mono text-xs transition-colors";
 const chipOff = "border-base-700 text-base-400 hover:text-base-100";
+
+const site = Astro.site ?? new URL("https://securitylabs.valentorassa.com");
+const labsJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: "Todos los labs",
+  url: new URL("/labs", site).href,
+  inLanguage: "es-AR",
+  numberOfItems: labs.length,
+  about: paths.map((path) => path.title),
+};
 ---
 
 <BaseLayout
   title="Todos los labs"
   description="Catálogo completo de labs prácticos de Open Security Labs. Comandos reales, criterio técnico y aprendizaje libre."
   width="wide"
+  jsonLd={labsJsonLd}
 >
   <section class="py-12">
     <p class="rule-label">Catálogo</p>
@@ -51,7 +67,8 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
       <span><span class="text-term-green">{labs.length}</span> labs</span>
       <span><span class="text-term-green">{paths.length}</span> rutas</span>
       <span
-        ><span class="text-term-green">~{totalMin}</span> min de práctica</span
+        ><span class="text-term-green">{totalPractice.split(" ")[0]}</span>
+        {totalPractice.split(" ").slice(1).join(" ")}</span
       >
       <span data-progress class="hidden"
         ><span class="text-term-green" data-progress-count>0</span> completados</span
@@ -112,7 +129,12 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
     <div class="mt-5 space-y-3">
       <div class="flex flex-wrap items-center gap-2" data-filter-group="path">
         <span class="text-base-500 mr-1 font-mono text-[0.7rem]">Ruta:</span>
-        <button class:list={[chip, chipOff]} data-filter="path" data-value="">
+        <button
+          class:list={[chip, chipOff]}
+          data-filter="path"
+          data-value=""
+          aria-pressed="true"
+        >
           Todas
         </button>
         {
@@ -121,6 +143,7 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
               class:list={[chip, chipOff]}
               data-filter="path"
               data-value={p.slug}
+              aria-pressed="false"
             >
               {p.short}
             </button>
@@ -129,7 +152,12 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
       </div>
       <div class="flex flex-wrap items-center gap-2" data-filter-group="level">
         <span class="text-base-500 mr-1 font-mono text-[0.7rem]">Nivel:</span>
-        <button class:list={[chip, chipOff]} data-filter="level" data-value="">
+        <button
+          class:list={[chip, chipOff]}
+          data-filter="level"
+          data-value=""
+          aria-pressed="true"
+        >
           Todos
         </button>
         {
@@ -138,6 +166,7 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
               class:list={[chip, chipOff]}
               data-filter="level"
               data-value={l.value}
+              aria-pressed="false"
             >
               <LabLevel level={l.value} />
             </button>
@@ -146,13 +175,19 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
       </div>
       <div class="flex flex-wrap items-center gap-2" data-filter-group="state">
         <span class="text-base-500 mr-1 font-mono text-[0.7rem]">Estado:</span>
-        <button class:list={[chip, chipOff]} data-filter="state" data-value="">
+        <button
+          class:list={[chip, chipOff]}
+          data-filter="state"
+          data-value=""
+          aria-pressed="true"
+        >
           Todos
         </button>
         <button
           class:list={[chip, chipOff]}
           data-filter="state"
           data-value="pending"
+          aria-pressed="false"
         >
           Pendientes
         </button>
@@ -160,6 +195,7 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
           class:list={[chip, chipOff]}
           data-filter="state"
           data-value="done"
+          aria-pressed="false"
         >
           Hechos
         </button>
@@ -170,12 +206,15 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
       {sorted.map((lab) => <LabCard lab={lab} />)}
     </div>
 
-    <p
+    <div
       class="text-base-400 mt-10 hidden text-center font-mono text-sm"
       data-no-results
     >
-      No hay labs que coincidan con tu búsqueda.
-    </p>
+      <p>No hay labs que coincidan con tu búsqueda.</p>
+      <button type="button" class="btn-ghost mt-3 text-xs" data-clear-filters>
+        Limpiar búsqueda y filtros
+      </button>
+    </div>
   </section>
 </BaseLayout>
 
@@ -196,6 +235,9 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
   );
   const input = document.querySelector<HTMLInputElement>("[data-lab-search]");
   const noResults = document.querySelector<HTMLElement>("[data-no-results]");
+  const clearFilters = document.querySelector<HTMLButtonElement>(
+    "[data-clear-filters]",
+  );
   const chips = Array.from(
     document.querySelectorAll<HTMLButtonElement>("[data-filter]"),
   );
@@ -213,6 +255,7 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
       c.classList.toggle(ON[1], on);
       c.classList.toggle(OFF[0], !on);
       c.classList.toggle(OFF[1], !on);
+      c.setAttribute("aria-pressed", String(on));
     });
   }
 
@@ -224,8 +267,12 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
       const done = isLabDone(id);
       const haystack = [
         card.dataset.title ?? "",
+        card.dataset.description ?? "",
         card.dataset.path ?? "",
+        card.dataset.level ?? "",
+        card.dataset.levelLabel ?? "",
         card.dataset.tags ?? "",
+        card.dataset.contributor ?? "",
       ].join(" ");
 
       const matchQ = q === "" || haystack.includes(q);
@@ -240,6 +287,15 @@ const chipOff = "border-base-700 text-base-400 hover:text-base-100";
     });
     noResults?.classList.toggle("hidden", visible !== 0);
   }
+
+  clearFilters?.addEventListener("click", () => {
+    if (input) input.value = "";
+    filters.path = "";
+    filters.level = "";
+    filters.state = "";
+    setChipStyles();
+    apply();
+  });
 
   function renderProgress() {
     let done = 0;

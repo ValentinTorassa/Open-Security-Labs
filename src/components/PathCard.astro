@@ -81,6 +81,11 @@ const { path, labCount, labIds = [] } = Astro.props;
             data-path-progress-bar
             class="h-full rounded-full transition-[width] duration-500"
             style="width: 0%; background: var(--accent)"
+            role="progressbar"
+            aria-label={`Progreso en ${path.title}`}
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
           />
         </div>
         <p
@@ -109,7 +114,10 @@ const { path, labCount, labIds = [] } = Astro.props;
         el.classList.remove("hidden");
         const pct = Math.round((done / ids.length) * 100);
         const bar = el.querySelector<HTMLElement>("[data-path-progress-bar]");
-        if (bar) bar.style.width = `${pct}%`;
+        if (bar) {
+          bar.style.width = `${pct}%`;
+          bar.setAttribute("aria-valuenow", String(pct));
+        }
         const label = el.querySelector<HTMLElement>(
           "[data-path-progress-label]",
         );

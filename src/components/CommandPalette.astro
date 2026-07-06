@@ -72,6 +72,13 @@ const pageItems: Item[] = [
     keywords: "perfil progreso token export import",
   },
   {
+    href: "/crear-lab",
+    title: "Crear lab",
+    sub: "Editor simple para proponer una PR",
+    kind: "Página",
+    keywords: "crear lab editor mdx contribuir github pull request pr",
+  },
+  {
     href: "/contribuir",
     title: "Contribuir",
     sub: "Sumar labs",
@@ -124,6 +131,10 @@ const items = [...pageItems, ...pathItems, ...labItems];
       <input
         data-cmdk-input
         type="text"
+        role="combobox"
+        aria-expanded="false"
+        aria-controls="cmdk-list"
+        aria-activedescendant=""
         autocomplete="off"
         spellcheck="false"
         placeholder="Buscar labs, rutas, herramientas…"
@@ -136,6 +147,7 @@ const items = [...pageItems, ...pathItems, ...labItems];
       >
     </div>
     <ul
+      id="cmdk-list"
       data-cmdk-list
       class="overflow-y-auto p-2"
       style="max-height: min(400px, calc(var(--cmdk-height, 100dvh) - 11rem));"
@@ -200,6 +212,7 @@ const items = [...pageItems, ...pathItems, ...labItems];
     const items: Item[] = JSON.parse(dataEl.textContent || "[]");
     let active = 0;
     let results: Item[] = [];
+    let lastTrigger: HTMLElement | null = null;
     const isOpen = () => !root.classList.contains("hidden");
 
     const syncViewport = () => {
@@ -219,6 +232,7 @@ const items = [...pageItems, ...pathItems, ...labItems];
       syncViewport();
       root.classList.remove("hidden");
       root.classList.add("flex");
+      input.setAttribute("aria-expanded", "true");
       document.body.style.overflow = "hidden";
       input.value = "";
       render("");
@@ -227,7 +241,10 @@ const items = [...pageItems, ...pathItems, ...labItems];
     const close = () => {
       root.classList.add("hidden");
       root.classList.remove("flex");
+      input.setAttribute("aria-expanded", "false");
+      input.setAttribute("aria-activedescendant", "");
       document.body.style.overflow = "";
+      lastTrigger?.focus();
     };
 
     function score(it: Item, q: string): number {
@@ -253,7 +270,9 @@ const items = [...pageItems, ...pathItems, ...labItems];
       emptyEl.classList.toggle("hidden", results.length > 0);
       results.forEach((it, idx) => {
         const li = document.createElement("li");
+        li.id = `cmdk-option-${idx}`;
         li.setAttribute("role", "option");
+        li.setAttribute("aria-selected", "false");
         li.dataset.idx = String(idx);
         li.className =
           "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5";
@@ -276,8 +295,11 @@ const items = [...pageItems, ...pathItems, ...labItems];
     function paint() {
       Array.from(listEl.children).forEach((el, idx) => {
         el.classList.toggle("bg-base-800", idx === active);
+        el.setAttribute("aria-selected", String(idx === active));
         if (idx === active) el.scrollIntoView({ block: "nearest" });
       });
+      const activeEl = listEl.children[active] as HTMLElement | undefined;
+      input?.setAttribute("aria-activedescendant", activeEl?.id ?? "");
     }
 
     function go(idx: number) {
@@ -292,7 +314,12 @@ const items = [...pageItems, ...pathItems, ...labItems];
       const mod = e.metaKey || e.ctrlKey;
       if (mod && k === "k") {
         e.preventDefault();
-        isOpen() ? close() : open();
+        if (isOpen()) {
+          close();
+        } else {
+          lastTrigger = document.activeElement as HTMLElement | null;
+          open();
+        }
         return;
       }
       if (!isOpen()) return;
@@ -321,6 +348,7 @@ const items = [...pageItems, ...pathItems, ...labItems];
     document.querySelectorAll("[data-cmdk-open]").forEach((el) =>
       el.addEventListener("click", (e) => {
         e.preventDefault();
+        lastTrigger = el as HTMLElement;
         open();
       }),
     );

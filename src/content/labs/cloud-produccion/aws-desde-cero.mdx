@@ -1,0 +1,102 @@
+---
+title: "AWS desde cero: región, ARN, CLI y credenciales falsas"
+description: "Un mapa seguro para leer conceptos base de AWS sin publicar datos reales: regiones, cuentas, ARNs, perfiles, CLI y redacción de evidencia."
+path: "cloud-produccion"
+order: 0
+level: "beginner"
+estimatedMinutes: 30
+prerequisites:
+  - "Tener instalada o poder leer documentación de AWS CLI"
+  - "No usar credenciales reales en capturas ni en el repo"
+objectives:
+  - "Entender región, cuenta, servicio, recurso y ARN"
+  - "Leer perfiles de AWS CLI sin exponer secretos"
+  - "Distinguir identidad, permisos y recurso"
+  - "Redactar evidencia cloud sin datos privados"
+evidence:
+  - "Tabla con partes de un ARN ficticio"
+  - "Salida redactada de aws configure list o equivalente"
+  - "Checklist de datos cloud que nunca publicarías"
+commands:
+  - "aws --version"
+  - "aws configure list"
+  - "aws sts get-caller-identity"
+challenge: "Escribí un mini inventario ficticio: región, cuenta placeholder, rol, bucket de juguete y política de ejemplo. Marcá qué campos redactarías si fueran reales."
+nextLabs:
+  - "cloud-produccion/iam-deny-gana"
+  - "cloud-produccion/cloudtrail-quien-hizo-que"
+tags:
+  - "aws"
+  - "cloud"
+  - "iam"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+Cloud se vuelve confuso cuando mezclás conceptos: cuenta, región, servicio, recurso, identidad y permisos. Este lab arma un mapa mínimo sin pedirte publicar nada real.
+
+<Callout type="error">
+  No subas account IDs, ARNs reales, nombres de buckets reales, screenshots de
+  consola ni salidas de comandos con datos de tu organización. En Open Security
+  Labs, cloud se documenta con placeholders y datos ficticios.
+</Callout>
+
+## Región y cuenta
+
+Una región es dónde vive el recurso. Una cuenta es el límite administrativo donde se factura, se audita y se aplican permisos.
+
+```text
+región de ejemplo: us-east-1
+cuenta ficticia:   123456789012
+```
+
+Usá `123456789012` como placeholder cuando necesites mostrar forma sin exponer identidad real.
+
+## ARN: la dirección de un recurso
+
+Un ARN identifica recursos de AWS con una forma estable:
+
+```text
+arn:aws:iam::123456789012:role/LabReadOnly
+ |  |   |       |          |
+ |  |   |       |          recurso
+ |  |   |       cuenta ficticia
+ |  |   región vacía para IAM
+ |  servicio
+ partición
+```
+
+<Callout type="concepto">
+  IAM es global, por eso el campo región puede aparecer vacío. Otros servicios,
+  como EC2 o Lambda, sí suelen incluir región en el ARN.
+</Callout>
+
+## CLI sin filtrar secretos
+
+Podés revisar la instalación y configuración sin mostrar claves.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+aws --version
+aws configure list
+```
+
+</TerminalBlock>
+
+Si corrés `aws sts get-caller-identity`, redactá cuenta y ARN antes de guardar evidencia.
+
+```text
+{
+  "UserId": "AROAXAMPLE:session",
+  "Account": "123456789012",
+  "Arn": "arn:aws:sts::123456789012:assumed-role/LabReadOnly/session"
+}
+```
+
+<Callout type="evidencia">
+  La evidencia buena no es "mirá mi cuenta real". Es un documento que muestra
+  que entendés qué parte identifica la cuenta, qué parte identifica el rol y qué
+  parte define el recurso, usando placeholders.
+</Callout>
