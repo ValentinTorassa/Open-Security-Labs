@@ -2,6 +2,7 @@
 title: "NATS y JetStream: subjects, streams y consumers sin magia"
 description: "Publicar no es lo mismo que persistir. Aprendé Core NATS, JetStream, wildcards, streams y consumers con un laboratorio local."
 path: "backend-arquitectura"
+contributor: "solsolettidev"
 order: 4
 level: "intermediate"
 estimatedMinutes: 45
@@ -194,10 +195,10 @@ nats context ls
 NATS organiza los subjects por tokens separados con punto:
 
 ```text
-etl
-etl.request
-etl.request.created
-etl.source.created
+orders
+orders.new
+orders.new.created
+orders.payment.created
 ```
 
 Hay dos wildcards importantes:
@@ -208,16 +209,16 @@ Hay dos wildcards importantes:
 Ejemplos:
 
 ```text
-etl.*     matchea etl.request
-etl.*     no matchea etl.request.created
+orders.*     matchea orders.new
+orders.*     no matchea orders.new.created
 
-etl.>     matchea etl.request
-etl.>     matchea etl.request.created
+orders.>     matchea orders.new
+orders.>     matchea orders.new.created
 ```
 
 <Callout type="error">
   No publiques en subjects con wildcards. Un publisher debe publicar en un
-  subject concreto como `etl.request.created`, no en `etl.>` ni en `etl.*`.
+  subject concreto como `orders.new.created`, no en `orders.>` ni en `orders.*`.
   Las wildcards son para suscribirse o para configurar qué subjects captura un
   stream.
 </Callout>
@@ -227,7 +228,7 @@ Probalo con dos suscriptores. En una terminal:
 <TerminalBlock title="terminal 1">
 
 ```bash
-nats sub 'etl.*'
+nats sub 'orders.*'
 ```
 
 </TerminalBlock>
@@ -237,20 +238,20 @@ En otra terminal:
 <TerminalBlock title="terminal 2">
 
 ```bash
-nats pub etl.request '{"type":"one-token"}'
-nats pub etl.request.created '{"type":"two-tokens"}'
+nats pub orders.new '{"type":"one-token"}'
+nats pub orders.new.created '{"type":"two-tokens"}'
 ```
 
 </TerminalBlock>
 
-El subscriber `etl.*` debería ver solo `etl.request`.
+El subscriber `orders.*` debería ver solo `orders.new`.
 
-Ahora escuchá todo lo que cuelga de `etl`:
+Ahora escuchá todo lo que cuelga de `orders`:
 
 <TerminalBlock title="terminal 1">
 
 ```bash
-nats sub 'etl.>'
+nats sub 'orders.>'
 ```
 
 </TerminalBlock>
@@ -260,8 +261,8 @@ Y publicá otra vez:
 <TerminalBlock title="terminal 2">
 
 ```bash
-nats pub etl.request '{"type":"one-token"}'
-nats pub etl.request.created '{"type":"two-tokens"}'
+nats pub orders.new '{"type":"one-token"}'
+nats pub orders.new.created '{"type":"two-tokens"}'
 ```
 
 </TerminalBlock>
@@ -273,19 +274,19 @@ Ahora deberían llegar los dos.
 Este punto parece menor, pero rompe integraciones reales:
 
 ```text
-etl.> matchea etl.request
-etl.> no matchea etl
+orders.> matchea orders.new
+orders.> no matchea orders
 ```
 
-Un stream configurado solo con `etl.>` no captura mensajes publicados al subject exacto `etl`. Para aceptar ambos, configurá los dos subjects:
+Un stream configurado solo con `orders.>` no captura mensajes publicados al subject exacto `orders`. Para aceptar ambos, configurá los dos subjects:
 
 ```text
-etl, etl.>
+orders, orders.>
 ```
 
 <Callout type="concepto">
-  Pensalo así: `etl.>` significa "algo después de `etl.`". Si publicás en
-  `etl`, no hay punto ni token siguiente. Por eso no matchea.
+  Pensalo así: `orders.>` significa "algo después de `orders.`". Si publicás en
+  `orders`, no hay punto ni token siguiente. Por eso no matchea.
 </Callout>
 
 Creá un stream que capture ambos casos:
@@ -293,7 +294,7 @@ Creá un stream que capture ambos casos:
 <TerminalBlock title="vt@labs:~">
 
 ```bash
-nats stream add ETL --subjects "etl,etl.>" --defaults
+nats stream add ORDERS --subjects "orders,orders.>" --defaults
 nats stream ls
 ```
 
@@ -304,9 +305,9 @@ Publicá tres mensajes:
 <TerminalBlock title="vt@labs:~">
 
 ```bash
-nats pub etl '{"event":"root-subject"}'
-nats pub etl.source.created '{"event":"source.created","sourceId":"src-1"}'
-nats pub etl.task.created '{"event":"task.created","taskId":"task-1"}'
+nats pub orders '{"event":"root-subject"}'
+nats pub orders.payment.created '{"event":"payment.created","orderId":"ord-1"}'
+nats pub orders.shipment.created '{"event":"shipment.created","orderId":"ord-1"}'
 ```
 
 </TerminalBlock>
@@ -316,7 +317,7 @@ Miralos desde el stream:
 <TerminalBlock title="vt@labs:~">
 
 ```bash
-nats stream view ETL --translate "jq ."
+nats stream view ORDERS --translate "jq ."
 ```
 
 </TerminalBlock>
@@ -326,7 +327,7 @@ Si querés acotar por tiempo:
 <TerminalBlock title="vt@labs:~">
 
 ```bash
-nats stream view ETL --since 1h --translate "jq ."
+nats stream view ORDERS --since 1h --translate "jq ."
 ```
 
 </TerminalBlock>
@@ -344,8 +345,8 @@ Cuando publicás un mensaje, JetStream decide si lo guarda mirando los subjects 
   caption="Publisher -> subject -> stream -> consumer. Cada flecha es un lugar donde puede fallar la configuración."
   code={`flowchart LR
     P[Publisher] -->|publica en| S(subject concreto)
-    S -->|matchea| ST[Stream ETL]
-    ST -->|entrega| C[Consumer etl-worker]
+    S -->|matchea| ST[Stream ORDERS]
+    ST -->|entrega| C[Consumer orders-worker]
     C -->|ACK| ST`}
 />
 
@@ -365,18 +366,18 @@ Un **stream** es el almacenamiento de JetStream que captura mensajes publicados 
 Un stream puede capturar varios subjects:
 
 ```text
-Stream: ETL
-Subjects: etl, etl.>
+Stream: ORDERS
+Subjects: orders, orders.>
 ```
 
 Entonces, cuando publicás esto:
 
 ```text
-subject: etl.source.created
-payload: {"sourceId":"src-1"}
+subject: orders.payment.created
+payload: {"orderId":"ord-1"}
 ```
 
-JetStream revisa si algún stream captura ese subject. Como `ETL` tiene `etl.>`, lo guarda.
+JetStream revisa si algún stream captura ese subject. Como `ORDERS` tiene `orders.>`, lo guarda.
 
 <Callout type="error">
   NATS Core no entiende de streams. Los streams son de JetStream. Si usás
@@ -395,12 +396,12 @@ Un consumer mantiene estado:
 - Qué mensajes debe redeliverar si no hubo ACK.
 - Desde qué punto empieza a leer.
 
-Creá un consumer durable para leer solo eventos bajo `etl.>`:
+Creá un consumer durable para leer solo eventos bajo `orders.>`:
 
 <TerminalBlock title="vt@labs:~">
 
 ```bash
-nats consumer add ETL etl-worker --filter "etl.>" --ack explicit --pull --defaults
+nats consumer add ORDERS orders-worker --filter "orders.>" --ack explicit --pull --defaults
 ```
 
 </TerminalBlock>
@@ -410,7 +411,7 @@ Pedile el próximo mensaje:
 <TerminalBlock title="vt@labs:~">
 
 ```bash
-nats consumer next ETL etl-worker
+nats consumer next ORDERS orders-worker
 ```
 
 </TerminalBlock>
@@ -479,14 +480,14 @@ NATS_ENABLED=true
 NATS_URL=nats://127.0.0.1:4222
 
 JETSTREAM_ENABLED=true
-JETSTREAM_STREAM_NAME=ETL
-JETSTREAM_STREAM_PUBLISH_NAME=ETL
-JETSTREAM_STREAM_CONSUMER_NAME=ETL
+JETSTREAM_STREAM_NAME=ORDERS
+JETSTREAM_STREAM_PUBLISH_NAME=ORDERS
+JETSTREAM_STREAM_CONSUMER_NAME=ORDERS
 
-JETSTREAM_SUBJECTS_PUBLISH=workflow.etl.setup.begin,workflow.etl.setup.begin.>
-JETSTREAM_SUBJECT_PREFIX=workflow.etl.setup.begin
+JETSTREAM_SUBJECTS_PUBLISH=shop.orders.events,shop.orders.events.>
+JETSTREAM_SUBJECT_PREFIX=shop.orders.events
 
-ETL_TASK_SUBJECT=workflow.etl.setup.begin.>
+ORDERS_TASK_SUBJECT=shop.orders.events.>
 DLQ_SUBJECT=dlq.>
 ```
 
@@ -512,19 +513,19 @@ await js.publish(
 )
 ```
 
-Y `NATS_SUBJECT_PREFIX=workflow.etl.setup.begin`, entonces publicar `source.created` termina en:
+Y `NATS_SUBJECT_PREFIX=shop.orders.events`, entonces publicar `payment.created` termina en:
 
 ```text
-workflow.etl.setup.begin.source.created
+shop.orders.events.payment.created
 ```
 
 El consumidor tiene que escuchar algo que matchee eso, por ejemplo:
 
 ```text
-workflow.etl.setup.begin.>
+shop.orders.events.>
 ```
 
-Si escucha `etl.>` o `workflow.etl.setup.>`, no va a recibir ese evento.
+Si escucha `orders.>` o `shop.orders.>`, no va a recibir ese evento.
 
 <Callout type="error">
   Revisá quién agrega el punto. Si el código hace `f"{prefix}.{subject}"`, el
@@ -545,8 +546,8 @@ Cuando termines, borrá el consumer y el stream para no dejar datos dando vuelta
 <TerminalBlock title="vt@labs:~">
 
 ```bash
-nats consumer rm ETL etl-worker --force
-nats stream rm ETL --force
+nats consumer rm ORDERS orders-worker --force
+nats stream rm ORDERS --force
 ```
 
 </TerminalBlock>
@@ -580,7 +581,7 @@ Después, verificá el stream:
 
 ```bash
 nats stream ls
-nats stream info ETL
+nats stream info ORDERS
 ```
 
 </TerminalBlock>
@@ -590,7 +591,7 @@ Miralo con JSON legible:
 <TerminalBlock title="vt@labs:~">
 
 ```bash
-nats stream view ETL --since 1h --translate "jq ."
+nats stream view ORDERS --since 1h --translate "jq ."
 ```
 
 </TerminalBlock>
