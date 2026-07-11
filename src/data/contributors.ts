@@ -27,6 +27,12 @@ export const contributors: Contributor[] = [
     role: "Creador y mantenedor",
     commits: 11,
   },
+  {
+    github: "solsolettidev",
+    name: "Sol Soletti",
+    role: "Autor de lab",
+    commits: 1,
+  },
 ];
 
 const byHandle = new Map(contributors.map((c) => [c.github.toLowerCase(), c]));
