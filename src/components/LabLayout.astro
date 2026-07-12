@@ -126,14 +126,15 @@ const accent = path?.accent ?? "#56d364";
   // Copy to clipboard logic
   document.querySelectorAll(".lab-prose pre").forEach((pre) => {
     if (pre.classList.contains("mermaid")) return;
-    
+
     // Find if the pre is inside a TerminalBlock wrapper
     const wrapper = pre.closest(".border-base-700.bg-base-900") || pre;
     if (wrapper.querySelector(".copy-btn")) return;
-    
+
     const btn = document.createElement("button");
-    btn.className = "copy-btn absolute right-2 rounded p-1.5 text-base-400 hover:text-base-100 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 z-10";
-    
+    btn.className =
+      "copy-btn absolute right-2 rounded p-1.5 text-base-400 hover:text-base-100 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 z-10";
+
     // Position differently based on wrapper type
     if (wrapper === pre) {
       // Standard markdown code block
@@ -142,16 +143,16 @@ const accent = path?.accent ?? "#56d364";
       // TerminalBlock (place button in the header area)
       btn.classList.add("top-1.5", "bg-base-800/80", "hover:bg-base-700");
     }
-    
+
     btn.setAttribute("aria-label", "Copiar código");
     btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
-    
+
     wrapper.classList.add("relative", "group");
-    
+
     btn.addEventListener("click", async () => {
       const code = pre.querySelector("code") || pre;
       const text = code.innerText;
-      
+
       try {
         await navigator.clipboard.writeText(text);
         btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-term-green"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
@@ -162,7 +163,7 @@ const accent = path?.accent ?? "#56d364";
         console.error("Fallo al copiar: ", err);
       }
     });
-    
+
     wrapper.appendChild(btn);
   });
 </script>
