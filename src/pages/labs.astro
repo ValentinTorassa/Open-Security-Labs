@@ -4,20 +4,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import LabCard from "../components/LabCard.astro";
 import LabLevel from "../components/LabLevel.astro";
 import { paths } from "../data/paths";
+import { sortLabs } from "../data/labs";
 
 const labs = await getCollection("labs", ({ data }) => !data.draft);
-
-// Orden por ruta (según paths.ts) y luego por duración.
-const pathOrder = new Map(paths.map((p) => [p.slug, p.order]));
-const sorted = [...labs].sort((a, b) => {
-  const pa = pathOrder.get(a.data.path) ?? 99;
-  const pb = pathOrder.get(b.data.path) ?? 99;
-  if (pa !== pb) return pa - pb;
-  return (
-    a.data.order - b.data.order ||
-    a.data.estimatedMinutes - b.data.estimatedMinutes
-  );
-});
+const sorted = sortLabs(labs);
 
 const totalMin = labs.reduce((acc, l) => acc + l.data.estimatedMinutes, 0);
 const totalPractice =

@@ -1,13 +1,11 @@
 ---
 // Calculadora CIDR / subred. 100% client-side, sin backend.
 // Ingresás algo como 10.0.0.0/24 y te muestra red, broadcast, rango y hosts.
-const uid = "cidr-" + Math.random().toString(36).slice(2, 9);
 ---
 
 <section
   class="not-prose border-term-cyan/30 bg-term-cyan/5 my-8 rounded-xl border p-5"
   data-cidr
-  id={uid}
 >
   <h3
     class="text-term-cyan flex items-center gap-2 font-mono text-sm font-semibold"

@@ -1,100 +1,7 @@
 ---
-import { getCollection } from "astro:content";
-import { paths, getPath } from "../data/paths";
-
-// Índice de búsqueda global, armado en build. Sin backend: viaja como JSON.
-const labs = await getCollection("labs", ({ data }) => !data.draft);
-
-type Item = {
-  href: string;
-  title: string;
-  sub: string;
-  kind: string;
-  keywords: string;
-};
-
-const labItems: Item[] = labs
-  .sort((a, b) => a.data.order - b.data.order)
-  .map((lab) => {
-    const p = getPath(lab.data.path);
-    return {
-      href: `/labs/${lab.id}`,
-      title: lab.data.title,
-      sub: p?.title ?? lab.data.path,
-      kind: "Lab",
-      keywords: [
-        lab.data.title,
-        p?.title ?? "",
-        lab.data.tags.join(" "),
-        lab.data.level,
-      ]
-        .join(" ")
-        .toLowerCase(),
-    };
-  });
-
-const pathItems: Item[] = paths.map((p) => ({
-  href: `/rutas/${p.slug}`,
-  title: p.title,
-  sub: "Ruta de aprendizaje",
-  kind: "Ruta",
-  keywords: `${p.title} ${p.short} ${p.focus.join(" ")}`.toLowerCase(),
-}));
-
-const pageItems: Item[] = [
-  {
-    href: "/labs",
-    title: "Todos los labs",
-    sub: "Catálogo completo",
-    kind: "Página",
-    keywords: "labs catalogo todos",
-  },
-  {
-    href: "/certificaciones",
-    title: "Certificaciones",
-    sub: "Exámenes por ruta",
-    kind: "Página",
-    keywords: "certificaciones certis examenes",
-  },
-  {
-    href: "/portafolio",
-    title: "Portafolio",
-    sub: "Proyectos con evidencia",
-    kind: "Página",
-    keywords:
-      "portafolio portfolio proyectos evidencia backend ciberseguridad cloud devsecops",
-  },
-  {
-    href: "/perfil",
-    title: "Perfil",
-    sub: "Tu progreso local",
-    kind: "Página",
-    keywords: "perfil progreso token export import",
-  },
-  {
-    href: "/crear-lab",
-    title: "Crear lab",
-    sub: "Editor simple para proponer una PR",
-    kind: "Página",
-    keywords: "crear lab editor mdx contribuir github pull request pr",
-  },
-  {
-    href: "/contribuir",
-    title: "Contribuir",
-    sub: "Sumar labs",
-    kind: "Página",
-    keywords: "contribuir aportar pr github",
-  },
-  {
-    href: "/about",
-    title: "Acerca",
-    sub: "Qué es Open Security Labs",
-    kind: "Página",
-    keywords: "acerca about sobre",
-  },
-];
-
-const items = [...pageItems, ...pathItems, ...labItems];
+// El índice de búsqueda vive en /search-index.json (src/pages/search-index.json.ts)
+// y se baja con fetch() la primera vez que se abre el palette, en vez de
+// viajar inline en el HTML de todas las páginas.
 ---
 
 <div
@@ -172,13 +79,6 @@ const items = [...pageItems, ...pathItems, ...labItems];
   </div>
 </div>
 
-<script
-  is:inline
-  type="application/json"
-  data-cmdk-items
-  set:html={JSON.stringify(items)}
-/>
-
 <script>
   type Item = {
     href: string;
@@ -204,12 +104,24 @@ const items = [...pageItems, ...pathItems, ...labItems];
   const input = document.querySelector<HTMLInputElement>("[data-cmdk-input]");
   const list = document.querySelector<HTMLElement>("[data-cmdk-list]");
   const empty = document.querySelector<HTMLElement>("[data-cmdk-empty]");
-  const dataEl = document.querySelector<HTMLElement>("[data-cmdk-items]");
 
-  if (root && input && list && empty && dataEl) {
+  if (root && input && list && empty) {
     const listEl = list;
     const emptyEl = empty;
-    const items: Item[] = JSON.parse(dataEl.textContent || "[]");
+    let items: Item[] = [];
+    let indexPromise: Promise<void> | null = null;
+    const ensureIndex = () => {
+      indexPromise ??= fetch("/search-index.json")
+        .then((r) => (r.ok ? r.json() : []))
+        .then((data: Item[]) => {
+          items = data;
+        })
+        .catch(() => {
+          // Permite reintentar en la próxima apertura si falló la red.
+          indexPromise = null;
+        });
+      return indexPromise;
+    };
     let active = 0;
     let results: Item[] = [];
     let lastTrigger: HTMLElement | null = null;
@@ -236,6 +148,9 @@ const items = [...pageItems, ...pathItems, ...labItems];
       document.body.style.overflow = "hidden";
       input.value = "";
       render("");
+      void ensureIndex().then(() => {
+        if (isOpen()) render(input.value);
+      });
       requestAnimationFrame(() => input.focus({ preventScroll: true }));
     };
     const close = () => {
