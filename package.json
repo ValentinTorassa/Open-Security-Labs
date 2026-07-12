@@ -26,12 +26,12 @@
     "@tailwindcss/vite": "^4.3.2",
     "astro": "^7.0.7",
     "astro-og-canvas": "^0.13.0",
-    "mermaid": "^11.15.0",
+    "mermaid": "^11.16.0",
     "tailwindcss": "^4.3.2"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
-    "prettier": "^3.6.2",
+    "prettier": "^3.9.5",
     "prettier-plugin-astro": "^0.14.1",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "typescript": "^5.9.2"
