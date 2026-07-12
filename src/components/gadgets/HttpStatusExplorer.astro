@@ -1,7 +1,6 @@
 ---
 // Explorador de códigos de estado HTTP. Client-side, sin backend.
 // Filtrá por número o texto y mirá qué significa cada código y cuándo usarlo.
-const uid = "http-" + Math.random().toString(36).slice(2, 9);
 
 const codes: { code: number; name: string; note: string }[] = [
   {
@@ -117,7 +116,6 @@ const colorOf = (c: number) =>
 <section
   class="not-prose border-term-blue/30 bg-term-blue/5 my-8 rounded-xl border p-5"
   data-http
-  id={uid}
 >
   <h3
     class="text-term-blue flex items-center gap-2 font-mono text-sm font-semibold"

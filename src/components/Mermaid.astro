@@ -24,37 +24,55 @@ const { code, caption } = Astro.props;
 </figure>
 
 <script>
-  import mermaid from "mermaid";
+  // Carga diferida: el bundle de mermaid pesa ~600 KB, así que recién se
+  // baja cuando un diagrama se acerca al viewport.
+  const targets = document.querySelectorAll<HTMLElement>(".mermaid");
 
-  mermaid.initialize({
-    startOnLoad: false,
-    securityLevel: "strict",
-    theme: "base",
-    fontFamily: "JetBrains Mono Variable, ui-monospace, monospace",
-    themeVariables: {
-      darkMode: true,
-      background: "#07090a",
-      mainBkg: "#101518",
-      primaryColor: "#101518",
-      primaryTextColor: "#dde4e8",
-      primaryBorderColor: "#273139",
-      secondaryColor: "#07090a",
-      tertiaryColor: "#07090a",
-      lineColor: "#4ade80",
-      textColor: "#b9c4cb",
-      nodeBorder: "#273139",
-      clusterBkg: "#07090a",
-      clusterBorder: "#1a2228",
-      edgeLabelBackground: "#07090a",
-      fontSize: "14px",
-    },
-  });
+  let started = false;
+  const start = async () => {
+    if (started) return;
+    started = true;
+    const { default: mermaid } = await import("mermaid");
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "strict",
+      theme: "base",
+      fontFamily: "JetBrains Mono Variable, ui-monospace, monospace",
+      themeVariables: {
+        darkMode: true,
+        background: "#07090a",
+        mainBkg: "#101518",
+        primaryColor: "#101518",
+        primaryTextColor: "#dde4e8",
+        primaryBorderColor: "#273139",
+        secondaryColor: "#07090a",
+        tertiaryColor: "#07090a",
+        lineColor: "#4ade80",
+        textColor: "#b9c4cb",
+        nodeBorder: "#273139",
+        clusterBkg: "#07090a",
+        clusterBorder: "#1a2228",
+        edgeLabelBackground: "#07090a",
+        fontSize: "14px",
+      },
+    });
+    await mermaid.run({ querySelector: ".mermaid" });
+  };
 
-  const render = () => mermaid.run({ querySelector: ".mermaid" });
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", render);
-  } else {
-    render();
+  if (targets.length > 0) {
+    if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            io.disconnect();
+            void start();
+          }
+        },
+        { rootMargin: "400px 0px" },
+      );
+      targets.forEach((t) => io.observe(t));
+    } else {
+      void start();
+    }
   }
 </script>

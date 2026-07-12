@@ -45,9 +45,11 @@ const route = await OGImageRoute({
         },
         description: { color: [138, 154, 163], size: 32, families: ["Inter"] },
       },
+      // Fuentes vendoreadas: sin fetch de red en build (determinismo y
+      // sin dependencia de terceros).
       fonts: [
-        "https://api.fontsource.org/v1/fonts/jetbrains-mono/latin-700-normal.ttf",
-        "https://api.fontsource.org/v1/fonts/inter/latin-400-normal.ttf",
+        "./src/assets/og-fonts/jetbrains-mono-latin-700-normal.ttf",
+        "./src/assets/og-fonts/inter-latin-400-normal.ttf",
       ],
     };
   },

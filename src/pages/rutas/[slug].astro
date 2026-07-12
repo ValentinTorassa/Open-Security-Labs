@@ -6,6 +6,7 @@ import LabCard from "../../components/LabCard.astro";
 import Exam from "../../components/Exam.astro";
 import { paths } from "../../data/paths";
 import { pathExams } from "../../data/path-exams";
+import { sortLabs } from "../../data/labs";
 
 export const getStaticPaths = (async () => {
   return paths.map((path) => ({
@@ -24,13 +25,7 @@ const prevPath = idx > 0 ? ordered[idx - 1] : undefined;
 const nextPath = idx < ordered.length - 1 ? ordered[idx + 1] : undefined;
 
 const allLabs = await getCollection("labs", ({ data }) => !data.draft);
-const labs = allLabs
-  .filter((l) => l.data.path === path.slug)
-  .sort(
-    (a, b) =>
-      a.data.order - b.data.order ||
-      a.data.estimatedMinutes - b.data.estimatedMinutes,
-  );
+const labs = sortLabs(allLabs.filter((l) => l.data.path === path.slug));
 
 const examStoreKey = `ruta:${path.slug}`;
 const firstLab = labs[0];

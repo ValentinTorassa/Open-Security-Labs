@@ -1,13 +1,11 @@
 ---
 // Juego: traducir permisos simbólicos (rwx) a octal. Client-side, sin backend.
 // Genera permisos al azar en cada ronda y lleva una racha.
-const uid = "perms-" + Math.random().toString(36).slice(2, 9);
 ---
 
 <section
   class="not-prose border-term-green/30 bg-term-green/5 my-8 rounded-xl border p-5"
   data-perms-game
-  id={uid}
 >
   <h3
     class="text-term-green flex items-center gap-2 font-mono text-sm font-semibold"

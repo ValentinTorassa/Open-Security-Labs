@@ -1,4 +1,5 @@
 ---
+import { existsSync } from "node:fs";
 import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
@@ -18,6 +19,18 @@ export const getStaticPaths = (async () => {
   if (mismatched.length > 0) {
     throw new Error(
       `certifications: slug distinto al nombre de archivo:\n${mismatched.join("\n")}`,
+    );
+  }
+
+  // Validación en build: badgeImage tiene que existir en public/.
+  const missingBadges = certs
+    .filter(
+      (c) => c.data.badgeImage && !existsSync(`public${c.data.badgeImage}`),
+    )
+    .map((c) => `  - "${c.id}" → badgeImage "${c.data.badgeImage}" no existe`);
+  if (missingBadges.length > 0) {
+    throw new Error(
+      `certifications: badges faltantes en public/:\n${missingBadges.join("\n")}`,
     );
   }
 
