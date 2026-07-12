@@ -276,12 +276,23 @@ const items = [...pageItems, ...pathItems, ...labItems];
         li.dataset.idx = String(idx);
         li.className =
           "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5";
-        li.innerHTML = `
-          <span class="shrink-0 rounded border border-base-700 bg-base-800/60 px-1.5 py-0.5 font-mono text-[0.6rem] text-base-400">${it.kind}</span>
-          <span class="min-w-0 flex-1">
-            <span class="block truncate text-sm text-base-100">${it.title}</span>
-            <span class="block truncate font-mono text-[0.7rem] text-base-500">${it.sub}</span>
-          </span>`;
+        // textContent (no innerHTML): title/sub vienen del frontmatter de labs
+        // aportados por PR, no pueden inyectar HTML.
+        const kindEl = document.createElement("span");
+        kindEl.className =
+          "shrink-0 rounded border border-base-700 bg-base-800/60 px-1.5 py-0.5 font-mono text-[0.6rem] text-base-400";
+        kindEl.textContent = it.kind;
+        const bodyEl = document.createElement("span");
+        bodyEl.className = "min-w-0 flex-1";
+        const titleEl = document.createElement("span");
+        titleEl.className = "block truncate text-sm text-base-100";
+        titleEl.textContent = it.title;
+        const subEl = document.createElement("span");
+        subEl.className =
+          "block truncate font-mono text-[0.7rem] text-base-500";
+        subEl.textContent = it.sub;
+        bodyEl.append(titleEl, subEl);
+        li.append(kindEl, bodyEl);
         li.addEventListener("click", () => go(idx));
         li.addEventListener("mousemove", () => {
           active = idx;

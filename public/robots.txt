@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://labs.vtsecurity.dev/sitemap-index.xml
+Sitemap: https://securitylabs.valentorassa.com/sitemap-index.xml
