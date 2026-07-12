@@ -2,11 +2,13 @@
 // Sin backend, sin login: todo vive en localStorage de quien visita.
 //   - labs hechos:   vtsl:done:<labId>     = "1"
 //   - examen pasado: vtsl:exam:<storeKey>  = "1"
+//   - brief hecho:   vtsl:brief:<slug>     = "1"
 // Los widgets (cards, barras, badges) se suscriben con onProgress() y se
 // redibujan cuando algo cambia, incluso entre pestañas.
 
 const LAB = "vtsl:done:";
 const EXAM = "vtsl:exam:";
+const BRIEF = "vtsl:brief:";
 const EVENT = "vtsl:progress";
 
 function store(): Storage | null {
@@ -52,6 +54,24 @@ export function countDone(ids: string[]): number {
   return ids.reduce((n, id) => n + (isLabDone(id) ? 1 : 0), 0);
 }
 
+export function isBriefDone(slug: string): boolean {
+  return store()?.getItem(BRIEF + slug) === "1";
+}
+
+export function setBriefDone(slug: string, done: boolean): void {
+  const s = store();
+  if (!s) return;
+  if (done) s.setItem(BRIEF + slug, "1");
+  else s.removeItem(BRIEF + slug);
+  emit();
+}
+
+export function toggleBriefDone(slug: string): boolean {
+  const next = !isBriefDone(slug);
+  setBriefDone(slug, next);
+  return next;
+}
+
 // --- Perfil portable: username + token (base64 del progreso) -----------------
 // Sin login ni backend. El "token" es solo el progreso serializado, para que
 // el usuario lo lleve de un dispositivo a otro si quiere.
@@ -94,12 +114,19 @@ export function resetProfile(): void {
   emit();
 }
 
-type Snapshot = { u?: string; a?: string; labs: string[]; exams: string[] };
+type Snapshot = {
+  u?: string;
+  a?: string;
+  labs: string[];
+  exams: string[];
+  briefs?: string[];
+};
 
 function snapshot(): Snapshot {
   const s = store();
   const labs: string[] = [];
   const exams: string[] = [];
+  const briefs: string[] = [];
   if (s) {
     for (let i = 0; i < s.length; i += 1) {
       const k = s.key(i);
@@ -108,6 +135,8 @@ function snapshot(): Snapshot {
         labs.push(k.slice(LAB.length));
       if (k.startsWith(EXAM) && s.getItem(k) === "1")
         exams.push(k.slice(EXAM.length));
+      if (k.startsWith(BRIEF) && s.getItem(k) === "1")
+        briefs.push(k.slice(BRIEF.length));
     }
   }
   const u = getUsername();
@@ -117,6 +146,7 @@ function snapshot(): Snapshot {
     ...(a !== DEFAULT_AVATAR ? { a } : {}),
     labs,
     exams,
+    ...(briefs.length > 0 ? { briefs } : {}),
   };
 }
 
@@ -140,6 +170,8 @@ export function importToken(token: string): boolean {
     if (!Array.isArray(data.labs) || !Array.isArray(data.exams)) return false;
     data.labs.forEach((id) => s.setItem(LAB + id, "1"));
     data.exams.forEach((key) => s.setItem(EXAM + key, "1"));
+    if (Array.isArray(data.briefs))
+      data.briefs.forEach((slug) => s.setItem(BRIEF + slug, "1"));
     if (data.u && !getUsername()) s.setItem(USER, data.u.slice(0, 32));
     if (data.a) s.setItem(AVATAR, data.a.slice(0, 32));
     emit();
