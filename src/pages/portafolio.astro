@@ -80,6 +80,14 @@ const portfolioJsonLd = {
               <span class="text-term-green">{portfolioProjects.length}</span>
             </div>
             <div class="flex items-center justify-between gap-4">
+              <span class="text-base-400">hechos</span>
+              <span class="text-term-green"
+                ><span data-briefs-done>0</span>/{
+                  portfolioProjects.length
+                }</span
+              >
+            </div>
+            <div class="flex items-center justify-between gap-4">
               <span class="text-base-400">evidencia</span>
               <span class="text-term-amber">repo/writeup/logs</span>
             </div>
@@ -99,24 +107,55 @@ const portfolioJsonLd = {
     </div>
   </section>
 
+  <!-- Índice compacto para mobile/tablet (el aside solo existe en lg+). -->
+  <nav
+    class="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:hidden"
+    aria-label="Proyectos de portafolio"
+    data-brief-nav
+  >
+    {
+      portfolioProjects.map((project, index) => (
+        <a
+          href={`#${project.slug}`}
+          class="brief-link border-base-700 bg-base-900/70 text-base-300 flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 font-mono text-xs whitespace-nowrap transition-colors"
+          style={`--accent: ${project.accent}`}
+        >
+          <span style="color: var(--accent)">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          {project.role}
+          <span
+            data-brief-dot={project.slug}
+            class="bg-term-green hidden h-1.5 w-1.5 rounded-full"
+            aria-hidden="true"
+          />
+        </a>
+      ))
+    }
+  </nav>
+
   <section class="grid gap-6 pb-12 lg:grid-cols-[17rem_1fr]">
     <aside class="hidden lg:block">
       <div
         class="border-base-800 bg-base-900/80 sticky top-24 rounded-2xl border p-4 backdrop-blur"
       >
         <p class="text-base-500 font-mono text-xs">// mapa del roadmap</p>
-        <nav class="mt-4 space-y-1" aria-label="Proyectos de portafolio">
+        <nav
+          class="mt-4 space-y-1"
+          aria-label="Proyectos de portafolio"
+          data-brief-nav
+        >
           {
             portfolioProjects.map((project, index) => (
               <a
                 href={`#${project.slug}`}
-                class="group hover:bg-base-850/70 flex items-center gap-3 rounded-lg px-2.5 py-2 transition-colors"
+                class="brief-link group hover:bg-base-850/70 flex items-center gap-3 rounded-lg px-2.5 py-2 transition-colors"
                 style={`--accent: ${project.accent}`}
               >
                 <span class="font-mono text-xs" style="color: var(--accent)">
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <span class="min-w-0">
+                <span class="min-w-0 flex-1">
                   <span class="text-base-200 block truncate text-sm transition-colors group-hover:text-[color:var(--accent)]">
                     {project.title}
                   </span>
@@ -124,6 +163,11 @@ const portfolioJsonLd = {
                     {project.role}
                   </span>
                 </span>
+                <span
+                  data-brief-dot={project.slug}
+                  class="bg-term-green hidden h-1.5 w-1.5 shrink-0 rounded-full"
+                  aria-hidden="true"
+                />
               </a>
             ))
           }
@@ -177,6 +221,14 @@ const portfolioJsonLd = {
                   <span class="border-base-700 bg-base-850/70 text-base-300 rounded-full border px-3 py-1 font-mono text-[0.7rem]">
                     {project.timebox}
                   </span>
+                  <button
+                    type="button"
+                    data-brief-toggle={project.slug}
+                    aria-pressed="false"
+                    class="border-base-700 bg-base-850/70 text-base-300 hover:border-term-green/50 hover:text-term-green cursor-pointer rounded-full border px-3 py-1 font-mono text-[0.7rem] transition-colors"
+                  >
+                    <span data-brief-label>marcar hecho</span>
+                  </button>
                 </div>
               </header>
 
@@ -325,6 +377,97 @@ const portfolioJsonLd = {
           ))
         }
       </div>
+
+      <div
+        class="border-base-800 mt-8 flex flex-wrap items-center gap-x-6 gap-y-4 border-t pt-6"
+      >
+        <a href="/labs" class="btn-primary">
+          <span class="opacity-60">$</span> practicar con los labs
+        </a>
+        <a href="/perfil" class="btn-ghost">ver tu progreso</a>
+        <p class="text-base-500 font-mono text-xs">
+          Marcá los briefs que termines: el progreso queda en tu navegador, sin
+          login.
+        </p>
+      </div>
     </div>
   </section>
 </BaseLayout>
+
+<style>
+  .brief-link[data-active] {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+</style>
+
+<script>
+  import {
+    isBriefDone,
+    toggleBriefDone,
+    onProgress,
+  } from "../scripts/progress";
+
+  const toggles = [
+    ...document.querySelectorAll<HTMLButtonElement>("[data-brief-toggle]"),
+  ];
+  const slugs = toggles.map((btn) => btn.dataset.briefToggle ?? "");
+
+  const render = () => {
+    toggles.forEach((btn) => {
+      const done = isBriefDone(btn.dataset.briefToggle ?? "");
+      btn.classList.toggle("text-term-green", done);
+      btn.classList.toggle("border-term-green/50", done);
+      btn.setAttribute("aria-pressed", String(done));
+      const label = btn.querySelector("[data-brief-label]");
+      if (label) label.textContent = done ? "✓ hecho" : "marcar hecho";
+    });
+    document
+      .querySelectorAll<HTMLElement>("[data-brief-dot]")
+      .forEach((dot) => {
+        dot.classList.toggle(
+          "hidden",
+          !isBriefDone(dot.dataset.briefDot ?? ""),
+        );
+      });
+    const counter = document.querySelector("[data-briefs-done]");
+    if (counter)
+      counter.textContent = String(slugs.filter((s) => isBriefDone(s)).length);
+  };
+
+  toggles.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      toggleBriefDone(btn.dataset.briefToggle ?? "");
+    });
+  });
+
+  onProgress(render);
+  render();
+
+  // Scrollspy: resalta en los índices el brief visible en pantalla.
+  const links = [
+    ...document.querySelectorAll<HTMLAnchorElement>("[data-brief-nav] a"),
+  ];
+  const linksById = new Map<string, HTMLAnchorElement[]>();
+  links.forEach((link) => {
+    const id = decodeURIComponent(link.hash.slice(1));
+    linksById.set(id, [...(linksById.get(id) ?? []), link]);
+  });
+
+  const spy = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        links.forEach((l) => l.removeAttribute("data-active"));
+        (linksById.get(entry.target.id) ?? []).forEach((l) =>
+          l.setAttribute("data-active", ""),
+        );
+      });
+    },
+    { rootMargin: "-25% 0px -65% 0px" },
+  );
+  linksById.forEach((_, id) => {
+    const target = document.getElementById(id);
+    if (target) spy.observe(target);
+  });
+</script>
