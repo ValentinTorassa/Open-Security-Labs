@@ -7,6 +7,7 @@ import CertCard from "../components/CertCard.astro";
 import Agradecimientos from "../components/Agradecimientos.astro";
 import { paths } from "../data/paths";
 import { portfolioProjects } from "../data/portfolio";
+import { REPO_URL } from "../data/site";
 
 const certifications = (await getCollection("certifications"))
   .map((c) => c.data)
@@ -101,7 +102,6 @@ const trust = [
 
 const youtube = "https://www.youtube.com/@vtcibersecurity";
 const discord = "https://discord.com/invite/z6cr5JF6bJ";
-const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
 ---
 
 <BaseLayout title="Open Security Labs" width="wide">
@@ -149,7 +149,14 @@ const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
         class="text-base-400 mt-8 flex flex-wrap gap-x-7 gap-y-3 font-mono text-xs"
       >
         <span><span class="text-term-green">0{paths.length}</span> rutas</span>
-        <span><span class="text-term-green">100%</span> open source</span>
+        <a
+          href={REPO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:text-term-green transition-colors"
+        >
+          <span class="text-term-green">100%</span> open source ↗
+        </a>
         <span
           ><span class="text-term-green">0</span> login · progreso local</span
         >
@@ -568,7 +575,7 @@ const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
             Suscribirme
           </a>
           <a
-            href={repo}
+            href={REPO_URL}
             target="_blank"
             rel="noopener noreferrer"
             class="btn-ghost"
