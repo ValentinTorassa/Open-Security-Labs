@@ -49,7 +49,7 @@ export const comptiaLinuxPlus: Certification = {
       ],
     },
     {
-      domainName: "Scripting, contenedores y automatización",
+      domainName: "Automatización, orquestación y scripting",
       labIds: ["ciberseguridad/docker-socket-to-host"],
     },
   ],
@@ -68,10 +68,11 @@ export const comptiaLinuxPlus: Certification = {
     "Diagnosticar fallos del kernel, almacenamiento y conectividad.",
   ],
   domains: [
-    { name: "Gestión del sistema", weight: 32 },
-    { name: "Seguridad", weight: 21 },
-    { name: "Scripting, contenedores y automatización", weight: 19 },
-    { name: "Troubleshooting", weight: 28 },
+    { name: "Gestión del sistema", weight: 23 },
+    { name: "Gestión de servicios y usuarios", weight: 20 },
+    { name: "Seguridad", weight: 18 },
+    { name: "Automatización, orquestación y scripting", weight: 17 },
+    { name: "Troubleshooting", weight: 22 },
   ],
   relatedPaths: ["linux-real", "ciberseguridad"],
   exam: [

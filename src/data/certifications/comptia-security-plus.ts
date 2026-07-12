@@ -106,7 +106,7 @@ export const comptiaSecurityPlus: Certification = {
       ],
       answer: 1,
       explain:
-        "La contraseña es algo que sabés; el código de la app (en tu teléfono) es algo que tenés. MFA real encripta factores de categorías DISTINTAS.",
+        "La contraseña es algo que sabés; el código de la app (en tu teléfono) es algo que tenés. MFA real combina factores de categorías DISTINTAS.",
     },
     {
       q: "¿Cuál es la diferencia entre un IDS y un IPS?",

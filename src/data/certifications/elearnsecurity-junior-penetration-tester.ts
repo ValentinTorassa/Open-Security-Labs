@@ -40,7 +40,7 @@ export const elearnsecurityJuniorPenetrationTester: Certification = {
       domainName: "Ataques a aplicaciones web",
       labIds: [
         "ciberseguridad/sql-injection-parametrizada",
-        "ciberseguridad/idor-cambiar-un-id",
+        "backend-arquitectura/idor-cambiar-un-id",
         "ciberseguridad/xss-local-defensivo",
       ],
     },

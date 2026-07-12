@@ -79,7 +79,7 @@ export const awsSolutionsArchitectAssociate: Certification = {
   relatedPaths: ["cloud-produccion", "backend-arquitectura"],
   exam: [
     {
-      q: "Necesitás almacenamiento de objetos durable y scalable para archivos estáticos. ¿Qué servicio elegís?",
+      q: "Necesitás almacenamiento de objetos durable y escalable para archivos estáticos. ¿Qué servicio elegís?",
       options: ["Amazon EBS", "Amazon S3", "Amazon RDS"],
       answer: 1,
       explain:

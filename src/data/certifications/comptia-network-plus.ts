@@ -37,21 +37,21 @@ export const comptiaNetworkPlus: Certification = {
   ],
   domainLabs: [
     {
-      domainName: "Networking Concepts",
+      domainName: "Conceptos de redes",
       labIds: [
         "redes-internet/una-request-no-es-magia",
         "redes-internet/dns-paso-a-paso",
       ],
     },
     {
-      domainName: "Network Implementation",
+      domainName: "Implementación de redes",
       labIds: [
         "redes-internet/leer-un-cidr-sin-calculadora",
         "cloud-produccion/vpc-security-groups",
       ],
     },
     {
-      domainName: "Network Troubleshooting",
+      domainName: "Troubleshooting de red",
       labIds: ["redes-internet/status-codes-4xx-vs-5xx"],
     },
   ],

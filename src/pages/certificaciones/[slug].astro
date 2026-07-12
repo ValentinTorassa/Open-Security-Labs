@@ -22,6 +22,25 @@ const relatedPaths = cert.relatedPaths
 
 const labs = await getCollection("labs", ({ data }) => !data.draft);
 
+// Validación en build: cada domainName de domainLabs tiene que existir en
+// domains, y cada labId tiene que apuntar a un lab existente (y no draft).
+// Un typo rompe el build acá en vez de desaparecer silenciosamente de la página.
+const labIds = new Set(labs.map((l) => l.id));
+const domainNames = new Set(cert.domains.map((d) => d.name));
+const brokenMappings = cert.domainLabs.flatMap((m) => [
+  ...(domainNames.has(m.domainName)
+    ? []
+    : [`  - "${cert.slug}" → domainLabs: dominio "${m.domainName}" no existe`]),
+  ...m.labIds
+    .filter((id) => !labIds.has(id))
+    .map((id) => `  - "${cert.slug}" → domainLabs: lab "${id}" no existe`),
+]);
+if (brokenMappings.length > 0) {
+  throw new Error(
+    `domainLabs con referencias inválidas:\n${brokenMappings.join("\n")}`,
+  );
+}
+
 const examFacts = [
   {
     icon: "list-checks" as const,
@@ -147,8 +166,8 @@ const domainsWithLabs = cert.domains.map((d) => {
         Recursos recomendados
       </h2>
       <p class="text-base-400 mt-1 text-sm">
-        Materiales seleccionados y gratuitos de alta calidad para dominar la
-        teoría.
+        Materiales seleccionados de alta calidad para dominar la teoría. La
+        mayoría son gratuitos.
       </p>
       <div class="mt-5 grid gap-4 sm:grid-cols-2">
         {
@@ -158,14 +177,20 @@ const domainsWithLabs = cert.domains.map((d) => {
               target="_blank"
               rel="noopener noreferrer"
               class="border-base-800 bg-base-850/30 group relative flex flex-col justify-between rounded-xl border p-5 transition-colors hover:border-[color:var(--accent)]"
-              style={`--accent: ${cert.accent}`}
             >
               <div>
                 <div class="flex items-center justify-between gap-2">
                   <span class="text-base-500 font-mono text-[0.68rem] tracking-[0.12em] uppercase">
                     {res.platform} · {res.type}
                   </span>
-                  <span class="bg-term-green/10 text-term-green rounded-full px-2 py-0.5 font-mono text-[0.65rem] font-bold">
+                  <span
+                    class:list={[
+                      "rounded-full px-2 py-0.5 font-mono text-[0.65rem] font-bold",
+                      res.free
+                        ? "bg-term-green/10 text-term-green"
+                        : "bg-amber-400/10 text-amber-300",
+                    ]}
+                  >
                     {res.free ? "Gratis" : "De pago"}
                   </span>
                 </div>
