@@ -22,8 +22,9 @@
   --color-base-800: #12181b;
   --color-base-700: #1a2228;
   --color-base-600: #273139;
-  --color-base-500: #3b4750;
-  --color-base-400: #5a6b75;
+  /* 500/400 son texto apagado: mínimos WCAG AA (≥4.5:1) sobre base-950. */
+  --color-base-500: #6c7d88;
+  --color-base-400: #7d8b94;
   --color-base-300: #8a9aa3;
   --color-base-200: #b9c4cb;
   --color-base-100: #dde4e8;
@@ -82,7 +83,8 @@
   --color-base-800: #e6eaee;
   --color-base-700: #d6dde3;
   --color-base-600: #b4bfc8;
-  --color-base-500: #8a949e;
+  /* AA sobre blanco (≥4.5:1). */
+  --color-base-500: #6b7680;
   --color-base-400: #5d6b75;
   --color-base-300: #424d56;
   --color-base-200: #2b343b;
@@ -234,7 +236,7 @@
     --color-base-800: #12181b;
     --color-base-700: #1a2228;
     --color-base-600: #273139;
-    --color-base-500: #3b4750;
+    --color-base-500: #6c7d88;
     --color-base-400: #7d8b94;
     --color-base-300: #b9c4cb;
     --color-base-200: #dde4e8;
@@ -297,6 +299,16 @@
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--color-base-400);
+  }
+
+  /* Texto en color de marca (--accent) con contraste AA: los acentos de
+     vendor son oscuros para texto sobre fondo oscuro, así que se aclaran en
+     dark y se oscurecen en light preservando el tono. */
+  .accent-text {
+    color: color-mix(in srgb, var(--accent) 55%, white);
+  }
+  :root[data-theme="light"] .accent-text {
+    color: color-mix(in srgb, var(--accent) 72%, black);
   }
 
   /* Botones reutilizables: una sola fuente de verdad para el acento. */

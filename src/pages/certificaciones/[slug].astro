@@ -1,12 +1,13 @@
 ---
-import { existsSync } from "node:fs";
 import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Exam from "../../components/Exam.astro";
 import Icon from "../../components/Icon.astro";
 import CredentialBadge from "../../components/CredentialBadge.astro";
 import { getPath } from "../../data/paths";
+import { getCertBadge } from "../../data/cert-badges";
 
 export const getStaticPaths = (async () => {
   const certs = await getCollection("certifications");
@@ -22,17 +23,8 @@ export const getStaticPaths = (async () => {
     );
   }
 
-  // Validación en build: badgeImage tiene que existir en public/.
-  const missingBadges = certs
-    .filter(
-      (c) => c.data.badgeImage && !existsSync(`public${c.data.badgeImage}`),
-    )
-    .map((c) => `  - "${c.id}" → badgeImage "${c.data.badgeImage}" no existe`);
-  if (missingBadges.length > 0) {
-    throw new Error(
-      `certifications: badges faltantes en public/:\n${missingBadges.join("\n")}`,
-    );
-  }
+  // La existencia de badgeImage la valida getCertBadge() en build
+  // (src/data/cert-badges.ts): un path inválido rompe el build.
 
   return certs.map((cert) => ({
     params: { slug: cert.data.slug },
@@ -99,8 +91,8 @@ const domainsWithLabs = cert.domains.map((d) => ({
       <a href="/certificaciones" class="hover:text-term-green"
         >certificaciones</a
       >
-      <span class="text-base-600 mx-1.5">/</span>
-      <span style="color: var(--accent)">{cert.slug}</span>
+      <span class="text-base-500 mx-1.5" aria-hidden="true">/</span>
+      <span class="accent-text">{cert.slug}</span>
     </nav>
 
     <!-- Header -->
@@ -113,11 +105,11 @@ const domainsWithLabs = cert.domains.map((d) => ({
             class="border-base-800 bg-base-950 flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-3xl border p-3 shadow-[0_22px_55px_rgba(0,0,0,0.25)] ring-1 ring-white/10 sm:h-28 sm:w-28"
             aria-hidden="true"
           >
-            <img
-              src={cert.badgeImage}
+            <Image
+              src={getCertBadge(cert.badgeImage)}
               alt=""
-              width="112"
-              height="112"
+              width={112}
+              height={112}
               decoding="async"
               class="h-full w-full object-contain"
             />
@@ -129,8 +121,8 @@ const domainsWithLabs = cert.domains.map((d) => ({
       <div class="min-w-0 flex-1">
         <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
           <span
-            class="rounded border px-2 py-0.5"
-            style="border-color: color-mix(in srgb, var(--accent) 35%, transparent); color: var(--accent)"
+            class="accent-text rounded border px-2 py-0.5"
+            style="border-color: color-mix(in srgb, var(--accent) 35%, transparent)"
           >
             {cert.code}
           </span>
@@ -158,10 +150,7 @@ const domainsWithLabs = cert.domains.map((d) => ({
         {
           examFacts.map((f) => (
             <div class="border-base-800 bg-base-850/30 rounded-lg border p-4">
-              <span
-                class="flex items-center gap-2 font-mono text-xs"
-                style="color: var(--accent)"
-              >
+              <span class="accent-text flex items-center gap-2 font-mono text-xs">
                 <Icon name={f.icon} size={15} />
                 {f.label}
               </span>
