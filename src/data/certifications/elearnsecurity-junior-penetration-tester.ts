@@ -22,7 +22,7 @@ export const elearnsecurityJuniorPenetrationTester: Certification = {
       name: "Penetration Testing Student (PTS) Path",
       platform: "INE",
       type: "course",
-      url: "https://ine.com/learning-paths/ejpt",
+      url: "https://ine.com/security/certifications/ejpt-certification",
       free: false,
       desc: "La ruta de entrenamiento oficial y detallada diseñada por INE para aprobar el examen práctico.",
     },

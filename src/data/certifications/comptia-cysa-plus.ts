@@ -30,7 +30,7 @@ export const comptiaCysaPlus: Certification = {
       name: "CySA+ Full Certification Prep playlist",
       platform: "YouTube / Certify Breakfast",
       type: "video",
-      url: "https://www.youtube.com/playlist?list=PLMOMg0C_Tz9T_8s36P_Uj35jT_l6_gC_d",
+      url: "https://www.youtube.com/playlist?list=PLMYSjEaGLw_vGxGsAIUgmkbEm52QR02tx",
       free: true,
       desc: "Curso completo gratuito de CySA+ que repasa los dominios teóricos y herramientas analíticas.",
     },

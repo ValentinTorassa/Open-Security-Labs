@@ -22,7 +22,7 @@ export const comptiaSecurityPlus: Certification = {
       name: "Professor Messer's SY0-701 Security+ Training Course",
       platform: "YouTube",
       type: "video",
-      url: "https://www.youtube.com/playlist?list=PLG49S3nxzAn34g4XKG6xM8O805D9Y83x2",
+      url: "https://www.youtube.com/playlist?list=PLG49S3nxzAnl4QDVqK-hOnoqcSKEIDDuv",
       free: true,
       desc: "El curso gratuito más famoso de la comunidad que cubre absolutamente todos los objetivos del examen oficial.",
     },

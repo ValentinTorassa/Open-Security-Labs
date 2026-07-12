@@ -22,7 +22,7 @@ export const hashicorpTerraformAssociate: Certification = {
       name: "HashiCorp Terraform Associate Certification Course",
       platform: "freeCodeCamp / Andrew Brown",
       type: "video",
-      url: "https://www.youtube.com/watch?v=V4wkCXgSCdw",
+      url: "https://www.youtube.com/watch?v=SPcwo0Gq9T8",
       free: true,
       desc: "Un excelente video curso completo de 12 horas con laboratorios paso a paso y preparación teórica.",
     },

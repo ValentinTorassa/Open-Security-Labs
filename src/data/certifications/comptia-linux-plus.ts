@@ -19,10 +19,10 @@ export const comptiaLinuxPlus: Certification = {
   ],
   studyResources: [
     {
-      name: "Free Linux+ Certification Prep Video Series",
+      name: "Free Linux Video Series",
       platform: "YouTube / NetworkChuck",
       type: "video",
-      url: "https://www.youtube.com/playlist?list=PLIhvC56v6w88H834F9Wz5c99P_z7507Bv",
+      url: "https://www.youtube.com/playlist?list=PLIhvC56v63IL2OjFvv_PI0B2yAXGfJLMI",
       free: true,
       desc: "Videos interactivos y muy entretenidos para aprender la administración de sistemas Linux desde cero.",
     },
