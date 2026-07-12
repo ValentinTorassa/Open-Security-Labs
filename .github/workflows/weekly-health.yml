@@ -67,9 +67,7 @@ jobs:
       - name: Serve dist
         run: npx --yes serve dist -l 4999 &
 
-      # Config en .github/pa11yci.json: --no-sandbox para Chrome en runners e
-      # ignore del rule de contraste (G18): la paleta apagada del sitio es una
-      # decisión de diseño; el job igual detecta regresiones de alt/aria/labels.
+      # Config en .github/pa11yci.json: --no-sandbox para Chrome en runners.
       - name: pa11y over representative pages
         run: |
           sleep 3

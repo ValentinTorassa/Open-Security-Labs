@@ -1,7 +1,9 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import { Image } from "astro:assets";
 import CredentialBadge from "./CredentialBadge.astro";
 import Icon from "./Icon.astro";
+import { getCertBadge } from "../data/cert-badges";
 
 interface Props {
   cert: CollectionEntry<"certifications">["data"];
@@ -27,11 +29,11 @@ const stats = [
           class="border-base-800 bg-base-950 flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border p-2.5 shadow-[0_18px_45px_rgba(0,0,0,0.24)] ring-1 ring-white/10"
           aria-hidden="true"
         >
-          <img
-            src={cert.badgeImage}
+          <Image
+            src={getCertBadge(cert.badgeImage)}
             alt=""
-            width="80"
-            height="80"
+            width={80}
+            height={80}
             loading="lazy"
             decoding="async"
             class="h-full w-full object-contain"
@@ -42,7 +44,7 @@ const stats = [
       )
     }
     <div class="min-w-0">
-      <p class="truncate font-mono text-xs" style="color: var(--accent)">
+      <p class="accent-text truncate font-mono text-xs">
         {cert.code} · {cert.level}
       </p>
       <p class="text-base-500 mt-0.5 font-mono text-[0.7rem]">{cert.vendor}</p>
