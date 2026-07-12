@@ -1,7 +1,11 @@
 ---
+import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import CertCard from "../components/CertCard.astro";
-import { certifications } from "../data/certifications";
+
+const certifications = (await getCollection("certifications"))
+  .map((c) => c.data)
+  .sort((a, b) => a.order - b.order);
 
 const totalQuestions = certifications.reduce((a, c) => a + c.exam.length, 0);
 const site = Astro.site ?? new URL("https://securitylabs.valentorassa.com");

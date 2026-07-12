@@ -1,10 +1,10 @@
 ---
-import type { Certification } from "../data/certifications";
+import type { CollectionEntry } from "astro:content";
 import CredentialBadge from "./CredentialBadge.astro";
 import Icon from "./Icon.astro";
 
 interface Props {
-  cert: Certification;
+  cert: CollectionEntry<"certifications">["data"];
 }
 const { cert } = Astro.props;
 
