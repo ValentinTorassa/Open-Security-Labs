@@ -1,8 +1,26 @@
 ---
+import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Icon from "../components/Icon.astro";
+import LabLevel from "../components/LabLevel.astro";
 import { portfolioProjects } from "../data/portfolio";
 import { getPath } from "../data/paths";
+
+const labs = await getCollection("labs", ({ data }) => !data.draft);
+const labById = new Map(labs.map((l) => [l.id, l]));
+
+// Validación en build: cada labId de los briefs apunta a un lab existente
+// (y no draft). Un typo rompe el build acá en vez de quedar como chip perdido.
+const brokenLabIds = portfolioProjects.flatMap((p) =>
+  p.labIds
+    .filter((id) => !labById.has(id))
+    .map((id) => `  - "${p.slug}" → lab "${id}" no existe`),
+);
+if (brokenLabIds.length > 0) {
+  throw new Error(
+    `portfolio con labIds inválidos:\n${brokenLabIds.join("\n")}`,
+  );
+}
 
 const presentationChecklist = [
   {
@@ -216,7 +234,7 @@ const portfolioJsonLd = {
 
                 <div class="flex flex-wrap gap-2 lg:justify-end">
                   <span class="border-base-700 bg-base-850/70 text-base-300 rounded-full border px-3 py-1 font-mono text-[0.7rem]">
-                    {project.difficulty}
+                    <LabLevel level={project.level} />
                   </span>
                   <span class="border-base-700 bg-base-850/70 text-base-300 rounded-full border px-3 py-1 font-mono text-[0.7rem]">
                     {project.timebox}
@@ -240,6 +258,21 @@ const portfolioJsonLd = {
                     </h3>
                     <p class="text-base-400 mt-2 text-sm leading-relaxed">
                       {project.why}
+                    </p>
+                  </div>
+
+                  <div
+                    class="mt-4 rounded-xl border p-4"
+                    style="border-color: color-mix(in srgb, var(--accent) 30%, var(--color-base-800)); background: color-mix(in srgb, var(--accent) 6%, var(--color-base-950));"
+                  >
+                    <h3
+                      class="font-mono text-sm font-semibold"
+                      style="color: var(--accent)"
+                    >
+                      Cómo contarlo en 30 segundos
+                    </h3>
+                    <p class="text-base-300 mt-2 text-sm leading-relaxed">
+                      “{project.pitch}”
                     </p>
                   </div>
 
@@ -301,6 +334,29 @@ const portfolioJsonLd = {
                       ))}
                     </ul>
                   </div>
+                </div>
+              </div>
+
+              <div class="border-base-800 mt-6 border-t pt-5">
+                <h3 class="text-base-100 font-mono text-sm font-semibold">
+                  Labs que te preparan
+                </h3>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  {project.labIds.map((id) => {
+                    const lab = labById.get(id);
+                    if (!lab) return null;
+                    return (
+                      <a
+                        href={`/labs/${lab.id}`}
+                        class="bg-base-850 hover:bg-base-800 border-base-750 text-base-300 hover:text-base-50 inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-xs transition-colors"
+                      >
+                        <span class="text-term-green" aria-hidden="true">
+                          &gt;_
+                        </span>
+                        {lab.data.title}
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
 
