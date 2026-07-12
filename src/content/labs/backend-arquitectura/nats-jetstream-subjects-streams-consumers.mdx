@@ -33,7 +33,8 @@ commands:
   - "nats stream view"
   - "nats consumer add"
   - "nats consumer next"
-challenge: "Creá un stream TASKS que capture tasks y tasks.>, publicá tres eventos JSON, consumilos con un consumer durable y explicá por qué tasks.> no captura el subject exacto tasks."
+challenge: "Creá un stream TASKS que capture tasks y tasks.>, publicá tres eventos JSON, consumilos con un consumer durable y explicá por qué tasks.> no captura el subject exacto tasks. Para probar la validación interactiva, ingresá la flag: flag{jetstream_persists}"
+flag: "flag{jetstream_persists}"
 nextLabs:
   - "backend-arquitectura/idempotencia-y-reintentos"
   - "redes-internet/una-request-no-es-magia"

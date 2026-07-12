@@ -20,6 +20,8 @@ const labs = defineCollection({
     commands: z.array(z.string()).default([]),
     // Enunciado del reto final.
     challenge: z.string().optional(),
+    // Flag opcional para verificar el reto automáticamente.
+    flag: z.string().optional(),
     // IDs de otros labs sugeridos como continuación (ej: "redes-internet/una-request-no-es-magia").
     nextLabs: z.array(z.string()).default([]),
     tags: z.array(z.string()).default([]),
