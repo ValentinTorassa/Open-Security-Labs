@@ -33,12 +33,15 @@ jobs:
       - name: Check links in built site
         uses: lycheeverse/lychee-action@v2
         with:
-          # 403/429: YouTube y CDNs suelen rebotar bots aunque el link viva.
+          # --root-dir resuelve links internos absolutos (/labs/...) contra dist.
+          # 403/429: YouTube y CDNs rebotan bots aunque el link viva.
+          # 999: LinkedIn responde eso a todo request no-browser.
           args: >-
             --no-progress
             --max-concurrency 4
-            --accept 200..=299,403,429
-            --exclude-path dist/pagefind
+            --root-dir ${{ github.workspace }}/dist
+            --fallback-extensions html
+            --accept 200..=299,403,429,999
             'dist/**/*.html'
           fail: true
 
@@ -62,10 +65,13 @@ jobs:
       - name: Serve dist
         run: npx --yes serve dist -l 4999 &
 
+      # Config en .github/pa11yci.json: --no-sandbox para Chrome en runners e
+      # ignore del rule de contraste (G18): la paleta apagada del sitio es una
+      # decisión de diseño; el job igual detecta regresiones de alt/aria/labels.
       - name: pa11y over representative pages
         run: |
           sleep 3
-          npx --yes pa11y-ci \
+          npx --yes pa11y-ci --config .github/pa11yci.json \
             http://localhost:4999/ \
             http://localhost:4999/labs/ \
             http://localhost:4999/labs/linux-real/permisos-en-octal/ \
