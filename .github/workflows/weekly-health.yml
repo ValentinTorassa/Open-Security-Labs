@@ -36,12 +36,14 @@ jobs:
           # --root-dir resuelve links internos absolutos (/labs/...) contra dist.
           # 403/429: YouTube y CDNs rebotan bots aunque el link viva.
           # 999: LinkedIn responde eso a todo request no-browser.
+          # /404: el canonical de la página 404 devuelve 404 por definición.
           args: >-
             --no-progress
             --max-concurrency 4
             --root-dir ${{ github.workspace }}/dist
             --fallback-extensions html
             --accept 200..=299,403,429,999
+            --exclude '^https://securitylabs\.valentorassa\.com/404'
             'dist/**/*.html'
           fail: true
 
