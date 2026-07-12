@@ -6,8 +6,11 @@ import PathCard from "../components/PathCard.astro";
 import CertCard from "../components/CertCard.astro";
 import Agradecimientos from "../components/Agradecimientos.astro";
 import { paths } from "../data/paths";
-import { certifications } from "../data/certifications";
 import { portfolioProjects } from "../data/portfolio";
+
+const certifications = (await getCollection("certifications"))
+  .map((c) => c.data)
+  .sort((a, b) => a.order - b.order);
 
 const labs = await getCollection("labs", ({ data }) => !data.draft);
 const labsFor = (slug: string) => labs.filter((l) => l.data.path === slug);

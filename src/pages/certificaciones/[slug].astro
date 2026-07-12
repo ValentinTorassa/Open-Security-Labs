@@ -5,13 +5,25 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import Exam from "../../components/Exam.astro";
 import Icon from "../../components/Icon.astro";
 import CredentialBadge from "../../components/CredentialBadge.astro";
-import { certifications } from "../../data/certifications";
 import { getPath } from "../../data/paths";
 
 export const getStaticPaths = (async () => {
-  return certifications.map((cert) => ({
-    params: { slug: cert.slug },
-    props: { cert },
+  const certs = await getCollection("certifications");
+
+  // Validación en build: el slug interno tiene que coincidir con el nombre
+  // del archivo JSON (el id de la entrada), que es el que arma la URL.
+  const mismatched = certs
+    .filter((c) => c.id !== c.data.slug)
+    .map((c) => `  - archivo "${c.id}.json" declara slug "${c.data.slug}"`);
+  if (mismatched.length > 0) {
+    throw new Error(
+      `certifications: slug distinto al nombre de archivo:\n${mismatched.join("\n")}`,
+    );
+  }
+
+  return certs.map((cert) => ({
+    params: { slug: cert.data.slug },
+    props: { cert: cert.data },
   }));
 }) satisfies GetStaticPaths;
 
@@ -22,23 +34,17 @@ const relatedPaths = cert.relatedPaths
 
 const labs = await getCollection("labs", ({ data }) => !data.draft);
 
-// Validación en build: cada domainName de domainLabs tiene que existir en
-// domains, y cada labId tiene que apuntar a un lab existente (y no draft).
-// Un typo rompe el build acá en vez de desaparecer silenciosamente de la página.
+// Validación en build: cada labId de domains tiene que apuntar a un lab
+// existente (y no draft). Un typo rompe el build acá en vez de desaparecer
+// silenciosamente de la página.
 const labIds = new Set(labs.map((l) => l.id));
-const domainNames = new Set(cert.domains.map((d) => d.name));
-const brokenMappings = cert.domainLabs.flatMap((m) => [
-  ...(domainNames.has(m.domainName)
-    ? []
-    : [`  - "${cert.slug}" → domainLabs: dominio "${m.domainName}" no existe`]),
-  ...m.labIds
+const brokenLabIds = cert.domains.flatMap((d) =>
+  d.labIds
     .filter((id) => !labIds.has(id))
-    .map((id) => `  - "${cert.slug}" → domainLabs: lab "${id}" no existe`),
-]);
-if (brokenMappings.length > 0) {
-  throw new Error(
-    `domainLabs con referencias inválidas:\n${brokenMappings.join("\n")}`,
-  );
+    .map((id) => `  - "${cert.slug}" → "${d.name}": lab "${id}" no existe`),
+);
+if (brokenLabIds.length > 0) {
+  throw new Error(`domains con labIds inválidos:\n${brokenLabIds.join("\n")}`);
 }
 
 const examFacts = [
@@ -66,18 +72,12 @@ const examFacts = [
   { icon: "file-text" as const, label: "Formato", value: cert.meta.format },
 ];
 
-const domainsWithLabs = cert.domains.map((d) => {
-  const mappedLabs = cert.domainLabs.find((m) => m.domainName === d.name);
-  const domainLabsList = mappedLabs
-    ? mappedLabs.labIds
-        .map((id) => labs.find((l) => l.id === id))
-        .filter((l): l is NonNullable<typeof l> => Boolean(l))
-    : [];
-  return {
-    ...d,
-    labsList: domainLabsList,
-  };
-});
+const domainsWithLabs = cert.domains.map((d) => ({
+  ...d,
+  labsList: d.labIds
+    .map((id) => labs.find((l) => l.id === id))
+    .filter((l): l is NonNullable<typeof l> => Boolean(l)),
+}));
 ---
 
 <BaseLayout title={cert.name} description={cert.summary} width="default">
