@@ -263,6 +263,10 @@
       } else if (k === "enter") {
         e.preventDefault();
         go(active);
+      } else if (k === "tab") {
+        // Trap de foco: el diálogo es modal, el input es el único foco útil.
+        e.preventDefault();
+        input.focus();
       }
     });
 

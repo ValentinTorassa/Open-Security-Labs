@@ -27,7 +27,8 @@ const {
   title = mode === "graded" ? "Examen" : "Comprobá lo que entendiste",
 } = Astro.props;
 
-const accent = mode === "graded" ? "term-green" : "term-cyan";
+// Clases literales (no interpoladas) para que el scanner de Tailwind las vea.
+const accentText = mode === "graded" ? "text-term-green" : "text-term-cyan";
 ---
 
 <section
@@ -46,10 +47,10 @@ const accent = mode === "graded" ? "term-green" : "term-cyan";
     <h3
       class:list={[
         "flex items-center gap-2 font-mono font-semibold",
-        mode === "graded" ? "text-base-50 text-lg" : `text-${accent} text-sm`,
+        mode === "graded" ? "text-base-50 text-lg" : `${accentText} text-sm`,
       ]}
     >
-      <span aria-hidden="true" class={`text-${accent}`}>
+      <span aria-hidden="true" class={accentText}>
         {mode === "graded" ? "▣" : "▸"}
       </span>
       {title}
@@ -64,6 +65,7 @@ const accent = mode === "graded" ? "term-green" : "term-cyan";
           class="text-base-400 font-mono text-xs"
           data-quiz-score
           data-total={questions.length}
+          role="status"
         >
           0 / {questions.length} correctas
         </p>
@@ -77,9 +79,10 @@ const accent = mode === "graded" ? "term-green" : "term-cyan";
       questions.map((item, qi) => (
         <li class="list-none" data-question data-answer={item.answer}>
           <p class="text-base-100 text-sm font-medium">
-            <span class={`font-mono text-${accent}`}>{qi + 1}.</span> {item.q}
+            <span class={`font-mono ${accentText}`}>{qi + 1}.</span> {item.q}
           </p>
-          <div class="mt-3 grid gap-2" role="radiogroup">
+          {/* Botones con aria-pressed (no radiogroup: exigiría role=radio + flechas). */}
+          <div class="mt-3 grid gap-2">
             {item.options.map((opt, oi) => (
               <button
                 type="button"

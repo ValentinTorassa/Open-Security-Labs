@@ -2,13 +2,17 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import CertCard from "../components/CertCard.astro";
+import { SITE_URL, CERTS_LAST_REVIEW } from "../data/site";
 
 const certifications = (await getCollection("certifications"))
   .map((c) => c.data)
   .sort((a, b) => a.order - b.order);
 
+// Derivado de los datos: no se desactualiza al sumar certificaciones.
+const vendors = [...new Set(certifications.map((c) => c.vendor))];
+
 const totalQuestions = certifications.reduce((a, c) => a + c.exam.length, 0);
-const site = Astro.site ?? new URL("https://securitylabs.valentorassa.com");
+const site = Astro.site ?? new URL(SITE_URL);
 const certsJsonLd = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
@@ -22,7 +26,7 @@ const certsJsonLd = {
 
 <BaseLayout
   title="Certificaciones"
-  description="Preparación y exámenes de práctica para AWS Cloud Practitioner, CompTIA Security+, Network+, Linux+ y AWS Solutions Architect. En español, con explicaciones."
+  description={`Preparación y exámenes de práctica para ${certifications.length} certificaciones de ${vendors.join(", ")}. En español, con explicaciones.`}
   width="wide"
   jsonLd={certsJsonLd}
 >
@@ -45,7 +49,7 @@ const certsJsonLd = {
         ><span class="text-term-green">{totalQuestions}</span> preguntas de práctica</span
       >
       <span
-        ><span class="text-term-green">julio 2026</span> última revisión</span
+        ><span class="text-term-green">{CERTS_LAST_REVIEW}</span> última revisión</span
       >
     </div>
 
@@ -56,7 +60,7 @@ const certsJsonLd = {
     <p
       class="border-base-800 bg-base-850/40 text-base-500 mt-10 rounded-lg border p-4 font-mono text-xs leading-relaxed"
     >
-      Open Security Labs no está afiliado a AWS ni a CompTIA. Los nombres,
+      Open Security Labs no está afiliado a {vendors.join(", ")}. Los nombres,
       códigos y marcas pertenecen a sus dueños. Las preguntas son propias y de
       práctica: no reproducen preguntas reales del examen. Antes de rendir,
       validá siempre la guía oficial y la versión vigente del examen.

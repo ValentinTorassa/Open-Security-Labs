@@ -7,6 +7,7 @@ import Exam from "../../components/Exam.astro";
 import { paths } from "../../data/paths";
 import { pathExams } from "../../data/path-exams";
 import { sortLabs } from "../../data/labs";
+import { SITE_URL } from "../../data/site";
 
 export const getStaticPaths = (async () => {
   return paths.map((path) => ({
@@ -29,7 +30,7 @@ const labs = sortLabs(allLabs.filter((l) => l.data.path === path.slug));
 
 const examStoreKey = `ruta:${path.slug}`;
 const firstLab = labs[0];
-const site = Astro.site ?? new URL("https://securitylabs.valentorassa.com");
+const site = Astro.site ?? new URL(SITE_URL);
 const routeUrl = new URL(`/rutas/${path.slug}`, site).href;
 const routeJsonLd = [
   {

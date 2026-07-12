@@ -5,6 +5,7 @@ import "../styles/global.css";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import CommandPalette from "../components/CommandPalette.astro";
+import { SITE_URL } from "../data/site";
 
 interface Props {
   title: string;
@@ -13,6 +14,8 @@ interface Props {
   width?: "default" | "wide" | "prose";
   /** Imagen para compartir en redes (relativa al sitio). */
   image?: string;
+  /** Tipo Open Graph: `article` para contenido tipo lab. */
+  ogType?: "website" | "article";
   /** Structured data adicional (p. ej. TechArticle de un lab). */
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
@@ -22,6 +25,7 @@ const {
   description = "Labs prácticos en español para entender Linux, redes, backend, cloud y ciberseguridad de verdad. Aprendé construyendo evidencia.",
   width = "default",
   image = "/og-default.png",
+  ogType = "website",
   jsonLd: extraJsonLd,
 } = Astro.props;
 
@@ -36,7 +40,7 @@ const mainWidth =
       : "max-w-5xl";
 
 // URLs absolutas para SEO y tarjetas sociales.
-const site = Astro.site ?? new URL("https://securitylabs.valentorassa.com");
+const site = Astro.site ?? new URL(SITE_URL);
 const canonical = new URL(Astro.url.pathname, site);
 const ogImage = new URL(image, site);
 
@@ -83,6 +87,23 @@ const extraJsonLdItems = Array.isArray(extraJsonLd)
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#07090a" />
+    <script is:inline>
+      // Sincroniza theme-color con el tema activo (el toggle emite vtsl:theme-change).
+      (() => {
+        const meta = document.querySelector('meta[name="theme-color"]');
+        const sync = () => {
+          if (!meta) return;
+          meta.setAttribute(
+            "content",
+            document.documentElement.dataset.theme === "light"
+              ? "#ffffff"
+              : "#07090a",
+          );
+        };
+        sync();
+        window.addEventListener("vtsl:theme-change", sync);
+      })();
+    </script>
     <link rel="canonical" href={canonical.href} />
     <link
       rel="alternate"
@@ -91,7 +112,7 @@ const extraJsonLdItems = Array.isArray(extraJsonLd)
       href={new URL("/rss.xml", site).href}
     />
 
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content="Open Security Labs" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />

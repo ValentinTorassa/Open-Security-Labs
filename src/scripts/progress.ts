@@ -159,6 +159,18 @@ export function exportToken(): string {
   return btoa(bin);
 }
 
+// Sanidad de ids importados: acota tamaño y formato para que un token
+// pegado no pueda escribir claves arbitrarias/ilimitadas en localStorage.
+const MAX_IMPORT_ENTRIES = 500;
+const VALID_ID = /^[a-z0-9:/_-]{1,120}$/i;
+
+function sanitizeIds(list: unknown): string[] {
+  if (!Array.isArray(list)) return [];
+  return list
+    .filter((id): id is string => typeof id === "string" && VALID_ID.test(id))
+    .slice(0, MAX_IMPORT_ENTRIES);
+}
+
 /** Importa un token y fusiona el progreso. Devuelve true si fue válido. */
 export function importToken(token: string): boolean {
   const s = store();
@@ -168,10 +180,9 @@ export function importToken(token: string): boolean {
     const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
     const data = JSON.parse(new TextDecoder().decode(bytes)) as Snapshot;
     if (!Array.isArray(data.labs) || !Array.isArray(data.exams)) return false;
-    data.labs.forEach((id) => s.setItem(LAB + id, "1"));
-    data.exams.forEach((key) => s.setItem(EXAM + key, "1"));
-    if (Array.isArray(data.briefs))
-      data.briefs.forEach((slug) => s.setItem(BRIEF + slug, "1"));
+    sanitizeIds(data.labs).forEach((id) => s.setItem(LAB + id, "1"));
+    sanitizeIds(data.exams).forEach((key) => s.setItem(EXAM + key, "1"));
+    sanitizeIds(data.briefs).forEach((slug) => s.setItem(BRIEF + slug, "1"));
     if (data.u && !getUsername()) s.setItem(USER, data.u.slice(0, 32));
     if (data.a) s.setItem(AVATAR, data.a.slice(0, 32));
     emit();

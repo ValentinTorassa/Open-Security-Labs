@@ -5,6 +5,7 @@ import LabCard from "../components/LabCard.astro";
 import LabLevel from "../components/LabLevel.astro";
 import { paths } from "../data/paths";
 import { sortLabs } from "../data/labs";
+import { SITE_URL } from "../data/site";
 
 const labs = await getCollection("labs", ({ data }) => !data.draft);
 const sorted = sortLabs(labs);
@@ -25,7 +26,7 @@ const chip =
   "shrink-0 rounded-full border px-3 py-1 font-mono text-xs transition-colors";
 const chipOff = "border-base-700 text-base-400 hover:text-base-100";
 
-const site = Astro.site ?? new URL("https://securitylabs.valentorassa.com");
+const site = Astro.site ?? new URL(SITE_URL);
 const labsJsonLd = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",

@@ -4,6 +4,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import PathCard from "../components/PathCard.astro";
 import { paths } from "../data/paths";
 import { sortLabs } from "../data/labs";
+import { SITE_URL } from "../data/site";
 
 const labs = sortLabs(await getCollection("labs", ({ data }) => !data.draft));
 const labsFor = (slug: string) => labs.filter((l) => l.data.path === slug);
@@ -28,7 +29,7 @@ const quickStarts = [
   },
 ];
 
-const site = Astro.site ?? new URL("https://securitylabs.valentorassa.com");
+const site = Astro.site ?? new URL(SITE_URL);
 const rutasJsonLd = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
