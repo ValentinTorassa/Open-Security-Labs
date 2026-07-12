@@ -7,11 +7,16 @@ export interface PortfolioProject {
   title: string;
   summary: string;
   why: string;
-  difficulty: string;
+  /** Nivel estandarizado (mismo enum que los labs). */
+  level: "beginner" | "intermediate" | "advanced";
   timebox: string;
   accent: string;
   icon: IconName;
   relatedPaths: PathSlug[];
+  /** Labs concretos que preparan para este brief (ids de la colección labs, validados en build). */
+  labIds: string[];
+  /** Cómo contarlo en 30 segundos (entrevista, README, LinkedIn). */
+  pitch: string;
   build: string[];
   evidence: string[];
   deliverables: string[];
@@ -26,11 +31,18 @@ export const portfolioProjects: PortfolioProject[] = [
     summary:
       "Elegí una app simple y documentá activos, trust boundaries, amenazas, impacto y mitigaciones realistas.",
     why: "Muestra criterio defensivo. No es tirar herramientas: es entender qué puede fallar, cuánto importa y qué control baja el riesgo.",
-    difficulty: "Inicial/intermedio",
+    level: "intermediate",
     timebox: "1 semana",
     accent: "#ff7b72",
     icon: "target",
     relatedPaths: ["ciberseguridad", "backend-arquitectura"],
+    labIds: [
+      "ciberseguridad/threat-modeling-app-chica",
+      "ciberseguridad/xss-local-defensivo",
+      "backend-arquitectura/jwt-no-es-autorizacion",
+    ],
+    pitch:
+      "Modelé amenazas de una app chica: qué puede fallar, cuánto importa y qué mitigación aplicaría primero. Diagrama, tabla priorizada y tradeoffs documentados.",
     build: [
       "Definí una app de juguete: usuarios, sesiones, panel admin, API y base de datos falsa.",
       "Dibujá un DFD simple con usuarios, backend, storage, servicios externos y trust boundaries.",
@@ -61,11 +73,19 @@ export const portfolioProjects: PortfolioProject[] = [
     summary:
       "Construí una API chica donde autenticación, autorización, validación y errores estén pensados desde el diseño.",
     why: "Para backend, seguridad se ve en decisiones concretas: endpoints, permisos, tests, logs y fallos bien contenidos.",
-    difficulty: "Intermedio",
+    level: "intermediate",
     timebox: "1-2 semanas",
     accent: "#bc8cff",
     icon: "lock",
     relatedPaths: ["backend-arquitectura", "ciberseguridad"],
+    labIds: [
+      "backend-arquitectura/api-http-base",
+      "backend-arquitectura/idor-cambiar-un-id",
+      "backend-arquitectura/jwt-no-es-autorizacion",
+      "ciberseguridad/sql-injection-parametrizada",
+    ],
+    pitch:
+      "Construí una API donde autorización, validación y errores están diseñados y testeados: los tests demuestran que un usuario no puede tocar recursos de otro.",
     build: [
       "Creá una API de tareas, tickets o notas con roles user/admin y datos ficticios.",
       "Separá authn de authz: estar logueado no implica poder tocar cualquier recurso.",
@@ -96,11 +116,19 @@ export const portfolioProjects: PortfolioProject[] = [
     summary:
       "Diseñá una arquitectura AWS pequeña con IAM mínimo, storage privado, logs, diagrama y costo estimado.",
     why: "Sirve para mostrar criterio de producción sin necesitar una infraestructura grande ni gastar plata de más.",
-    difficulty: "Intermedio",
+    level: "intermediate",
     timebox: "1 semana",
     accent: "#58a6ff",
     icon: "gauge",
     relatedPaths: ["cloud-produccion", "redes-internet"],
+    labIds: [
+      "cloud-produccion/aws-desde-cero",
+      "cloud-produccion/iam-deny-gana",
+      "cloud-produccion/vpc-security-groups",
+      "cloud-produccion/cloudtrail-quien-hizo-que",
+    ],
+    pitch:
+      "Diseñé una arquitectura AWS mínima con IAM de mínimo privilegio, logs que confirman cada acción importante y una estimación de costos con plan de cleanup.",
     build: [
       "Diseñá el sistema antes de desplegar: usuarios, permisos, red, storage, logs y blast radius.",
       "Escribí políticas IAM mínimas con recursos ficticios o ejemplos claramente redactados.",
@@ -131,11 +159,18 @@ export const portfolioProjects: PortfolioProject[] = [
     summary:
       "Armá una VM local, revisá usuarios, permisos, servicios, firewall, logs y dejá un checklist reproducible.",
     why: "Es un proyecto simple pero potente: demuestra que entendés el sistema operativo y podés explicar cada control.",
-    difficulty: "Inicial",
+    level: "beginner",
     timebox: "2-4 tardes",
     accent: "#56d364",
     icon: "list-checks",
     relatedPaths: ["linux-real", "ciberseguridad"],
+    labIds: [
+      "linux-real/permisos-usuarios-procesos",
+      "linux-real/systemd-y-journalctl",
+      "ciberseguridad/por-que-chmod-777",
+    ],
+    pitch:
+      "Hice hardening de un servidor Linux descartable y dejé un script de auditoría read-only que explica cada control, con evidencia before/after.",
     build: [
       "Levantá una VM o contenedor local descartable con usuarios y servicios de juguete.",
       "Inventariá procesos, puertos abiertos, permisos inseguros y logs relevantes.",
@@ -166,11 +201,18 @@ export const portfolioProjects: PortfolioProject[] = [
     summary:
       "Configurá CI con permisos mínimos, secret scanning, checks de formato/tests y una explicación de qué bloquea cada paso.",
     why: "Muestra seguridad aplicada al flujo real de desarrollo: prevención, feedback temprano y límites de permisos.",
-    difficulty: "Intermedio",
+    level: "intermediate",
     timebox: "1 semana",
     accent: "#e3b341",
     icon: "git-branch",
     relatedPaths: ["devsecops-agentes", "backend-arquitectura"],
+    labIds: [
+      "devsecops-agentes/github-actions-secrets-en-logs",
+      "devsecops-agentes/secret-scanning-token-al-repo",
+      "devsecops-agentes/sbom-basico",
+    ],
+    pitch:
+      "Armé un pipeline de CI con permisos mínimos que bloquea secretos y errores comunes antes del merge, con un reporte de qué bloquea cada paso y por qué.",
     build: [
       "Creá un repo de ejemplo con una app mínima o scripts de juguete.",
       "Agregá GitHub Actions con permisos explícitos y jobs separados por responsabilidad.",
@@ -195,17 +237,65 @@ export const portfolioProjects: PortfolioProject[] = [
     ],
   },
   {
+    slug: "deteccion-logs-locales",
+    role: "Blue team / detección",
+    title: "Detección con logs locales (mini SOC)",
+    summary:
+      "Generá actividad sospechosa de juguete en un entorno descartable y escribí reglas de detección sobre logs reales del sistema, con casos de prueba.",
+    why: "Detección es la mitad del trabajo defensivo que casi nadie muestra: probás que entendés qué rastros deja cada acción y cómo separar señal de ruido.",
+    level: "intermediate",
+    timebox: "1 semana",
+    accent: "#f778ba",
+    icon: "shield",
+    relatedPaths: ["linux-real", "devsecops-agentes"],
+    labIds: [
+      "linux-real/systemd-y-journalctl",
+      "cloud-produccion/cloudtrail-quien-hizo-que",
+      "devsecops-agentes/github-actions-secrets-en-logs",
+    ],
+    pitch:
+      "Escribí reglas de detección sobre logs del sistema con casos de prueba que disparan cada alerta, y documenté falsos positivos y puntos ciegos.",
+    build: [
+      "Levantá una VM o contenedor descartable y generá actividad normal más acciones sospechosas de juguete (sudo fallidos, procesos inesperados, descargas raras).",
+      "Definí 4-6 reglas de detección sobre journalctl/auditd: patrón, por qué importa y qué falso positivo esperás.",
+      "Automatizá las reglas en un script que lea logs y emita eventos con severidad y contexto.",
+      "Escribí un caso de prueba reproducible por regla: el comando que dispara la alerta y la salida esperada.",
+    ],
+    evidence: [
+      "Tabla de reglas: patrón, severidad, fuente del log y falsos positivos conocidos.",
+      "Script de detección con salida de ejemplo.",
+      "Transcripción de un caso de prueba disparando cada regla.",
+      "Writeup honesto: qué NO detecta y cómo lo mejorarías.",
+    ],
+    deliverables: [
+      "scripts/detect.sh o scripts/detect.py.",
+      "docs/detection-rules.md.",
+      "docs/test-cases.md con comandos reproducibles.",
+    ],
+    avoid: [
+      "No corras malware real: simulá los comportamientos con acciones inofensivas.",
+      "No uses logs de tu máquina personal ni de sistemas de terceros.",
+      "No prometas cero falsos positivos: documentarlos vale más que ocultarlos.",
+    ],
+  },
+  {
     slug: "agente-con-permisos",
     role: "Agentes / seguridad moderna",
     title: "Agente con permisos acotados y approval gate",
     summary:
       "Diseñá un workflow donde un agente puede leer, proponer cambios y pedir aprobación antes de acciones riesgosas.",
     why: "Cada vez más equipos usan agentes. El diferencial es mostrar que pensás en permisos, auditoría y límites operativos.",
-    difficulty: "Intermedio/avanzado",
+    level: "advanced",
     timebox: "1-2 semanas",
     accent: "#39c5cf",
     icon: "alert-triangle",
     relatedPaths: ["devsecops-agentes", "ciberseguridad"],
+    labIds: [
+      "devsecops-agentes/agente-no-deberia-tocar-archivos-a-ciegas",
+      "devsecops-agentes/docker-image-hardening",
+    ],
+    pitch:
+      "Diseñé un agente con permisos acotados y approval gate: puede leer y proponer, pero toda acción riesgosa pasa por aprobación humana y queda auditada.",
     build: [
       "Definí un caso seguro: agente que revisa archivos de ejemplo y propone un patch.",
       "Separá acciones read-only, write, network y deploy aunque el prototipo sea simple.",
