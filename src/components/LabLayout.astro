@@ -151,7 +151,7 @@ const accent = path?.accent ?? "#56d364";
 
     btn.addEventListener("click", async () => {
       const code = pre.querySelector("code") || pre;
-      const text = code.innerText;
+      const text = code.textContent || "";
 
       try {
         await navigator.clipboard.writeText(text);
