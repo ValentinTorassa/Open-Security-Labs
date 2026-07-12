@@ -1,4 +1,6 @@
-import { defineCollection, z } from "astro:content";
+import { defineCollection } from "astro:content";
+// El re-export de `z` desde astro:content quedó deprecado en Astro 7.
+import { z } from "astro/zod";
 import { glob } from "astro/loaders";
 import { PATH_SLUGS } from "./data/paths";
 import { DEFAULT_CONTRIBUTOR } from "./data/contributors";

@@ -21,8 +21,9 @@ function hexToRgb(hex: string): [number, number, number] {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
+// astro-og-canvas ≥0.12: el nombre del parámetro se infiere del archivo
+// ([...route].ts) y el slug default ya agrega la extensión .png.
 const route = await OGImageRoute({
-  param: "route",
   pages,
   getImageOptions: (_id, page: (typeof pages)[string]) => {
     const accent = getPath(page.path)?.accent ?? "#56d364";
