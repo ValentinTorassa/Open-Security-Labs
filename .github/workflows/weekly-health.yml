@@ -1,0 +1,75 @@
+name: Weekly health
+
+# Chequeos que no bloquean PRs pero avisan cuando el contenido se pudre:
+# links externos muertos (esta revisión encontró 11 de una) y regresiones
+# de accesibilidad en el sitio compilado.
+on:
+  schedule:
+    # Lunes 09:00 UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  links:
+    name: link check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Check links in built site
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # 403/429: YouTube y CDNs suelen rebotar bots aunque el link viva.
+          args: >-
+            --no-progress
+            --max-concurrency 4
+            --accept 200..=299,403,429
+            --exclude-path dist/pagefind
+            'dist/**/*.html'
+          fail: true
+
+  a11y:
+    name: accessibility smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Serve dist
+        run: npx --yes serve dist -l 4999 &
+
+      - name: pa11y over representative pages
+        run: |
+          sleep 3
+          npx --yes pa11y-ci \
+            http://localhost:4999/ \
+            http://localhost:4999/labs/ \
+            http://localhost:4999/labs/linux-real/permisos-en-octal/ \
+            http://localhost:4999/certificaciones/ \
+            http://localhost:4999/certificaciones/comptia-security-plus/ \
+            http://localhost:4999/portafolio/ \
+            http://localhost:4999/perfil/
