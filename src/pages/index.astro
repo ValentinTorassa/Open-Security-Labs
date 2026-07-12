@@ -96,32 +96,7 @@ const trust = [
   },
 ];
 
-const quickStarts = [
-  {
-    icon: "terminal" as const,
-    eyebrow: "vengo de cero",
-    title: "Hacé tu primer lab",
-    body: "Empezá con una request HTTP completa: DNS, conexión, headers y dónde mirar si falla.",
-    href: firstLabHref,
-    cta: "empezar primer lab",
-  },
-  {
-    icon: "server" as const,
-    eyebrow: "soy dev/backend",
-    title: "Entendé APIs y permisos",
-    body: "Pasá de endpoints que funcionan a endpoints que fallan bien y no filtran datos.",
-    href: "/rutas/backend-arquitectura",
-    cta: "ver ruta backend",
-  },
-  {
-    icon: "cloud" as const,
-    eyebrow: "quiero cloud/security",
-    title: "Bajá cloud a tierra",
-    body: "IAM, logs, storage privado, blast radius y decisiones que sobreviven producción.",
-    href: "/rutas/cloud-produccion",
-    cta: "ver ruta cloud",
-  },
-];
+
 
 const youtube = "https://www.youtube.com/@vtcibersecurity";
 const discord = "https://discord.com/invite/z6cr5JF6bJ";
@@ -167,7 +142,7 @@ const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
         <a href={firstLabHref} class="btn-primary">
           <span class="opacity-60">$</span> empezar primer lab
         </a>
-        <a href="#empezar" class="btn-ghost"> no sé por dónde empezar </a>
+
       </div>
 
       <div
@@ -348,51 +323,12 @@ const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
     </div>
   </section>
 
-  <!-- ===================== QUICKSTART ===================== -->
-  <section id="empezar" class="scroll-mt-20 py-8">
-    <div class="mb-2 flex items-baseline gap-3.5">
-      <span class="text-term-green font-mono text-sm">// 02</span>
-      <h2 class="text-base-50 font-mono text-3xl font-bold tracking-tight">
-        No sé por dónde empezar
-      </h2>
-    </div>
-    <p class="text-base-400 mb-8 max-w-2xl text-base leading-relaxed">
-      Elegí según tu punto de partida. Lo importante es conseguir una primera
-      evidencia concreta, no elegir la ruta perfecta.
-    </p>
 
-    <div class="grid gap-4 md:grid-cols-3">
-      {
-        quickStarts.map((item) => (
-          <a
-            href={item.href}
-            class="card group flex flex-col p-5 hover:-translate-y-0.5"
-          >
-            <span class="text-term-green mb-3 inline-flex">
-              <Icon name={item.icon} size={22} strokeWidth={1.6} />
-            </span>
-            <span class="text-base-500 font-mono text-[0.68rem] tracking-[0.14em] uppercase">
-              {item.eyebrow}
-            </span>
-            <span class="text-base-50 group-hover:text-term-green mt-2 font-mono text-lg font-semibold">
-              {item.title}
-            </span>
-            <span class="text-base-400 mt-2 flex-1 text-sm leading-relaxed">
-              {item.body}
-            </span>
-            <span class="text-term-green mt-4 font-mono text-xs">
-              {item.cta} →
-            </span>
-          </a>
-        ))
-      }
-    </div>
-  </section>
 
   <!-- ===================== RUTAS ===================== -->
   <section id="rutas" class="scroll-mt-20 py-8">
     <div class="mb-2 flex items-baseline gap-3.5">
-      <span class="text-term-green font-mono text-sm">// 03</span>
+      <span class="text-term-green font-mono text-sm">// 02</span>
       <h2 class="text-base-50 font-mono text-3xl font-bold tracking-tight">
         Rutas de aprendizaje
       </h2>
@@ -420,7 +356,7 @@ const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
   <!-- ===================== CERTIFICACIONES ===================== -->
   <section id="certificaciones" class="scroll-mt-20 py-8">
     <div class="mb-2 flex items-baseline gap-3.5">
-      <span class="text-term-green font-mono text-sm">// 04</span>
+      <span class="text-term-green font-mono text-sm">// 03</span>
       <h2 class="text-base-50 font-mono text-3xl font-bold tracking-tight">
         Certificaciones
       </h2>
@@ -444,7 +380,7 @@ const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
   <!-- ===================== PORTAFOLIO ===================== -->
   <section id="portafolio" class="scroll-mt-20 py-8">
     <div class="mb-2 flex items-baseline gap-3.5">
-      <span class="text-term-green font-mono text-sm">// 05</span>
+      <span class="text-term-green font-mono text-sm">// 04</span>
       <h2 class="text-base-50 font-mono text-3xl font-bold tracking-tight">
         Proyectos para portafolio
       </h2>
@@ -540,7 +476,7 @@ const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
   <!-- ===================== PARA QUIÉN ===================== -->
   <section id="quien" class="scroll-mt-20 py-8">
     <div class="mb-2 flex items-baseline gap-3.5">
-      <span class="text-term-green font-mono text-sm">// 06</span>
+      <span class="text-term-green font-mono text-sm">// 05</span>
       <h2 class="text-base-50 font-mono text-3xl font-bold tracking-tight">
         ¿Para quién es?
       </h2>
