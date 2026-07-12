@@ -1,4 +1,6 @@
 ---
+import { REPO_URL } from "../data/site";
+
 const links = [
   { href: "/", label: "Inicio" },
   { href: "/labs", label: "Aprender" },
@@ -63,6 +65,25 @@ const isActive = (href: string) =>
           ))
         }
       </nav>
+
+      <a
+        href={REPO_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Ver el repositorio en GitHub"
+        class="border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors sm:flex"
+      >
+        <svg
+          class="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17 5 18 5.3 18 5.3c.7 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"
+          ></path>
+        </svg>
+      </a>
 
       <button
         type="button"
@@ -206,7 +227,15 @@ const isActive = (href: string) =>
     }
   </nav>
   <div class="border-base-800 mt-auto border-t pt-6 pb-4">
-    <p class="text-base-500 font-mono text-xs">
+    <a
+      href={REPO_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-base-400 hover:text-term-green font-mono text-sm transition-colors"
+    >
+      Repositorio en GitHub ↗
+    </a>
+    <p class="text-base-500 mt-4 font-mono text-xs">
       Open Security Labs by VT Security &copy; {new Date().getFullYear()}
     </p>
   </div>
