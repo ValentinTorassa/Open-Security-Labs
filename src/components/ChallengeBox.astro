@@ -1,4 +1,6 @@
 ---
+import { createHash } from "node:crypto";
+
 interface Props {
   /** Enunciado del reto. Si no se pasa, usa el slot. */
   prompt?: string;
@@ -6,6 +8,13 @@ interface Props {
   flag?: string;
 }
 const { prompt, title = "Reto", flag } = Astro.props;
+
+// La flag nunca viaja en texto plano al HTML: se embebe su SHA-256 y el
+// cliente hashea lo que escribís antes de comparar. Dogfooding de
+// "hashear no es cifrar", y de paso la respuesta no está a un view-source.
+const flagHash = flag
+  ? createHash("sha256").update(flag.trim()).digest("hex")
+  : undefined;
 ---
 
 <section
@@ -26,7 +35,7 @@ const { prompt, title = "Reto", flag } = Astro.props;
       <>
         <form
           data-flag-form
-          data-expected={flag}
+          data-expected-hash={flagHash}
           class="mt-4 flex flex-col gap-3 sm:flex-row"
         >
           <input
@@ -44,6 +53,7 @@ const { prompt, title = "Reto", flag } = Astro.props;
         </form>
         <p
           data-flag-message
+          role="status"
           class="mt-3 hidden font-mono text-xs font-semibold"
         />
       </>
@@ -56,22 +66,43 @@ const { prompt, title = "Reto", flag } = Astro.props;
 </section>
 
 <script>
+  const sha256Hex = async (text: string): Promise<string> => {
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(text),
+    );
+    return Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  };
+
   document
     .querySelectorAll<HTMLFormElement>("[data-flag-form]")
     .forEach((form) => {
-      form.addEventListener("submit", (e) => {
+      form.addEventListener("submit", async (e) => {
         e.preventDefault();
         const input = form.querySelector("input");
         const msg = form.nextElementSibling as HTMLElement;
         if (!input || !msg) return;
 
-        const expected = form.dataset.expected;
+        const expectedHash = form.dataset.expectedHash;
         const actual = input.value.trim();
 
         msg.classList.remove("hidden", "text-term-green", "text-red-400");
         input.classList.remove("border-term-green", "border-red-400");
 
-        if (actual === expected) {
+        let ok = false;
+        try {
+          // crypto.subtle solo existe en contextos seguros (https/localhost).
+          ok = expectedHash === (await sha256Hex(actual));
+        } catch {
+          msg.textContent =
+            "✗ No se pudo verificar acá (necesita https). Anotá tu respuesta igual.";
+          msg.classList.add("text-red-400");
+          return;
+        }
+
+        if (ok) {
           msg.textContent =
             "✓ ¡Flag correcta! Ya podés marcar el lab como hecho.";
           msg.classList.add("text-term-green");

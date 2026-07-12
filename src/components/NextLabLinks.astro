@@ -8,7 +8,7 @@ interface Props {
 }
 const { ids } = Astro.props;
 
-const all = await getCollection("labs");
+const all = await getCollection("labs", ({ data }) => !data.draft);
 const nextLabs = ids
   .map((id) => all.find((l) => l.id === id))
   .filter((l): l is NonNullable<typeof l> => Boolean(l));

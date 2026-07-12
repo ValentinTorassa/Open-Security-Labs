@@ -321,12 +321,8 @@ const badgesData = JSON.stringify(
     labIds: string[];
   };
 
-  type BadgeRule =
-    | { kind: "labs"; n: number }
-    | { kind: "rutas"; n: number }
-    | { kind: "exams"; n: number }
-    | { kind: "route"; route: string }
-    | { kind: "allLabs" };
+  // Tipo compartido con el server: si cambia la regla, TypeScript avisa acá.
+  type BadgeRule = import("../data/badges").BadgeRule;
   type BadgeDef = { id: string; rule: BadgeRule };
   type AvatarOption = {
     id: string;
