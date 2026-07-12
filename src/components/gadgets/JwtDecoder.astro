@@ -1,7 +1,6 @@
 ---
 // Decodificador de JWT. Client-side, sin backend: el token nunca sale del navegador.
 // Decodifica header y payload (NO verifica la firma: para eso hace falta el secreto).
-const uid = "jwt-" + Math.random().toString(36).slice(2, 9);
 
 const sample =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0IiwibmFtZSI6IkphbmUiLCJyb2xlIjoidXNlciIsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjoxNzAwMDAzNjAwfQ.s5lqQzVQk0bnv8r3mFqL0qY8mF8q3Yk0XyZ1abcdEfg";
@@ -10,7 +9,6 @@ const sample =
 <section
   class="not-prose border-term-violet/30 bg-term-violet/5 my-8 rounded-xl border p-5"
   data-jwt
-  id={uid}
 >
   <h3
     class="text-term-violet flex items-center gap-2 font-mono text-sm font-semibold"

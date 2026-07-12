@@ -1,13 +1,11 @@
 ---
 // Evaluador de políticas IAM. Client-side, sin backend.
 // Modela la lógica real de AWS: Deny explícito gana, si no hay Allow → denegado.
-const uid = "iam-" + Math.random().toString(36).slice(2, 9);
 ---
 
 <section
   class="not-prose border-term-amber/30 bg-term-amber/5 my-8 rounded-xl border p-5"
   data-iam
-  id={uid}
 >
   <h3
     class="text-term-amber flex items-center gap-2 font-mono text-sm font-semibold"

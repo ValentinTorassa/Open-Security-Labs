@@ -3,17 +3,11 @@ import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PathCard from "../components/PathCard.astro";
 import { paths } from "../data/paths";
+import { sortLabs } from "../data/labs";
 
-const labs = await getCollection("labs", ({ data }) => !data.draft);
+const labs = sortLabs(await getCollection("labs", ({ data }) => !data.draft));
 const labsFor = (slug: string) => labs.filter((l) => l.data.path === slug);
-const pathOrder = new Map(paths.map((p) => [p.slug, p.order]));
-const firstLab = [...labs]
-  .sort((a, b) => {
-    const pa = pathOrder.get(a.data.path) ?? 99;
-    const pb = pathOrder.get(b.data.path) ?? 99;
-    return pa - pb || a.data.order - b.data.order;
-  })
-  .find((l) => l.data.level === "beginner");
+const firstLab = labs.find((l) => l.data.level === "beginner");
 const firstLabHref = firstLab ? `/labs/${firstLab.id}` : "/labs";
 
 const quickStarts = [

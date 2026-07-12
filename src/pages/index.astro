@@ -8,19 +8,15 @@ import Agradecimientos from "../components/Agradecimientos.astro";
 import { paths } from "../data/paths";
 import { portfolioProjects } from "../data/portfolio";
 import { REPO_URL } from "../data/site";
+import { sortLabs } from "../data/labs";
 
 const certifications = (await getCollection("certifications"))
   .map((c) => c.data)
   .sort((a, b) => a.order - b.order);
 
-const labs = await getCollection("labs", ({ data }) => !data.draft);
+const labs = sortLabs(await getCollection("labs", ({ data }) => !data.draft));
 const labsFor = (slug: string) => labs.filter((l) => l.data.path === slug);
-const pathOrder = new Map(paths.map((p) => [p.slug, p.order]));
-const sortedLabs = [...labs].sort((a, b) => {
-  const pa = pathOrder.get(a.data.path) ?? 99;
-  const pb = pathOrder.get(b.data.path) ?? 99;
-  return pa - pb || a.data.order - b.data.order;
-});
+const sortedLabs = labs;
 const firstLab =
   sortedLabs.find((l) => l.data.level === "beginner") ?? sortedLabs[0];
 const firstLabHref = firstLab ? `/labs/${firstLab.id}` : "/labs";

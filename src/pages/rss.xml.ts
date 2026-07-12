@@ -2,10 +2,11 @@ import rss from "@astrojs/rss";
 import type { APIContext } from "astro";
 import { getCollection } from "astro:content";
 import { getPath } from "../data/paths";
+import { sortLabs } from "../data/labs";
 
 export async function GET(context: APIContext) {
   const labs = await getCollection("labs", ({ data }) => !data.draft);
-  const sorted = labs.sort((a, b) => a.data.order - b.data.order);
+  const sorted = sortLabs(labs);
 
   return rss({
     title: "Open Security Labs",

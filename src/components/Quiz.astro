@@ -27,7 +27,6 @@ const {
   title = mode === "graded" ? "Examen" : "Comprobá lo que entendiste",
 } = Astro.props;
 
-const uid = "quiz-" + Math.random().toString(36).slice(2, 9);
 const accent = mode === "graded" ? "term-green" : "term-cyan";
 ---
 
@@ -42,7 +41,6 @@ const accent = mode === "graded" ? "term-green" : "term-cyan";
   data-mode={mode}
   data-pass={passScore}
   data-store-key={storeKey}
-  id={uid}
 >
   <header class="flex flex-wrap items-baseline justify-between gap-2">
     <h3

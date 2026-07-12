@@ -4,14 +4,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import BadgeMedal from "../components/BadgeMedal.astro";
 import { paths } from "../data/paths";
 import { badges } from "../data/badges";
+import { sortLabs } from "../data/labs";
 
-const labs = await getCollection("labs", ({ data }) => !data.draft);
-const pathOrder = new Map(paths.map((p) => [p.slug, p.order]));
-const sortedLabs = [...labs].sort((a, b) => {
-  const pa = pathOrder.get(a.data.path) ?? 99;
-  const pb = pathOrder.get(b.data.path) ?? 99;
-  return pa - pb || a.data.order - b.data.order;
-});
+const labs = sortLabs(await getCollection("labs", ({ data }) => !data.draft));
+const sortedLabs = labs;
 const firstLab =
   sortedLabs.find((l) => l.data.level === "beginner") ?? sortedLabs[0];
 const firstLabHref = firstLab ? `/labs/${firstLab.id}` : "/labs";
