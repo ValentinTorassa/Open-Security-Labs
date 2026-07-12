@@ -37,6 +37,15 @@ jobs:
       - name: Build
         run: npm run build
 
+      # El HTML generado tiene que ser reproducible: dos builds del mismo
+      # commit deben ser byte-idénticos (protege contra uids aleatorios y
+      # órdenes de colección no determinísticos).
+      - name: Determinism check (build twice, diff)
+        run: |
+          cp -r dist /tmp/dist-first
+          npm run build
+          diff -r /tmp/dist-first dist
+
   secrets:
     name: secret scan
     runs-on: ubuntu-latest
