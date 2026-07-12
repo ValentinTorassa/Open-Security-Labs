@@ -32,6 +32,9 @@ const labs = defineCollection({
     contributor: z.string().default(DEFAULT_CONTRIBUTOR),
     // Orden dentro de la ruta (menor primero). Para secuenciar labs quirúrgicos.
     order: z.number().int().default(100),
+    // Fechas opcionales (YYYY-MM-DD): alimentan RSS pubDate y JSON-LD.
+    published: z.coerce.date().optional(),
+    updated: z.coerce.date().optional(),
     draft: z.boolean().default(false),
   }),
 });

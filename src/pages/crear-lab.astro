@@ -521,6 +521,7 @@ npm run build</code></pre>
     is:inline
     type="application/json"
     data-paths-json
+    data-repo={repo}
     set:html={JSON.stringify(pathOptions)}
   />
 </BaseLayout>
@@ -533,9 +534,10 @@ npm run build</code></pre>
     accent: string;
   };
 
-  const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
-  const branch = "main";
   const pathsRaw = document.querySelector<HTMLElement>("[data-paths-json]");
+  // URL del repo inyectada desde el frontmatter (fuente única: data/site.ts).
+  const repo = pathsRaw?.dataset.repo ?? "";
+  const branch = "main";
   const pathOptions: PathOption[] = pathsRaw
     ? JSON.parse(pathsRaw.textContent ?? "[]")
     : [];
@@ -640,6 +642,8 @@ npm run build</code></pre>
       .map((item) => `- ${item}`)
       .join("\n");
     const filePath = `src/content/labs/${path}/${slug}.mdx`;
+    // Este scaffold refleja a mano el esquema de labs de src/content.config.ts.
+    // Si cambiás el esquema (campos nuevos/obligatorios), actualizá esta plantilla.
     const mdx = `---
 title: ${yamlString(title)}
 description: ${yamlString(description)}
@@ -662,8 +666,8 @@ ${yamlList(tags, "lab")}
 contributor: ${yamlString(contributor)}
 ---
 
-import Callout from "../../../components/Callout.astro";
-import TerminalBlock from "../../../components/TerminalBlock.astro";
+import Callout from "@components/Callout.astro";
+import TerminalBlock from "@components/TerminalBlock.astro";
 
 ${body}
 

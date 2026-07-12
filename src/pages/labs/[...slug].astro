@@ -3,6 +3,7 @@ import { getCollection, render } from "astro:content";
 import type { GetStaticPaths } from "astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import LabLayout from "../../components/LabLayout.astro";
+import { SITE_URL } from "../../data/site";
 
 export const getStaticPaths = (async () => {
   const labs = await getCollection("labs", ({ data }) => !data.draft);
@@ -30,7 +31,7 @@ export const getStaticPaths = (async () => {
 const { lab } = Astro.props;
 const { Content } = await render(lab);
 
-const site = Astro.site ?? new URL("https://securitylabs.valentorassa.com");
+const site = Astro.site ?? new URL(SITE_URL);
 const labJsonLd = {
   "@context": "https://schema.org",
   "@type": "TechArticle",
@@ -42,6 +43,12 @@ const labJsonLd = {
   keywords: lab.data.tags.join(", "),
   educationalLevel: lab.data.level,
   timeRequired: `PT${lab.data.estimatedMinutes}M`,
+  ...(lab.data.published
+    ? { datePublished: lab.data.published.toISOString().slice(0, 10) }
+    : {}),
+  ...(lab.data.updated
+    ? { dateModified: lab.data.updated.toISOString().slice(0, 10) }
+    : {}),
   author: {
     "@type": "Person",
     name: "Valentín Torassa Colombero",
@@ -59,6 +66,7 @@ const labJsonLd = {
   title={lab.data.title}
   description={lab.data.description}
   image={`/og/${lab.id}.png`}
+  ogType="article"
   jsonLd={labJsonLd}
   width="prose"
 >

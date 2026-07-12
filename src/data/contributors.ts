@@ -25,7 +25,7 @@ export const contributors: Contributor[] = [
     github: "ValentinTorassa",
     name: "Valentín Torassa Colombero",
     role: "Creador y mantenedor",
-    commits: 11,
+    commits: 36,
   },
   {
     github: "solsolettidev",

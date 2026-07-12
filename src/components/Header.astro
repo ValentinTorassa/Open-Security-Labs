@@ -112,6 +112,7 @@ const isActive = (href: string) =>
         type="button"
         data-theme-toggle
         aria-label="Cambiar tema claro/oscuro"
+        aria-pressed="false"
         class="theme-toggle border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors"
       >
         <svg
@@ -243,6 +244,13 @@ const isActive = (href: string) =>
 
 <script>
   const btn = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
+  const syncThemeButton = () => {
+    btn?.setAttribute(
+      "aria-pressed",
+      String(document.documentElement.dataset.theme === "light"),
+    );
+  };
+  syncThemeButton();
   btn?.addEventListener("click", () => {
     const light = document.documentElement.dataset.theme === "light";
     if (light) {
@@ -256,6 +264,9 @@ const isActive = (href: string) =>
         localStorage.setItem("vtsl:theme", "light");
       } catch {}
     }
+    syncThemeButton();
+    // BaseLayout escucha esto para actualizar <meta name="theme-color">.
+    window.dispatchEvent(new CustomEvent("vtsl:theme-change"));
   });
 
   // Mobile menu logic
@@ -292,5 +303,34 @@ const isActive = (href: string) =>
     }
     setMobileMenu(false);
     openBtn?.focus();
+  });
+
+  // Trap de foco: con el menú abierto (fondo con scroll bloqueado), Tab
+  // circula dentro del menú en vez de escaparse a la página tapada.
+  document.addEventListener("keydown", (event) => {
+    if (
+      event.key !== "Tab" ||
+      !mobileMenu ||
+      mobileMenu.classList.contains("hidden")
+    ) {
+      return;
+    }
+    const focusables = mobileMenu.querySelectorAll<HTMLElement>(
+      "a[href], button:not([disabled])",
+    );
+    if (focusables.length === 0) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement;
+    if (!mobileMenu.contains(active)) {
+      event.preventDefault();
+      first.focus();
+    } else if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
   });
 </script>
