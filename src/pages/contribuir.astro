@@ -1,11 +1,11 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { contributors, avatarUrl, profileUrl } from "../data/contributors";
+import { REPO_URL as repo } from "../data/site";
 
 // Más commits primero.
 const acks = [...contributors].sort((a, b) => b.commits - a.commits);
 const totalCommits = acks.reduce((n, c) => n + c.commits, 0);
-const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
 ---
 
 <BaseLayout

@@ -2,8 +2,8 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Icon from "../components/Icon.astro";
 import { paths } from "../data/paths";
+import { REPO_URL as repo } from "../data/site";
 
-const repo = "https://github.com/ValentinTorassa/Open-Security-Labs";
 const pathOptions = paths.map((path) => ({
   slug: path.slug,
   title: path.title,
