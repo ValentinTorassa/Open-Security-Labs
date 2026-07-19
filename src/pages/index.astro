@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Icon from "../components/Icon.astro";
 import PathCard from "../components/PathCard.astro";
@@ -9,6 +10,7 @@ import { paths } from "../data/paths";
 import { portfolioProjects } from "../data/portfolio";
 import { REPO_URL } from "../data/site";
 import { sortLabs } from "../data/labs";
+import vtAvatar from "../assets/community/vt-avatar.png";
 
 const certifications = (await getCollection("certifications"))
   .map((c) => c.data)
@@ -19,7 +21,7 @@ const labsFor = (slug: string) => labs.filter((l) => l.data.path === slug);
 const sortedLabs = labs;
 const firstLab =
   sortedLabs.find((l) => l.data.level === "beginner") ?? sortedLabs[0];
-const firstLabHref = firstLab ? `/labs/${firstLab.id}` : "/labs";
+const firstLabHref = firstLab ? `/labs/${firstLab.id}/` : "/labs/";
 const allLabIds = sortedLabs.map((l) => l.id);
 const portfolioTeaser = portfolioProjects.slice(0, 3);
 
@@ -157,7 +159,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
           ><span class="text-term-green">0</span> login · progreso local</span
         >
         <a
-          href="/perfil"
+          href="/perfil/"
           data-global-progress
           data-all-ids={allLabIds.join(",")}
           class="hover:text-term-green hidden"
@@ -199,7 +201,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
           {
             paths.map((p) => (
               <a
-                href={`/rutas/${p.slug}`}
+                href={`/rutas/${p.slug}/`}
                 class="hover:text-term-green w-fit transition-colors hover:underline"
               >
                 {p.slug}/
@@ -230,7 +232,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
 
   <!-- ===================== TU PROGRESO (solo para quien ya empezó) ======= -->
   <a
-    href="/perfil"
+    href="/perfil/"
     data-resume
     data-all-ids={allLabIds.join(",")}
     class="card group hidden items-center gap-5 p-5 hover:-translate-y-0.5"
@@ -396,7 +398,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
         {
           portfolioTeaser.map((project) => (
             <a
-              href={`/portafolio#${project.slug}`}
+              href={`/portafolio/#${project.slug}`}
               class="card group flex gap-4 p-4 hover:-translate-y-0.5"
               style={`--accent: ${project.accent}`}
             >
@@ -422,7 +424,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
         }
 
         <div class="mt-1 flex flex-wrap gap-3">
-          <a href="/portafolio" class="btn-primary"> ver roadmap completo </a>
+          <a href="/portafolio/" class="btn-primary"> ver roadmap completo </a>
         </div>
       </div>
 
@@ -518,11 +520,11 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
         class="relative grid items-center gap-8 lg:grid-cols-[auto_1fr_auto]"
       >
         <div class="relative shrink-0">
-          <img
-            src="/vt-avatar.png"
+          <Image
+            src={vtAvatar}
             alt="VT Security — mascota pingüino con capucha"
-            width="124"
-            height="124"
+            width={124}
+            height={124}
             class="border-base-600 block h-[124px] w-[124px] rounded-2xl border bg-black"
           />
           <span

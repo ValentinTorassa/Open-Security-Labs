@@ -20,7 +20,7 @@ export const GET: APIRoute = async () => {
   const labItems: Item[] = labs.map((lab) => {
     const p = getPath(lab.data.path);
     return {
-      href: `/labs/${lab.id}`,
+      href: `/labs/${lab.id}/`,
       title: lab.data.title,
       sub: p?.title ?? lab.data.path,
       kind: "Lab",
@@ -36,7 +36,7 @@ export const GET: APIRoute = async () => {
   });
 
   const pathItems: Item[] = paths.map((p) => ({
-    href: `/rutas/${p.slug}`,
+    href: `/rutas/${p.slug}/`,
     title: p.title,
     sub: "Ruta de aprendizaje",
     kind: "Ruta",
@@ -45,21 +45,21 @@ export const GET: APIRoute = async () => {
 
   const pageItems: Item[] = [
     {
-      href: "/labs",
+      href: "/labs/",
       title: "Todos los labs",
       sub: "Catálogo completo",
       kind: "Página",
       keywords: "labs catalogo todos",
     },
     {
-      href: "/certificaciones",
+      href: "/certificaciones/",
       title: "Certificaciones",
       sub: "Exámenes por ruta",
       kind: "Página",
       keywords: "certificaciones certis examenes",
     },
     {
-      href: "/portafolio",
+      href: "/portafolio/",
       title: "Portafolio",
       sub: "Proyectos con evidencia",
       kind: "Página",
@@ -67,28 +67,28 @@ export const GET: APIRoute = async () => {
         "portafolio portfolio proyectos evidencia backend ciberseguridad cloud devsecops",
     },
     {
-      href: "/perfil",
+      href: "/perfil/",
       title: "Perfil",
       sub: "Tu progreso local",
       kind: "Página",
       keywords: "perfil progreso token export import",
     },
     {
-      href: "/crear-lab",
+      href: "/crear-lab/",
       title: "Crear lab",
       sub: "Editor simple para proponer una PR",
       kind: "Página",
       keywords: "crear lab editor mdx contribuir github pull request pr",
     },
     {
-      href: "/contribuir",
+      href: "/contribuir/",
       title: "Contribuir",
       sub: "Sumar labs",
       kind: "Página",
       keywords: "contribuir aportar pr github",
     },
     {
-      href: "/about",
+      href: "/about/",
       title: "Acerca",
       sub: "Qué es Open Security Labs",
       kind: "Página",

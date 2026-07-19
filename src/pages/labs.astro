@@ -31,7 +31,7 @@ const labsJsonLd = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
   name: "Todos los labs",
-  url: new URL("/labs", site).href,
+  url: new URL("/labs/", site).href,
   inLanguage: "es-AR",
   numberOfItems: labs.length,
   about: paths.map((path) => path.title),

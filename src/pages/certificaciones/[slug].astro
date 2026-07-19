@@ -88,7 +88,7 @@ const domainsWithLabs = cert.domains.map((d) => ({
 <BaseLayout title={cert.name} description={cert.summary} width="default">
   <article class="py-12" style={`--accent: ${cert.accent}`}>
     <nav class="text-base-400 mb-6 font-mono text-xs" aria-label="Migas de pan">
-      <a href="/certificaciones" class="hover:text-term-green"
+      <a href="/certificaciones/" class="hover:text-term-green"
         >certificaciones</a
       >
       <span class="text-base-500 mx-1.5" aria-hidden="true">/</span>
@@ -287,7 +287,7 @@ const domainsWithLabs = cert.domains.map((d) => ({
                   <div class="flex flex-wrap gap-2">
                     {d.labsList.map((lab) => (
                       <a
-                        href={`/labs/${lab.id}`}
+                        href={`/labs/${lab.id}/`}
                         class="bg-base-850 hover:bg-base-800 border-base-750 text-base-300 hover:text-base-50 inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-xs transition-colors"
                       >
                         <span class="text-term-green" aria-hidden="true">
@@ -318,7 +318,7 @@ const domainsWithLabs = cert.domains.map((d) => ({
           <div class="mt-4 grid gap-3 sm:grid-cols-2">
             {relatedPaths.map((p) => (
               <a
-                href={`/rutas/${p.slug}`}
+                href={`/rutas/${p.slug}/`}
                 class="card group flex items-center gap-3 p-4 hover:-translate-y-0.5"
                 style={`--accent: ${p.accent}`}
               >

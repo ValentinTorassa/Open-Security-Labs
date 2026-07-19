@@ -17,7 +17,7 @@ const certsJsonLd = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
   name: "Certificaciones",
-  url: new URL("/certificaciones", site).href,
+  url: new URL("/certificaciones/", site).href,
   inLanguage: "es-AR",
   numberOfItems: certifications.length,
   about: certifications.map((cert) => cert.name),
