@@ -13,13 +13,13 @@ permissions:
   contents: read
 
 jobs:
-  links:
-    name: link check
-    runs-on: ubuntu-latest
+  build:
+    name: build
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22
           cache: npm
@@ -30,8 +30,24 @@ jobs:
       - name: Build
         run: npm run build
 
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: dist
+          path: dist
+          retention-days: 1
+
+  links:
+    name: link check
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: dist
+          path: dist
+
       - name: Check links in built site
-        uses: lycheeverse/lychee-action@v2
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2
         with:
           # --root-dir resuelve links internos absolutos (/labs/...) contra dist.
           # 403/429: YouTube y CDNs rebotan bots aunque el link viva.
@@ -49,28 +65,26 @@ jobs:
 
   a11y:
     name: accessibility smoke
-    runs-on: ubuntu-latest
+    needs: build
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7
+      # Checkout necesario: pa11y-ci lee .github/pa11yci.json del repo.
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
 
-      - uses: actions/setup-node@v6
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: dist
+          path: dist
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Serve dist
-        run: npx --yes serve dist -l 4999 &
 
       # Config en .github/pa11yci.json: --no-sandbox para Chrome en runners.
       - name: pa11y over representative pages
         run: |
-          sleep 3
+          npx --yes serve dist -l 4999 &
+          npx --yes wait-on http://localhost:4999
           npx --yes pa11y-ci --config .github/pa11yci.json \
             http://localhost:4999/ \
             http://localhost:4999/labs/ \

@@ -524,4 +524,13 @@
     border-radius: 0.6rem;
     padding: 1rem 1.1rem;
   }
+
+  /* Shiki dual theme: el HTML sale con los colores claros inline y el tema
+     oscuro en vars --shiki-dark*. En dark (default) forzamos las vars; en
+     light (data-theme="light") quedan los valores inline tal cual. */
+  :root:not([data-theme="light"]) .astro-code,
+  :root:not([data-theme="light"]) .astro-code span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
+  }
 }

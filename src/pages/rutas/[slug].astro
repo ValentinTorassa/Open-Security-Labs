@@ -31,7 +31,7 @@ const labs = sortLabs(allLabs.filter((l) => l.data.path === path.slug));
 const examStoreKey = `ruta:${path.slug}`;
 const firstLab = labs[0];
 const site = Astro.site ?? new URL(SITE_URL);
-const routeUrl = new URL(`/rutas/${path.slug}`, site).href;
+const routeUrl = new URL(`/rutas/${path.slug}/`, site).href;
 const routeJsonLd = [
   {
     "@context": "https://schema.org",
@@ -51,7 +51,7 @@ const routeJsonLd = [
         "@type": "ListItem",
         position: 1,
         name: "Rutas",
-        item: new URL("/rutas", site).href,
+        item: new URL("/rutas/", site).href,
       },
       {
         "@type": "ListItem",
@@ -72,7 +72,7 @@ const routeJsonLd = [
 >
   <section class="py-12" style={`--accent: ${path.accent}`}>
     <nav class="text-base-400 mb-6 font-mono text-xs" aria-label="Migas de pan">
-      <a href="/rutas" class="hover:text-term-green">rutas</a>
+      <a href="/rutas/" class="hover:text-term-green">rutas</a>
       <span class="text-base-500 mx-1.5" aria-hidden="true">/</span>
       <span class="accent-text">{path.slug}</span>
     </nav>
@@ -100,7 +100,7 @@ const routeJsonLd = [
     {
       firstLab && (
         <a
-          href={`/labs/${firstLab.id}`}
+          href={`/labs/${firstLab.id}/`}
           data-ruta-start
           class="btn-primary mt-6 inline-flex"
         >
@@ -168,7 +168,7 @@ const routeJsonLd = [
               Todavía no hay labs publicados en esta ruta.
             </p>
             <a
-              href="/contribuir"
+              href="/contribuir/"
               class="text-term-green mt-3 inline-block text-sm hover:underline"
             >
               ¿Querés escribir el primero? →
@@ -234,7 +234,7 @@ const routeJsonLd = [
       {
         prevPath ? (
           <a
-            href={`/rutas/${prevPath.slug}`}
+            href={`/rutas/${prevPath.slug}/`}
             class="card group flex flex-col p-4 hover:-translate-y-0.5"
             style={`--accent: ${prevPath.accent}`}
           >
@@ -250,7 +250,7 @@ const routeJsonLd = [
       {
         nextPath && (
           <a
-            href={`/rutas/${nextPath.slug}`}
+            href={`/rutas/${nextPath.slug}/`}
             class="card group flex flex-col p-4 text-right hover:-translate-y-0.5 sm:col-start-2"
             style={`--accent: ${nextPath.accent}`}
           >
@@ -267,7 +267,7 @@ const routeJsonLd = [
 
     <div class="mt-10">
       <a
-        href="/rutas"
+        href="/rutas/"
         class="text-base-400 hover:text-term-green font-mono text-sm"
       >
         ← Volver a todas las rutas

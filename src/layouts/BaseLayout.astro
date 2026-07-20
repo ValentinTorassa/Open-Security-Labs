@@ -2,6 +2,10 @@
 import "@fontsource-variable/inter";
 import "@fontsource-variable/jetbrains-mono";
 import "../styles/global.css";
+// Subset latino (cubre acentos/ñ del español) de cada variable font: precargado
+// para evitar FOUT/FOIT en el primer paint, sin bajar el resto de los subsets.
+import interLatinWoff2 from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
+import jetbrainsMonoLatinWoff2 from "@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import CommandPalette from "../components/CommandPalette.astro";
@@ -70,6 +74,21 @@ const extraJsonLdItems = Array.isArray(extraJsonLd)
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href={interLatinWoff2}
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href={jetbrainsMonoLatinWoff2}
+      crossorigin
+    />
 
     <script is:inline>
       // Tema antes del primer paint para evitar flash. Default: oscuro.

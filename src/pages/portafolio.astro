@@ -43,7 +43,7 @@ const portfolioJsonLd = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
   name: "Portafolio técnico",
-  url: new URL("/portafolio", site).href,
+  url: new URL("/portafolio/", site).href,
   inLanguage: "es-AR",
   numberOfItems: portfolioProjects.length,
   about: portfolioProjects.map((project) => project.title),
@@ -348,7 +348,7 @@ const portfolioJsonLd = {
                     if (!lab) return null;
                     return (
                       <a
-                        href={`/labs/${lab.id}`}
+                        href={`/labs/${lab.id}/`}
                         class="bg-base-850 hover:bg-base-800 border-base-750 text-base-300 hover:text-base-50 inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-xs transition-colors"
                       >
                         <span class="text-term-green" aria-hidden="true">
@@ -384,7 +384,7 @@ const portfolioJsonLd = {
                     if (!path) return null;
                     return (
                       <a
-                        href={`/rutas/${path.slug}`}
+                        href={`/rutas/${path.slug}/`}
                         class="border-base-700 bg-base-800/50 text-base-300 hover:border-term-green/50 hover:text-term-green rounded border px-2.5 py-1 font-mono text-xs transition-colors"
                       >
                         {path.short}
@@ -438,10 +438,10 @@ const portfolioJsonLd = {
       <div
         class="border-base-800 mt-8 flex flex-wrap items-center gap-x-6 gap-y-4 border-t pt-6"
       >
-        <a href="/labs" class="btn-primary">
+        <a href="/labs/" class="btn-primary">
           <span class="opacity-60">$</span> practicar con los labs
         </a>
-        <a href="/perfil" class="btn-ghost">ver tu progreso</a>
+        <a href="/perfil/" class="btn-ghost">ver tu progreso</a>
         <p class="text-base-500 font-mono text-xs">
           Marcá los briefs que termines: el progreso queda en tu navegador, sin
           login.

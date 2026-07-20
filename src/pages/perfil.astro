@@ -10,7 +10,7 @@ const labs = sortLabs(await getCollection("labs", ({ data }) => !data.draft));
 const sortedLabs = labs;
 const firstLab =
   sortedLabs.find((l) => l.data.level === "beginner") ?? sortedLabs[0];
-const firstLabHref = firstLab ? `/labs/${firstLab.id}` : "/labs";
+const firstLabHref = firstLab ? `/labs/${firstLab.id}/` : "/labs/";
 
 const avatarOptions = [
   { id: "penguin", emoji: "🐧", label: "Pingüino", accent: "#56d364" },
@@ -67,7 +67,7 @@ const badgesData = JSON.stringify(
       </p>
       <div class="mt-4 flex flex-wrap gap-2">
         <a href={firstLabHref} class="btn-primary text-xs">Hacer primer lab</a>
-        <a href="/rutas" class="btn-ghost text-xs">Ver rutas</a>
+        <a href="/rutas/" class="btn-ghost text-xs">Ver rutas</a>
         <button type="button" data-zero-import class="btn-ghost text-xs">
           Importar token
         </button>
@@ -411,7 +411,7 @@ const badgesData = JSON.stringify(
       row.className = "border-base-800 rounded-lg border p-3";
       row.innerHTML = `
         <div class="flex items-center justify-between font-mono text-xs">
-          <a href="/rutas/${r.slug}" class="text-base-200 hover:text-[color:var(--accent)]">${r.title}</a>
+          <a href="/rutas/${r.slug}/" class="text-base-200 hover:text-[color:var(--accent)]">${r.title}</a>
           <span class="text-base-400" data-ruta-count>0/${r.labIds.length}</span>
         </div>
         <div class="bg-base-800 mt-2 h-1.5 w-full overflow-hidden rounded-full">

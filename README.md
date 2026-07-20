@@ -46,7 +46,7 @@ LatAm, con un tono directo y técnico.
 
 ## Correr en local
 
-Necesitás **Node.js 18+** y npm.
+Necesitás **Node.js 22+** y npm.
 
 ```bash
 git clone <url-del-repo> open-security-labs

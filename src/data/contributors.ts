@@ -39,6 +39,12 @@ export const contributors: Contributor[] = [
     role: "Fixes de espaciado y UI",
     commits: 1,
   },
+  {
+    github: "Luciano-plaza",
+    name: "Luciano Plaza",
+    role: "Infra, SEO y performance",
+    commits: 1,
+  },
 ];
 
 const byHandle = new Map(contributors.map((c) => [c.github.toLowerCase(), c]));

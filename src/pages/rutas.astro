@@ -9,7 +9,7 @@ import { SITE_URL } from "../data/site";
 const labs = sortLabs(await getCollection("labs", ({ data }) => !data.draft));
 const labsFor = (slug: string) => labs.filter((l) => l.data.path === slug);
 const firstLab = labs.find((l) => l.data.level === "beginner");
-const firstLabHref = firstLab ? `/labs/${firstLab.id}` : "/labs";
+const firstLabHref = firstLab ? `/labs/${firstLab.id}/` : "/labs/";
 
 const quickStarts = [
   {
@@ -19,12 +19,12 @@ const quickStarts = [
   },
   {
     label: "Soy dev/backend",
-    href: "/rutas/backend-arquitectura",
+    href: "/rutas/backend-arquitectura/",
     body: "Arrancá por APIs, permisos, sesiones y modos de falla.",
   },
   {
     label: "Quiero cloud/security",
-    href: "/rutas/cloud-produccion",
+    href: "/rutas/cloud-produccion/",
     body: "Seguí por IAM, logs, redes cloud y blast radius.",
   },
 ];
@@ -34,7 +34,7 @@ const rutasJsonLd = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
   name: "Rutas de aprendizaje",
-  url: new URL("/rutas", site).href,
+  url: new URL("/rutas/", site).href,
   inLanguage: "es-AR",
   numberOfItems: paths.length,
   about: paths.map((path) => path.title),
