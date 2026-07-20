@@ -72,7 +72,7 @@ const totalCommits = acks.reduce((n, c) => n + c.commits, 0);
       <h2>Cómo agregar un lab</h2>
       <p>
         Un lab es un archivo <code>.mdx</code> dentro de la carpeta de su ruta. Por
-        ejemplo, un lab de Linux va en
+        ejemplo, un lab de Linux va en {" "}
         <code>src/content/labs/linux-real/</code>.
       </p>
       <ol>
@@ -85,7 +85,7 @@ const totalCommits = acks.reduce((n, c) => n + c.commits, 0);
           Escribí la lección usando los componentes (Callout, TerminalBlock…).
         </li>
         <li>
-          Verificá con <code>npm run check</code> y mirá el resultado con
+          Verificá con <code>npm run check</code> y mirá el resultado con {" "}
           <code>npm run dev</code>.
         </li>
         <li>Abrí un Pull Request.</li>
@@ -162,9 +162,9 @@ contributor: "TuUsuarioDeGitHub"  # opcional; default: el mantenedor
       </h2>
       <p class="text-base-300 mt-3 leading-relaxed">
         Open Security Labs existe gracias a quienes escriben labs, corrigen
-        errores y mejoran el material. {acks.length}
-        {acks.length === 1 ? "persona" : "personas"} y {totalCommits} commits hasta
-        hoy. Gracias 🙌
+        errores y mejoran el material. {acks.length}{" "}
+        {acks.length === 1 ? "persona" : "personas"} y {totalCommits}{" "}
+        commits hasta hoy. Gracias 🙌
       </p>
 
       <ul class="mt-8 grid gap-4 sm:grid-cols-2">
@@ -207,8 +207,10 @@ contributor: "TuUsuarioDeGitHub"  # opcional; default: el mantenedor
       class="border-base-700 bg-base-850/40 text-base-300 mt-10 rounded-xl border p-6 text-sm"
     >
       <p>
-        Para detalles completos mirá <code class="mono">CONTRIBUTING.md</code>,
-        <code class="mono">AGENTS.md</code> y
+        Para detalles completos mirá <code class="mono">CONTRIBUTING.md</code>, {
+          " "
+        }
+        <code class="mono">AGENTS.md</code> y {" "}
         <code class="mono">SECURITY.md</code> en el repositorio.
       </p>
       <div class="mt-4 flex flex-wrap gap-2">

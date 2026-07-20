@@ -172,7 +172,9 @@ const badgesData = JSON.stringify(
     <div class="mt-10 flex items-baseline justify-between gap-3">
       <h2 class="rule-label">Insignias</h2>
       <span class="text-base-400 font-mono text-xs">
-        <span class="text-term-green" data-badges-count>0</span>/{badges.length}
+        <span class="text-term-green" data-badges-count>0</span>/{
+          badges.length
+        }{" "}
         ganadas
       </span>
     </div>
@@ -272,7 +274,7 @@ const badgesData = JSON.stringify(
       >
       </p>
       <p class="text-base-500 mt-3 font-mono text-xs">
-        ¿Empezás de cero?
+        ¿Empezás de cero?{" "}
         <button type="button" data-reset class="text-term-red hover:underline">
           Borrar todo mi progreso
         </button>
