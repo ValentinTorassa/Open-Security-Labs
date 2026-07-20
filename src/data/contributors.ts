@@ -34,15 +34,15 @@ export const contributors: Contributor[] = [
     commits: 1,
   },
   {
-    github: "CorbalanLucas",
-    name: "Lucas Corbalan",
-    role: "Fixes de espaciado y UI",
-    commits: 1,
-  },
-  {
     github: "Luciano-plaza",
     name: "Luciano Plaza",
     role: "Infra, SEO y performance",
+    commits: 1,
+  },
+  {
+    github: "CorbalanLucas",
+    name: "Lucas Corbalan",
+    role: "Fixes de espaciado y UI",
     commits: 1,
   },
 ];
