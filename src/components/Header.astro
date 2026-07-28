@@ -106,6 +106,34 @@ const isActive = (href: string) =>
         >
       </button>
 
+      {
+        path === "/" && (
+          <button
+            type="button"
+            data-home-style-toggle
+            aria-label="Activar estilo Archivo operativo"
+            aria-pressed="false"
+            title="Alternar Archivo operativo"
+            class="border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors"
+          >
+            <svg
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M5 7h14v13H5z" />
+              <path d="M8 7V4h8v3" />
+              <path d="M8 11h8M8 15h8" />
+            </svg>
+          </button>
+        )
+      }
+
       <button
         type="button"
         data-theme-toggle
