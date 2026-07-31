@@ -16,13 +16,145 @@ const { path, labCount, labIds = [] } = Astro.props;
   class="card group relative flex flex-col overflow-hidden p-5 hover:-translate-y-0.5"
   style={`--accent: ${path.accent}`}
   data-path-card
+  data-path-slug={path.slug}
 >
   <div class="flex items-center justify-between gap-3">
     <span
       class="flex h-10 w-10 items-center justify-center rounded-lg border"
       style="border-color: color-mix(in srgb, var(--accent) 40%, transparent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent)"
     >
-      <Icon name={path.icon} size={20} />
+      <span class="path-icon-default flex items-center justify-center">
+        <Icon name={path.icon} size={20} />
+      </span>
+      {
+        path.slug === "redes-internet" && (
+          <svg
+            class="archive-route-art"
+            viewBox="0 0 120 120"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.25"
+            aria-hidden="true"
+          >
+            <circle cx="60" cy="60" r="44" opacity="0.32" />
+            <circle cx="60" cy="60" r="24" opacity="0.5" />
+            <path d="m60 16 34 22 6 40-40 26-40-26 6-40Z" opacity="0.72" />
+            <path
+              d="M60 16v44m34-22L60 60m40 18L60 60m0 44V60M20 78l40-18M26 38l34 22"
+              opacity="0.52"
+            />
+            <circle cx="60" cy="60" r="8" />
+            <g fill="currentColor" stroke="none">
+              <circle cx="60" cy="16" r="2.6" />
+              <circle cx="94" cy="38" r="2.6" />
+              <circle cx="100" cy="78" r="2.6" />
+              <circle cx="60" cy="104" r="2.6" />
+              <circle cx="20" cy="78" r="2.6" />
+              <circle cx="26" cy="38" r="2.6" />
+              <circle cx="60" cy="60" r="3.4" />
+            </g>
+          </svg>
+        )
+      }
+      {
+        path.slug === "cloud-produccion" && (
+          <svg
+            class="archive-route-art"
+            viewBox="0 0 120 120"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.25"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M24 48h66c8 0 14-6 14-13s-6-13-14-13c-2 0-4 .4-6 1C80 14 72 9 62 9c-13 0-23 9-25 21-3-2-6-3-10-3-8 0-14 5-14 11s5 10 11 10Z" />
+            <path
+              d="M60 48v18M26 66h68M26 66v14m34-14v14m34-14v14"
+              opacity="0.7"
+            />
+            <rect x="14" y="80" width="24" height="22" />
+            <rect x="48" y="80" width="24" height="22" />
+            <rect x="82" y="80" width="24" height="22" />
+            <path
+              d="M19 88h10m-10 6h7m27-6h10m-10 6h7m27-6h10m-10 6h7"
+              opacity="0.68"
+            />
+            <g fill="currentColor" stroke="none">
+              <circle cx="33" cy="94" r="1.8" />
+              <circle cx="67" cy="94" r="1.8" />
+              <circle cx="101" cy="94" r="1.8" />
+            </g>
+          </svg>
+        )
+      }
+      {
+        path.slug === "ciberseguridad" && (
+          <svg
+            class="archive-route-art"
+            viewBox="0 0 120 120"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.25"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m60 9 39 15v29c0 25-15 43-39 57-24-14-39-32-39-57V24Z" />
+            <path
+              d="m60 20 28 11v22c0 18-10 32-28 44-18-12-28-26-28-44V31Z"
+              opacity="0.48"
+            />
+            <circle cx="60" cy="55" r="15" />
+            <circle cx="60" cy="55" r="5" />
+            <path
+              d="M60 32v10m0 26v12M37 55h10m26 0h10M43 38l7 7m20 20 7 7m0-34-7 7M50 65l-7 7"
+              opacity="0.72"
+            />
+            <path d="m53 55 5 5 10-12" stroke-width="1.8" />
+            <g fill="currentColor" stroke="none">
+              <circle cx="60" cy="32" r="2" />
+              <circle cx="83" cy="55" r="2" />
+              <circle cx="60" cy="80" r="2" />
+              <circle cx="37" cy="55" r="2" />
+            </g>
+          </svg>
+        )
+      }
+      {
+        path.slug === "devsecops-agentes" && (
+          <svg
+            class="archive-route-art"
+            viewBox="0 0 120 120"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.25"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="17" y="25" width="86" height="70" rx="20" opacity="0.5" />
+            <path d="M17 60h86M38 25v70m44-70v70" opacity="0.68" />
+            <rect x="50" y="45" width="20" height="30" />
+            <path d="m55 59 4 4 7-9" stroke-width="1.8" />
+            <path d="m26 25 5-5 5 5m58 70-5 5-5-5" />
+            <g fill="var(--archive-surface, #0d0e0c)" stroke="currentColor">
+              <circle cx="17" cy="60" r="5" />
+              <circle cx="38" cy="25" r="5" />
+              <circle cx="82" cy="25" r="5" />
+              <circle cx="103" cy="60" r="5" />
+              <circle cx="82" cy="95" r="5" />
+              <circle cx="38" cy="95" r="5" />
+            </g>
+            <g fill="currentColor" stroke="none">
+              <circle cx="17" cy="60" r="1.8" />
+              <circle cx="38" cy="25" r="1.8" />
+              <circle cx="82" cy="25" r="1.8" />
+              <circle cx="103" cy="60" r="1.8" />
+              <circle cx="82" cy="95" r="1.8" />
+              <circle cx="38" cy="95" r="1.8" />
+            </g>
+          </svg>
+        )
+      }
     </span>
     <span class="text-base-400 flex items-center gap-2 font-mono text-xs">
       <span>Ruta {String(path.order).padStart(2, "0")}</span>
@@ -96,6 +228,12 @@ const { path, labCount, labIds = [] } = Astro.props;
     )
   }
 </a>
+
+<style>
+  .archive-route-art {
+    display: none;
+  }
+</style>
 
 <script>
   import { countDone, onProgress } from "../scripts/progress";

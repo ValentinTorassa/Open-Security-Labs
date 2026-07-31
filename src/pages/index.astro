@@ -1484,7 +1484,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     [data-path-card]
     > div:first-child
     > span:first-child
-    svg {
+    .path-icon-default {
     display: none;
   }
 
@@ -1740,6 +1740,55 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     left: 50%;
     width: 1px;
     background: currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    [data-path-card]:is(
+      [data-path-slug="redes-internet"],
+      [data-path-slug="cloud-produccion"],
+      [data-path-slug="ciberseguridad"],
+      [data-path-slug="devsecops-agentes"]
+    )
+    > div:first-child
+    > span:first-child {
+    width: 120px;
+    height: 120px;
+    margin: 1.55rem auto;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    transform: none;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    [data-path-card]:is(
+      [data-path-slug="redes-internet"],
+      [data-path-slug="cloud-produccion"],
+      [data-path-slug="ciberseguridad"],
+      [data-path-slug="devsecops-agentes"]
+    )
+    > div:first-child
+    > span:first-child::before,
+  :root[data-home-style="archive"]
+    #rutas
+    [data-path-card]:is(
+      [data-path-slug="redes-internet"],
+      [data-path-slug="cloud-produccion"],
+      [data-path-slug="ciberseguridad"],
+      [data-path-slug="devsecops-agentes"]
+    )
+    > div:first-child
+    > span:first-child::after {
+    display: none;
+  }
+
+  :root[data-home-style="archive"] #rutas .archive-route-art {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
   }
 
   :root[data-home-style="archive"] #rutas [data-path-card] h3 {
@@ -2196,16 +2245,6 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
       > div:first-child
       > span:first-child {
       margin-block: 1.25rem;
-    }
-
-    :root[data-home-style="archive"]
-      #rutas
-      > .grid
-      > [data-path-card]:nth-of-type(5)
-      > div:first-child
-      > span:first-child {
-      margin-top: 2.9rem;
-      margin-bottom: 1.25rem;
     }
 
     :root[data-home-style="archive"] [data-portfolio-roadmap] {
