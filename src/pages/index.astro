@@ -123,7 +123,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   >
   </div>
 
-  <!-- ===================== HERO : TERMINAL ===================== -->
+  <!-- ===================== HERO ===================== -->
   <section
     id="top"
     class="hero-frame mt-4 grid items-center gap-8 px-4 py-5 sm:mt-6 sm:px-6 sm:py-7 lg:grid-cols-[1.02fr_0.98fr] lg:px-8 lg:py-8"
@@ -182,7 +182,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
       </div>
     </div>
 
-    <!-- Terminal como objeto principal del hero. -->
+    <!-- La vista actual usa terminal; Archivo operativo muestra un mapa. -->
     <div class="terminal-object overflow-hidden rounded-xl">
       <div
         class="terminal-object__header border-base-700 flex items-center justify-between gap-4 border-b px-3.5 py-3"
@@ -237,6 +237,46 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
           > ./empezar.sh<span
             class="bg-term-green ml-0.5 inline-block h-4 w-2 [animation:vtBlink_1s_step-end_infinite] align-[-3px]"
           ></span>
+        </div>
+      </div>
+
+      <div class="archive-system-map" aria-hidden="true">
+        <div class="archive-system-map__header">
+          <span>OSL / system map</span>
+          <span>index 01—06</span>
+        </div>
+        <div class="archive-system-map__diagram">
+          <svg viewBox="0 0 520 280" role="presentation">
+            <g class="archive-system-map__orbits">
+              <circle cx="260" cy="140" r="94"></circle>
+              <circle cx="260" cy="140" r="58"></circle>
+              <path d="M260 140 105 54M260 140 260 30M260 140 415 54"></path>
+              <path d="M260 140 105 226M260 140 260 250M260 140 415 226"></path>
+            </g>
+            <g class="archive-system-map__nodes">
+              <circle cx="105" cy="54" r="7"></circle>
+              <rect x="253" y="23" width="14" height="14"></rect>
+              <circle cx="415" cy="54" r="7"></circle>
+              <rect x="98" y="219" width="14" height="14"></rect>
+              <circle cx="260" cy="250" r="7"></circle>
+              <rect x="408" y="219" width="14" height="14"></rect>
+            </g>
+            <g class="archive-system-map__core">
+              <rect x="226" y="106" width="68" height="68"></rect>
+              <rect x="242" y="122" width="36" height="36"></rect>
+              <circle cx="260" cy="140" r="5"></circle>
+            </g>
+          </svg>
+        </div>
+        <div class="archive-system-map__routes">
+          {
+            paths.map((path, index) => (
+              <span style={`--node-color:${path.accent}`}>
+                <b>0{index + 1}</b>
+                <em>{path.short}</em>
+              </span>
+            ))
+          }
         </div>
       </div>
     </div>
@@ -731,7 +771,8 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     background: color-mix(in srgb, var(--color-base-850) 72%, transparent);
   }
 
-  .archive-contributor-mark {
+  .archive-contributor-mark,
+  .archive-system-map {
     display: none;
   }
 
@@ -748,6 +789,10 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     --archive-line: #363930;
     --archive-copy: #9b9e95;
     --archive-meta: #85887f;
+    --archive-paper: #cdd3c9;
+    --archive-paper-ink: #11130f;
+    --archive-paper-muted: #444b42;
+    --archive-paper-line: #7c8578;
     --color-base-950: #090a08 !important;
     --color-base-900: #0d0e0c !important;
     --color-base-850: #11120f !important;
@@ -762,7 +807,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     --color-base-50: #f3f2ea !important;
     --color-term-green: #d7ff64 !important;
     --color-term-cyan: #8eb9aa !important;
-    --color-term-amber: #c7a76a !important;
+    --color-term-amber: #aeb9af !important;
     --color-term-red: #d87b68 !important;
     --color-term-violet: #a69abc !important;
     --color-term-blue: #86a7a0 !important;
@@ -906,76 +951,123 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] .terminal-object {
-    --color-base-950: #c7a76a !important;
-    --color-base-900: #c7a76a !important;
-    --color-base-850: #c7a76a !important;
-    --color-base-800: #b6975d !important;
-    --color-base-700: #6b5b3d !important;
-    --color-base-600: #4d422e !important;
-    --color-base-500: #50452f !important;
-    --color-base-400: #3f3829 !important;
-    --color-base-300: #29271f !important;
-    --color-base-200: #1b1b16 !important;
-    --color-base-100: #12130f !important;
-    --color-base-50: #090a08 !important;
-    --color-term-green: #11120f !important;
-    --color-term-blue: #2c5149 !important;
-    --color-term-amber: #7a3d2e !important;
     position: relative;
     min-height: 440px;
     overflow: hidden;
-    border: 1px solid #5e5037;
+    border: 1px solid #50564b;
     border-radius: 0 !important;
-    background: #c7a76a !important;
-    box-shadow: 16px 16px 0 #171914;
-    color: #11120f;
+    background: #0c0e0b !important;
+    box-shadow: 16px 16px 0 #151713;
+    color: #d7ff64;
   }
 
-  :root[data-home-style="archive"] .terminal-object::before,
-  :root[data-home-style="archive"] .terminal-object::after {
-    position: absolute;
-    z-index: 0;
-    border: 1px solid rgba(17, 18, 15, 0.22);
-    border-radius: 50%;
-    content: "";
-    pointer-events: none;
+  :root[data-home-style="archive"]
+    .terminal-object
+    > :is(.terminal-object__header, .terminal-object__body) {
+    display: none;
   }
 
-  :root[data-home-style="archive"] .terminal-object::before {
-    top: 18%;
-    right: 9%;
-    width: 250px;
-    height: 250px;
+  :root[data-home-style="archive"] .archive-system-map {
+    display: grid;
+    min-height: 438px;
+    grid-template-rows: auto minmax(0, 1fr) auto;
   }
 
-  :root[data-home-style="archive"] .terminal-object::after {
-    top: 23%;
-    right: -1%;
-    width: 250px;
-    height: 190px;
-  }
-
-  :root[data-home-style="archive"] .terminal-object > * {
-    position: relative;
-    z-index: 1;
-  }
-
-  :root[data-home-style="archive"] .terminal-object__header {
-    min-height: 54px;
-    border-color: #6b5b3d !important;
-    background: transparent !important;
-    letter-spacing: 0.05em;
+  :root[data-home-style="archive"] .archive-system-map__header {
+    display: flex;
+    min-height: 52px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--archive-line);
+    color: var(--archive-meta);
+    font: 0.62rem var(--font-mono);
+    letter-spacing: 0.12em;
     text-transform: uppercase;
   }
 
-  :root[data-home-style="archive"] .terminal-object__body {
-    display: flex;
-    min-height: 380px;
-    flex-direction: column;
-    justify-content: center;
-    background: transparent !important;
-    font-size: 0.76rem !important;
-    line-height: 1.9 !important;
+  :root[data-home-style="archive"] .archive-system-map__diagram {
+    position: relative;
+    display: grid;
+    min-height: 260px;
+    place-items: center;
+    overflow: hidden;
+    background-image:
+      linear-gradient(rgba(215, 255, 100, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(215, 255, 100, 0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__diagram svg {
+    width: min(100%, 520px);
+    height: auto;
+    padding: 1.25rem;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__orbits {
+    fill: none;
+    stroke: #4f574b;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__nodes {
+    fill: #0c0e0b;
+    stroke: #d7ff64;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__core {
+    fill: #0c0e0b;
+    stroke: #d7ff64;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__core rect:first-child {
+    transform: rotate(45deg);
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+
+  :root[data-home-style="archive"]
+    .archive-system-map__core
+    :is(rect:last-of-type, circle) {
+    fill: #d7ff64;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__routes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid var(--archive-line);
+    border-left: 1px solid var(--archive-line);
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__routes > span {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: auto 1fr;
+    gap: 0.55rem;
+    padding: 0.72rem;
+    border-right: 1px solid var(--archive-line);
+    border-bottom: 1px solid var(--archive-line);
+    font: 0.6rem var(--font-mono);
+    letter-spacing: 0.035em;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__routes b {
+    color: var(--node-color);
+    font-weight: 600;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__routes em {
+    overflow: hidden;
+    color: #a8aaa2;
+    font-style: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   :root[data-home-style="archive"] [data-resume] {
@@ -1787,10 +1879,10 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
 
   :root[data-home-style="archive"] [data-portfolio-roadmap] {
     min-height: 390px;
-    border-color: #5e5037 !important;
+    border-color: var(--archive-paper-line) !important;
     border-radius: 0 !important;
-    background: #c7a76a !important;
-    color: #11120f;
+    background: var(--archive-paper) !important;
+    color: var(--archive-paper-ink);
   }
 
   :root[data-home-style="archive"] [data-portfolio-roadmap]::before,
@@ -1844,7 +1936,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] [data-portfolio-roadmap] h3 + p {
-    color: #3f3829 !important;
+    color: var(--archive-paper-muted) !important;
     font-size: 0.75rem;
     line-height: 1.55;
   }
@@ -1864,7 +1956,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     > div {
     border: 0;
     border-radius: 0;
-    background: rgba(199, 167, 106, 0.92);
+    background: color-mix(in srgb, var(--archive-paper) 94%, white);
   }
 
   :root[data-home-style="archive"] #quien > .grid {
@@ -1952,10 +2044,10 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] [data-community-panel] {
-    border-color: #5e5037 !important;
+    border-color: var(--archive-paper-line) !important;
     border-radius: 0 !important;
-    background: #c7a76a !important;
-    color: #11120f;
+    background: var(--archive-paper) !important;
+    color: var(--archive-paper-ink);
   }
 
   :root[data-home-style="archive"] [data-community-panel] img {
@@ -1969,8 +2061,8 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     > div:first-child
     > span {
     border-radius: 0;
-    background: #11120f;
-    color: #c7a76a;
+    background: var(--archive-paper-ink);
+    color: var(--archive-paper);
   }
 
   :root[data-home-style="archive"] [data-community-panel] h2 {
@@ -1992,7 +2084,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     > div
     > div:nth-child(2)
     > div:first-child {
-    color: #3f3829 !important;
+    color: var(--archive-paper-muted) !important;
   }
 
   :root[data-home-style="archive"] [data-community-panel] .btn-primary,
@@ -2005,8 +2097,8 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] [data-community-panel] .btn-primary {
-    background: #11120f;
-    color: #c7a76a;
+    background: var(--archive-paper-ink);
+    color: var(--archive-paper);
   }
 
   :root[data-home-style="archive"] body > footer {
@@ -2052,12 +2144,29 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
 
     :root[data-home-style="archive"] .terminal-object {
       min-height: 400px;
-      box-shadow: 9px 9px 0 #171914;
+      box-shadow: 9px 9px 0 #151713;
     }
 
-    :root[data-home-style="archive"] .terminal-object__body {
-      min-height: 340px;
-      font-size: 0.7rem !important;
+    :root[data-home-style="archive"] .archive-system-map {
+      min-height: 398px;
+    }
+
+    :root[data-home-style="archive"] .archive-system-map__header {
+      font-size: 0.56rem;
+    }
+
+    :root[data-home-style="archive"] .archive-system-map__diagram {
+      min-height: 230px;
+    }
+
+    :root[data-home-style="archive"] .archive-system-map__diagram svg {
+      padding: 0.75rem;
+    }
+
+    :root[data-home-style="archive"] .archive-system-map__routes > span {
+      gap: 0.4rem;
+      padding: 0.62rem 0.5rem;
+      font-size: 0.55rem;
     }
 
     :root[data-home-style="archive"] [data-trust-card] {
