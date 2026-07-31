@@ -111,13 +111,25 @@ const { path, labCount, labIds = [] } = Astro.props;
           >
             <path d="M16 60c12-25 29-27 44 0s32 25 44 0c-12-25-29-27-44 0S28 85 16 60Z" />
             <rect
-              x="50"
-              y="50"
-              width="20"
-              height="20"
+              x="42"
+              y="40"
+              width="36"
+              height="36"
+              rx="3"
               fill="var(--archive-surface, #0d0e0c)"
             />
-            <path d="m55 60 4 4 7-9" stroke-width="1.8" />
+            <path d="M60 40V30" />
+            <circle
+              cx="60"
+              cy="27"
+              r="3"
+              fill="var(--archive-surface, #0d0e0c)"
+            />
+            <g fill="currentColor" stroke="none">
+              <circle cx="52" cy="54" r="2.2" />
+              <circle cx="68" cy="54" r="2.2" />
+            </g>
+            <path d="M51 66h18" />
           </svg>
         )
       }
