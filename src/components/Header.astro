@@ -47,7 +47,7 @@ const isActive = (href: string) =>
 
     <div class="flex min-w-0 items-center gap-2">
       <!-- Nav Desktop -->
-      <nav class="hidden items-center gap-2 lg:flex" aria-label="Principal">
+      <nav class="hidden items-center gap-2 xl:flex" aria-label="Principal">
         {
           links.map((l) => (
             <a
@@ -175,7 +175,7 @@ const isActive = (href: string) =>
         aria-label="Abrir menú"
         aria-expanded="false"
         aria-controls="mobile-menu"
-        class="border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors lg:hidden"
+        class="border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors xl:hidden"
       >
         <svg
           class="h-4 w-4"
@@ -201,7 +201,7 @@ const isActive = (href: string) =>
 <div
   id="mobile-menu"
   data-mobile-menu
-  class="bg-base-950/95 fixed inset-0 z-[100] flex hidden flex-col px-5 py-5 backdrop-blur-md transition-opacity lg:hidden"
+  class="bg-base-950/95 fixed inset-0 z-[100] flex hidden flex-col px-5 py-5 backdrop-blur-md transition-opacity xl:hidden"
   style="height: 100dvh;"
 >
   <div class="flex items-center justify-between">

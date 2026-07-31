@@ -9,12 +9,13 @@ const initials = (name: string) =>
     .split(" ")
     .slice(0, 2)
     .map((part) => part[0])
-    .join("");
+    .join("")
+    .toUpperCase();
 ---
 
 <section id="agradecimientos" class="scroll-mt-20 py-8">
   <div class="mb-2 flex items-baseline gap-3.5">
-    <span class="text-term-green font-mono text-sm">// 05</span>
+    <span class="text-term-green font-mono text-sm">// 06</span>
     <span class="section-heading-icon" data-section-icon>
       <Icon name="git-branch" size={17} strokeWidth={1.7} />
     </span>

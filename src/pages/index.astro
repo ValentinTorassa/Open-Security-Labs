@@ -743,6 +743,11 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
 
   :root[data-home-style="archive"] {
     color-scheme: dark;
+    --archive-surface: #0d0e0c;
+    --archive-surface-raised: #11120f;
+    --archive-line: #363930;
+    --archive-copy: #9b9e95;
+    --archive-meta: #85887f;
     --color-base-950: #090a08 !important;
     --color-base-900: #0d0e0c !important;
     --color-base-850: #11120f !important;
@@ -775,7 +780,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] body > header > div {
-    height: 4.5rem;
+    height: 4rem;
   }
 
   :root[data-home-style="archive"] body > header img,
@@ -785,9 +790,9 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] body > header nav a {
-    color: #8d9087;
-    font-size: 0.65rem;
-    letter-spacing: 0.05em;
+    color: #a8aaa2;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
   }
 
@@ -797,6 +802,29 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
 
   :root[data-home-style="archive"] [data-theme-toggle] {
     display: none !important;
+  }
+
+  :root[data-home-style="archive"] [data-mobile-menu] {
+    background: rgba(9, 10, 8, 0.98) !important;
+    backdrop-filter: none;
+  }
+
+  :root[data-home-style="archive"] [data-mobile-menu] :is(a, button, img) {
+    border-radius: 0 !important;
+  }
+
+  :root[data-home-style="archive"] [data-mobile-menu] nav {
+    gap: 0;
+    margin-top: 3rem;
+    border-top: 1px solid var(--archive-line);
+  }
+
+  :root[data-home-style="archive"] [data-mobile-menu] nav a {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--archive-line);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   :root[data-home-style="archive"] .section-heading-icon {
@@ -817,9 +845,9 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   :root[data-home-style="archive"] .hero-frame {
     grid-template-columns: minmax(0, 1.12fr) minmax(330px, 0.88fr) !important;
     gap: clamp(3rem, 6vw, 5.5rem) !important;
-    min-height: 650px;
+    min-height: 610px;
     margin-top: 1rem !important;
-    padding: 4.5rem 0 5rem !important;
+    padding: 4rem 0 4.5rem !important;
     overflow: visible;
     border: 0;
     border-top: 1px solid #44473f;
@@ -894,7 +922,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     --color-term-blue: #2c5149 !important;
     --color-term-amber: #7a3d2e !important;
     position: relative;
-    min-height: 480px;
+    min-height: 440px;
     overflow: hidden;
     border: 1px solid #5e5037;
     border-radius: 0 !important;
@@ -942,11 +970,11 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
 
   :root[data-home-style="archive"] .terminal-object__body {
     display: flex;
-    min-height: 420px;
+    min-height: 380px;
     flex-direction: column;
     justify-content: center;
     background: transparent !important;
-    font-size: 0.73rem !important;
+    font-size: 0.76rem !important;
     line-height: 1.9 !important;
   }
 
@@ -969,8 +997,8 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] main > section:not(#top) {
-    padding-top: 4.25rem !important;
-    padding-bottom: 4.25rem !important;
+    padding-top: 3.75rem !important;
+    padding-bottom: 3.75rem !important;
   }
 
   :root[data-home-style="archive"]
@@ -1001,6 +1029,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     font-family: Georgia, "Times New Roman", serif !important;
     font-size: clamp(2rem, 4vw, 3rem) !important;
     font-weight: 400 !important;
+    line-height: 1 !important;
     letter-spacing: -0.035em !important;
   }
 
@@ -1031,16 +1060,16 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     > div:first-child
     + p {
     max-width: 700px;
-    margin-bottom: 2.5rem !important;
-    color: #8d9087;
+    margin-bottom: 2.25rem !important;
+    color: var(--archive-copy);
     font-size: 0.85rem;
     line-height: 1.65;
   }
 
   :root[data-home-style="archive"] main .card {
-    border-color: #2f322c;
+    border-color: var(--archive-line);
     border-radius: 0 !important;
-    background: #0d0e0c;
+    background: var(--archive-surface);
     box-shadow: none !important;
   }
 
@@ -1048,9 +1077,10 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     display: none;
   }
 
-  :root[data-home-style="archive"] main .card:hover {
-    border-color: color-mix(in srgb, var(--accent, #d7ff64) 55%, #44473f);
-    background: #11120f;
+  :root[data-home-style="archive"] main a.card:is(:hover, :focus-visible) {
+    outline: 1px solid color-mix(in srgb, var(--accent, #d7ff64) 55%, #44473f);
+    outline-offset: -1px;
+    background: var(--archive-surface-raised);
     transform: none !important;
   }
 
@@ -1066,7 +1096,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] [data-trust-card] {
-    min-height: 145px;
+    min-height: 128px;
     padding: 1.2rem !important;
     border: 0;
     border-right: 1px solid #44473f;
@@ -1171,8 +1201,9 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     [data-trust-card]
     > span:last-child
     > span:last-child {
-    color: #7f8279;
-    font-size: 0.68rem;
+    color: var(--archive-copy);
+    font-size: 0.75rem;
+    line-height: 1.55;
   }
 
   :root[data-home-style="archive"] #metodo > .grid {
@@ -1181,7 +1212,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] [data-method-card] {
-    min-height: 285px;
+    min-height: 260px;
     padding: 1rem !important;
     border: 0 !important;
   }
@@ -1203,7 +1234,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     width: 88px;
     height: 88px;
     place-items: center;
-    margin: 1.7rem auto;
+    margin: 1.4rem auto;
     border: 1px solid currentColor;
   }
 
@@ -1310,14 +1341,14 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
 
   :root[data-home-style="archive"] [data-method-card] > div:nth-child(2) {
     font-family: Georgia, "Times New Roman", serif !important;
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 400;
   }
 
   :root[data-home-style="archive"] [data-method-card] > p {
-    color: #777a71;
-    font-size: 0.67rem;
-    line-height: 1.55;
+    color: var(--archive-copy);
+    font-size: 0.75rem;
+    line-height: 1.6;
   }
 
   :root[data-home-style="archive"] #rutas > .grid {
@@ -1326,7 +1357,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] #rutas [data-path-card] {
-    min-height: 420px;
+    min-height: 390px;
     padding: 1rem !important;
     border: 0;
     background: #0d0e0c;
@@ -1349,7 +1380,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     display: block;
     width: 120px;
     height: 120px;
-    margin: 2.2rem auto;
+    margin: 1.55rem auto;
     border: 1px solid var(--accent) !important;
     border-radius: 0 !important;
     background: transparent !important;
@@ -1388,8 +1419,8 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     grid-row: 1;
     width: 100%;
     justify-content: space-between;
-    color: #777a71;
-    font-size: 0.48rem;
+    color: var(--archive-meta);
+    font-size: 0.625rem;
   }
 
   :root[data-home-style="archive"]
@@ -1548,7 +1579,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     > span:first-child {
     width: 100px;
     height: 82px;
-    margin-top: 3.8rem;
+    margin-top: 3.15rem;
   }
 
   :root[data-home-style="archive"]
@@ -1628,10 +1659,10 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
 
   :root[data-home-style="archive"] #rutas [data-path-card] h3 + p {
     min-height: 3.2em;
-    color: #9b9e95;
-    font:
-      0.72rem/1.5 Georgia,
-      serif;
+    color: var(--archive-copy);
+    font-family: inherit;
+    font-size: 0.75rem;
+    line-height: 1.55;
   }
 
   :root[data-home-style="archive"]
@@ -1642,8 +1673,8 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     border-color: #2f322c;
     border-radius: 0;
     background: transparent;
-    color: #72766c;
-    font-size: 0.5rem;
+    color: var(--archive-meta);
+    font-size: 0.625rem;
   }
 
   :root[data-home-style="archive"]
@@ -1651,7 +1682,8 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     [data-path-card]
     > div:nth-of-type(3) {
     border-color: #2f322c;
-    font-size: 0.55rem;
+    color: var(--archive-meta);
+    font-size: 0.625rem;
   }
 
   :root[data-home-style="archive"] #certificaciones > .grid {
@@ -1660,7 +1692,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] #certificaciones .card {
-    min-height: 310px;
+    min-height: 290px;
     padding: 1rem !important;
     border: 0;
   }
@@ -1670,8 +1702,8 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     .card
     > div:first-child
     > span {
-    width: 4.4rem;
-    height: 4.4rem;
+    width: 4rem;
+    height: 4rem;
     border-radius: 0 !important;
     background: transparent;
     box-shadow: none;
@@ -1684,9 +1716,9 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] #certificaciones .card h3 + p {
-    color: #7f8279;
-    font-size: 0.68rem;
-    line-height: 1.55;
+    color: var(--archive-copy);
+    font-size: 0.75rem;
+    line-height: 1.6;
   }
 
   :root[data-home-style="archive"] #certificaciones .card > div:nth-of-type(2) {
@@ -1702,13 +1734,14 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     border: 0;
     border-radius: 0;
     background: #11120f;
-    font-size: 0.5rem;
+    color: var(--archive-meta);
+    font-size: 0.625rem;
   }
 
   :root[data-home-style="archive"] #certificaciones .card > div:last-child {
     border-color: #2f322c;
-    color: #72766c;
-    font-size: 0.53rem;
+    color: var(--archive-meta);
+    font-size: 0.625rem;
   }
 
   :root[data-home-style="archive"] #portafolio > div:nth-of-type(2) {
@@ -1716,7 +1749,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] [data-portfolio-project] {
-    min-height: 120px;
+    min-height: 104px;
     padding: 1rem !important;
     border: 0;
     border-bottom: 1px solid #44473f;
@@ -1741,9 +1774,9 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     [data-portfolio-project]
     > span:last-child
     > span:last-child {
-    color: #777a71;
-    font-size: 0.67rem;
-    line-height: 1.5;
+    color: var(--archive-copy);
+    font-size: 0.75rem;
+    line-height: 1.6;
   }
 
   :root[data-home-style="archive"] #portafolio .btn-primary {
@@ -1753,7 +1786,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] [data-portfolio-roadmap] {
-    min-height: 430px;
+    min-height: 390px;
     border-color: #5e5037 !important;
     border-radius: 0 !important;
     background: #c7a76a !important;
@@ -1791,7 +1824,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   :root[data-home-style="archive"] [data-portfolio-roadmap] > div:last-child {
     z-index: 1;
     display: flex;
-    min-height: 370px;
+    min-height: 330px;
     flex-direction: column;
   }
 
@@ -1812,7 +1845,8 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
 
   :root[data-home-style="archive"] [data-portfolio-roadmap] h3 + p {
     color: #3f3829 !important;
-    font-size: 0.69rem;
+    font-size: 0.75rem;
+    line-height: 1.55;
   }
 
   :root[data-home-style="archive"]
@@ -1839,7 +1873,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] [data-audience-card] {
-    min-height: 150px;
+    min-height: 126px;
     padding: 1rem !important;
     border: 0;
   }
@@ -1863,9 +1897,9 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] [data-audience-card] p {
-    color: #777a71;
-    font-size: 0.67rem;
-    line-height: 1.5;
+    color: var(--archive-copy);
+    font-size: 0.75rem;
+    line-height: 1.6;
   }
 
   :root[data-home-style="archive"] #agradecimientos > ul {
@@ -1877,7 +1911,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] #agradecimientos li .card {
-    min-height: 104px;
+    min-height: 88px;
     padding: 0.9rem !important;
     border: 0;
     border-right: 1px solid #2f322c;
@@ -1894,21 +1928,23 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     height: 2.7rem;
     flex: none;
     place-items: center;
-    border: 1px solid #d7ff64;
+    border: 1px solid #5a5d53;
+    background: rgba(215, 255, 100, 0.04);
     color: #d7ff64;
-    font: 700 0.52rem var(--font-mono);
+    font: 700 0.68rem var(--font-mono);
+    letter-spacing: 0.04em;
   }
 
   :root[data-home-style="archive"] #agradecimientos li .card p:first-child {
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 0.78rem;
+    font-size: 0.84rem;
     font-weight: 400;
   }
 
   :root[data-home-style="archive"] #agradecimientos li .card p:last-child {
     margin-top: 0.25rem;
-    color: #777a71;
-    font-size: 0.6rem;
+    color: var(--archive-copy);
+    font-size: 0.68rem;
   }
 
   :root[data-home-style="archive"] #comunidad {
@@ -1974,7 +2010,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] body > footer {
-    margin-top: 3rem !important;
+    margin-top: 2rem !important;
     border-color: #2f322c;
     background: #0d0e0c;
   }
@@ -2003,25 +2039,25 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
 
   @media (max-width: 640px) {
     :root[data-home-style="archive"] main > section:not(#top) {
-      padding-top: 3.5rem !important;
-      padding-bottom: 3.5rem !important;
+      padding-top: 3rem !important;
+      padding-bottom: 3rem !important;
     }
 
     :root[data-home-style="archive"] .hero-frame {
       margin-inline: -1.25rem;
-      padding: 3.5rem 1.25rem 4rem !important;
+      padding: 3.25rem 1.25rem 3.5rem !important;
       border-right: 0;
       border-left: 0;
     }
 
     :root[data-home-style="archive"] .terminal-object {
-      min-height: 440px;
+      min-height: 400px;
       box-shadow: 9px 9px 0 #171914;
     }
 
     :root[data-home-style="archive"] .terminal-object__body {
-      min-height: 380px;
-      font-size: 0.65rem !important;
+      min-height: 340px;
+      font-size: 0.7rem !important;
     }
 
     :root[data-home-style="archive"] [data-trust-card] {
@@ -2031,15 +2067,44 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     }
 
     :root[data-home-style="archive"] [data-method-card] {
-      min-height: 250px;
+      min-height: 225px;
+    }
+
+    :root[data-home-style="archive"]
+      [data-method-card]
+      > div:first-child
+      > span:first-child {
+      margin-block: 1.15rem;
     }
 
     :root[data-home-style="archive"] #rutas [data-path-card] {
-      min-height: 390px;
+      min-height: 350px;
+    }
+
+    :root[data-home-style="archive"]
+      #rutas
+      [data-path-card]
+      > div:first-child
+      > span:first-child {
+      margin-block: 1.25rem;
+    }
+
+    :root[data-home-style="archive"]
+      #rutas
+      > .grid
+      > [data-path-card]:nth-of-type(5)
+      > div:first-child
+      > span:first-child {
+      margin-top: 2.9rem;
+      margin-bottom: 1.25rem;
     }
 
     :root[data-home-style="archive"] [data-portfolio-roadmap] {
-      min-height: 400px;
+      min-height: 360px;
+    }
+
+    :root[data-home-style="archive"] [data-portfolio-roadmap] > div:last-child {
+      min-height: 300px;
     }
 
     :root[data-home-style="archive"] [data-community-panel] {
@@ -2047,6 +2112,11 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
       padding: 2rem 1.25rem !important;
       border-right: 0;
       border-left: 0;
+    }
+
+    :root[data-home-style="archive"] [data-community-panel] img {
+      width: 6rem;
+      height: 6rem;
     }
 
     :root[data-home-style="archive"] #agradecimientos > ul {
