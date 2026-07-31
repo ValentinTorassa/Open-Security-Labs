@@ -47,7 +47,7 @@ const isActive = (href: string) =>
 
     <div class="flex min-w-0 items-center gap-2">
       <!-- Nav Desktop -->
-      <nav class="hidden items-center gap-2 lg:flex" aria-label="Principal">
+      <nav class="hidden items-center gap-2 xl:flex" aria-label="Principal">
         {
           links.map((l) => (
             <a
@@ -106,6 +106,34 @@ const isActive = (href: string) =>
         >
       </button>
 
+      {
+        path === "/" && (
+          <button
+            type="button"
+            data-home-style-toggle
+            aria-label="Activar estilo Archivo operativo"
+            aria-pressed="false"
+            title="Alternar Archivo operativo"
+            class="border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors"
+          >
+            <svg
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M5 7h14v13H5z" />
+              <path d="M8 7V4h8v3" />
+              <path d="M8 11h8M8 15h8" />
+            </svg>
+          </button>
+        )
+      }
+
       <button
         type="button"
         data-theme-toggle
@@ -147,7 +175,7 @@ const isActive = (href: string) =>
         aria-label="Abrir menú"
         aria-expanded="false"
         aria-controls="mobile-menu"
-        class="border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors lg:hidden"
+        class="border-base-700 text-base-400 hover:border-term-green/50 hover:text-base-100 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors xl:hidden"
       >
         <svg
           class="h-4 w-4"
@@ -173,7 +201,7 @@ const isActive = (href: string) =>
 <div
   id="mobile-menu"
   data-mobile-menu
-  class="bg-base-950/95 fixed inset-0 z-[100] flex hidden flex-col px-5 py-5 backdrop-blur-md transition-opacity lg:hidden"
+  class="bg-base-950/95 fixed inset-0 z-[100] flex hidden flex-col px-5 py-5 backdrop-blur-md transition-opacity xl:hidden"
   style="height: 100dvh;"
 >
   <div class="flex items-center justify-between">

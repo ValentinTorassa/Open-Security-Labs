@@ -103,6 +103,18 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
 ---
 
 <BaseLayout title="Open Security Labs" width="wide">
+  <script is:inline>
+    (() => {
+      let style = "current";
+      try {
+        if (localStorage.getItem("osl:home-style-v1") === "archive") {
+          style = "archive";
+        }
+      } catch {}
+      document.documentElement.dataset.homeStyle = style;
+    })();
+  </script>
+
   <!-- Grilla ambiental + glow radial verde detrás del hero (decorativos). -->
   <div
     class="bg-grid pointer-events-none fixed inset-0 -z-10"
@@ -111,7 +123,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   >
   </div>
 
-  <!-- ===================== HERO : TERMINAL ===================== -->
+  <!-- ===================== HERO ===================== -->
   <section
     id="top"
     class="hero-frame mt-4 grid items-center gap-8 px-4 py-5 sm:mt-6 sm:px-6 sm:py-7 lg:grid-cols-[1.02fr_0.98fr] lg:px-8 lg:py-8"
@@ -170,7 +182,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
       </div>
     </div>
 
-    <!-- Terminal como objeto principal del hero. -->
+    <!-- La vista actual usa terminal; Archivo operativo muestra un mapa. -->
     <div class="terminal-object overflow-hidden rounded-xl">
       <div
         class="terminal-object__header border-base-700 flex items-center justify-between gap-4 border-b px-3.5 py-3"
@@ -227,6 +239,46 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
           ></span>
         </div>
       </div>
+
+      <div class="archive-system-map" aria-hidden="true">
+        <div class="archive-system-map__header">
+          <span>OSL / system map</span>
+          <span>index 01—06</span>
+        </div>
+        <div class="archive-system-map__diagram">
+          <svg viewBox="0 0 520 280" role="presentation">
+            <g class="archive-system-map__orbits">
+              <circle cx="260" cy="140" r="94"></circle>
+              <circle cx="260" cy="140" r="58"></circle>
+              <path d="M260 140 105 54M260 140 260 30M260 140 415 54"></path>
+              <path d="M260 140 105 226M260 140 260 250M260 140 415 226"></path>
+            </g>
+            <g class="archive-system-map__nodes">
+              <circle cx="105" cy="54" r="7"></circle>
+              <rect x="253" y="23" width="14" height="14"></rect>
+              <circle cx="415" cy="54" r="7"></circle>
+              <rect x="98" y="219" width="14" height="14"></rect>
+              <circle cx="260" cy="250" r="7"></circle>
+              <rect x="408" y="219" width="14" height="14"></rect>
+            </g>
+            <g class="archive-system-map__core">
+              <rect x="226" y="106" width="68" height="68"></rect>
+              <rect x="242" y="122" width="36" height="36"></rect>
+              <circle cx="260" cy="140" r="5"></circle>
+            </g>
+          </svg>
+        </div>
+        <div class="archive-system-map__routes">
+          {
+            paths.map((path, index) => (
+              <span style={`--node-color:${path.accent}`}>
+                <b>0{index + 1}</b>
+                <em>{path.short}</em>
+              </span>
+            ))
+          }
+        </div>
+      </div>
     </div>
   </section>
 
@@ -272,7 +324,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     <div class="grid gap-3 sm:grid-cols-3">
       {
         trust.map((item) => (
-          <div class="card flex gap-3 p-4">
+          <div data-trust-card class="card flex gap-3 p-4">
             <span class="text-term-green mt-0.5 inline-flex shrink-0">
               <Icon name={item.icon} size={19} strokeWidth={1.7} />
             </span>
@@ -294,6 +346,9 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   <section id="metodo" class="scroll-mt-20 py-8">
     <div class="mb-2 flex items-baseline gap-3.5">
       <span class="text-term-green font-mono text-sm">// 01</span>
+      <span class="section-heading-icon" data-section-icon>
+        <Icon name="workflow" size={17} strokeWidth={1.7} />
+      </span>
       <h2 class="text-base-50 font-mono text-3xl font-bold tracking-tight">
         Cómo funciona un lab
       </h2>
@@ -307,6 +362,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
       {
         method.map((m) => (
           <div
+            data-method-card
             class="card p-5 hover:-translate-y-1"
             style={`--accent:${m.accent}; ${m.accent.includes("amber") ? "border-color: color-mix(in srgb, var(--color-term-amber) 40%, transparent);" : ""}`}
           >
@@ -332,6 +388,9 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   <section id="rutas" class="scroll-mt-20 py-8">
     <div class="mb-2 flex items-baseline gap-3.5">
       <span class="text-term-green font-mono text-sm">// 02</span>
+      <span class="section-heading-icon" data-section-icon>
+        <Icon name="git-branch" size={17} strokeWidth={1.7} />
+      </span>
       <h2 class="text-base-50 font-mono text-3xl font-bold tracking-tight">
         Rutas de aprendizaje
       </h2>
@@ -360,6 +419,9 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   <section id="certificaciones" class="scroll-mt-20 py-8">
     <div class="mb-2 flex items-baseline gap-3.5">
       <span class="text-term-green font-mono text-sm">// 03</span>
+      <span class="section-heading-icon" data-section-icon>
+        <Icon name="award" size={17} strokeWidth={1.7} />
+      </span>
       <h2 class="text-base-50 font-mono text-3xl font-bold tracking-tight">
         Certificaciones
       </h2>
@@ -384,6 +446,9 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   <section id="portafolio" class="scroll-mt-20 py-8">
     <div class="mb-2 flex items-baseline gap-3.5">
       <span class="text-term-green font-mono text-sm">// 04</span>
+      <span class="section-heading-icon" data-section-icon>
+        <Icon name="file-text" size={17} strokeWidth={1.7} />
+      </span>
       <h2 class="text-base-50 font-mono text-3xl font-bold tracking-tight">
         Proyectos para portafolio
       </h2>
@@ -398,6 +463,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
         {
           portfolioTeaser.map((project) => (
             <a
+              data-portfolio-project
               href={`/portafolio/#${project.slug}`}
               class="card group flex gap-4 p-4 hover:-translate-y-0.5"
               style={`--accent: ${project.accent}`}
@@ -429,6 +495,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
       </div>
 
       <div
+        data-portfolio-roadmap
         class="border-base-700 bg-base-900 relative overflow-hidden rounded-2xl border p-6 sm:p-7"
       >
         <div
@@ -480,6 +547,9 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   <section id="quien" class="scroll-mt-20 py-8">
     <div class="mb-2 flex items-baseline gap-3.5">
       <span class="text-term-green font-mono text-sm">// 05</span>
+      <span class="section-heading-icon" data-section-icon>
+        <Icon name="target" size={17} strokeWidth={1.7} />
+      </span>
       <h2 class="text-base-50 font-mono text-3xl font-bold tracking-tight">
         ¿Para quién es?
       </h2>
@@ -492,7 +562,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     <div class="grid gap-3.5 sm:grid-cols-2">
       {
         audience.map((a) => (
-          <div class="card flex gap-4 p-5">
+          <div data-audience-card class="card flex gap-4 p-5">
             <span class="text-term-green mt-0.5 inline-flex shrink-0">
               <Icon name={a.icon} size={22} strokeWidth={1.6} />
             </span>
@@ -514,6 +584,7 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   <!-- ===================== COMUNIDAD / CTA ===================== -->
   <section id="comunidad" class="scroll-mt-20 py-8">
     <div
+      data-community-panel
       class="border-base-700 bg-base-900 relative overflow-hidden rounded-2xl border p-8 sm:p-11"
     >
       <div
@@ -535,9 +606,12 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
         </div>
         <div>
           <div
-            class="text-term-green mb-3 font-mono text-xs tracking-[0.15em] uppercase"
+            class="text-term-green mb-3 flex items-center gap-2.5 font-mono text-xs tracking-[0.15em] uppercase"
           >
-            // comunidad
+            <span class="section-heading-icon" data-section-icon>
+              <Icon name="network" size={17} strokeWidth={1.7} />
+            </span>
+            <span>// comunidad</span>
           </div>
           <h2
             class="text-base-50 mb-3 font-mono text-2xl font-extrabold tracking-tight sm:text-3xl"
@@ -624,4 +698,1573 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
 
   render();
   onProgress(render);
+
+  type HomeStyle = "current" | "archive";
+  const homeStyleToggle = document.querySelector<HTMLButtonElement>(
+    "[data-home-style-toggle]",
+  );
+
+  function applyHomeStyle(style: HomeStyle, persist = true) {
+    document.documentElement.dataset.homeStyle = style;
+    const archiveIsActive = style === "archive";
+
+    if (homeStyleToggle) {
+      homeStyleToggle.setAttribute("aria-pressed", String(archiveIsActive));
+      homeStyleToggle.setAttribute(
+        "aria-label",
+        archiveIsActive
+          ? "Volver al estilo actual"
+          : "Activar estilo Archivo operativo",
+      );
+      homeStyleToggle.title = archiveIsActive
+        ? "Volver al estilo actual"
+        : "Activar Archivo operativo";
+    }
+
+    const themeColor = document.querySelector<HTMLMetaElement>(
+      'meta[name="theme-color"]',
+    );
+    if (themeColor) {
+      themeColor.content =
+        style === "archive"
+          ? "#090a08"
+          : document.documentElement.dataset.theme === "light"
+            ? "#ffffff"
+            : "#07090a";
+    }
+
+    if (persist) {
+      try {
+        localStorage.setItem("osl:home-style-v1", style);
+      } catch {}
+    }
+  }
+
+  homeStyleToggle?.addEventListener("click", () => {
+    applyHomeStyle(
+      document.documentElement.dataset.homeStyle === "archive"
+        ? "current"
+        : "archive",
+    );
+  });
+
+  applyHomeStyle(
+    document.documentElement.dataset.homeStyle === "archive"
+      ? "archive"
+      : "current",
+    false,
+  );
 </script>
+
+<style is:global>
+  .section-heading-icon {
+    display: inline-flex;
+    width: 2rem;
+    height: 2rem;
+    flex: none;
+    align-self: center;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-base-700);
+    border-radius: 0.45rem;
+    color: var(--color-term-green);
+    background: color-mix(in srgb, var(--color-base-850) 72%, transparent);
+  }
+
+  .archive-system-map {
+    display: none;
+  }
+
+  [data-home-style-toggle][aria-pressed="true"] {
+    border-color: var(--color-term-green) !important;
+    color: var(--color-term-green) !important;
+    background: color-mix(in srgb, var(--color-term-green) 10%, transparent);
+  }
+
+  :root[data-home-style="archive"] {
+    color-scheme: dark;
+    --archive-surface: #0d0e0c;
+    --archive-surface-raised: #11120f;
+    --archive-line: #363930;
+    --archive-copy: #9b9e95;
+    --archive-meta: #85887f;
+    --archive-paper: #cdd3c9;
+    --archive-paper-ink: #11130f;
+    --archive-paper-muted: #444b42;
+    --archive-paper-line: #7c8578;
+    --color-base-950: #090a08 !important;
+    --color-base-900: #0d0e0c !important;
+    --color-base-850: #11120f !important;
+    --color-base-800: #171914 !important;
+    --color-base-700: #2f322c !important;
+    --color-base-600: #44473f !important;
+    --color-base-500: #72766c !important;
+    --color-base-400: #8d9087 !important;
+    --color-base-300: #a8aaa2 !important;
+    --color-base-200: #cacbc4 !important;
+    --color-base-100: #e1e0d9 !important;
+    --color-base-50: #f3f2ea !important;
+    --color-term-green: #d7ff64 !important;
+    --color-term-cyan: #8eb9aa !important;
+    --color-term-amber: #aeb9af !important;
+    --color-term-red: #d87b68 !important;
+    --color-term-violet: #a69abc !important;
+    --color-term-blue: #86a7a0 !important;
+    --color-accent: #d7ff64 !important;
+  }
+
+  :root[data-home-style="archive"] body {
+    background: #090a08;
+  }
+
+  :root[data-home-style="archive"] body > header {
+    border-color: #2f322c !important;
+    background: rgba(9, 10, 8, 0.96) !important;
+    backdrop-filter: none;
+  }
+
+  :root[data-home-style="archive"] body > header > div {
+    height: 4rem;
+  }
+
+  :root[data-home-style="archive"] body > header img,
+  :root[data-home-style="archive"] body > header button,
+  :root[data-home-style="archive"] body > header a {
+    border-radius: 0 !important;
+  }
+
+  :root[data-home-style="archive"] body > header nav a {
+    color: #a8aaa2;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  :root[data-home-style="archive"] body > header nav a[aria-current="page"] {
+    color: #d7ff64;
+  }
+
+  :root[data-home-style="archive"] [data-theme-toggle] {
+    display: none !important;
+  }
+
+  :root[data-home-style="archive"] [data-mobile-menu] {
+    background: rgba(9, 10, 8, 0.98) !important;
+    backdrop-filter: none;
+  }
+
+  :root[data-home-style="archive"] [data-mobile-menu] :is(a, button, img) {
+    border-radius: 0 !important;
+  }
+
+  :root[data-home-style="archive"] [data-mobile-menu] nav {
+    gap: 0;
+    margin-top: 3rem;
+    border-top: 1px solid var(--archive-line);
+  }
+
+  :root[data-home-style="archive"] [data-mobile-menu] nav a {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--archive-line);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  :root[data-home-style="archive"] .section-heading-icon {
+    border-color: #d7ff64;
+    border-radius: 0;
+    background: transparent;
+    color: #d7ff64;
+  }
+
+  :root[data-home-style="archive"] .bg-grid {
+    background-image:
+      linear-gradient(rgba(215, 255, 100, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(215, 255, 100, 0.035) 1px, transparent 1px);
+    background-size: 56px 56px;
+    opacity: 0.65;
+  }
+
+  :root[data-home-style="archive"] .hero-frame {
+    grid-template-columns: minmax(0, 1.12fr) minmax(330px, 0.88fr) !important;
+    gap: clamp(3rem, 6vw, 5.5rem) !important;
+    min-height: 610px;
+    margin-top: 1rem !important;
+    padding: 4rem 0 4.5rem !important;
+    overflow: visible;
+    border: 0;
+    border-top: 1px solid #44473f;
+    border-bottom: 1px solid #44473f;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  :root[data-home-style="archive"] .hero-frame::before {
+    display: none;
+  }
+
+  :root[data-home-style="archive"] .hero-frame h1 {
+    font-family: Georgia, "Times New Roman", serif !important;
+    font-size: clamp(3.6rem, 7vw, 6.8rem) !important;
+    font-weight: 400 !important;
+    line-height: 0.84 !important;
+    letter-spacing: -0.075em !important;
+  }
+
+  :root[data-home-style="archive"] .hero-frame h1 > span {
+    color: #d7ff64 !important;
+    font-style: italic;
+  }
+
+  :root[data-home-style="archive"] .hero-frame h1 + p {
+    max-width: 610px;
+    color: #a8aaa2;
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+
+  :root[data-home-style="archive"] .hero-token {
+    border-color: #44473f;
+    border-radius: 0;
+    background: transparent;
+    color: #8d9087;
+    font-size: 0.62rem;
+  }
+
+  :root[data-home-style="archive"] .hero-frame .btn-primary {
+    border: 1px solid #d7ff64;
+    border-radius: 0;
+    background: #d7ff64;
+    color: #090a08;
+    box-shadow: none;
+  }
+
+  :root[data-home-style="archive"]
+    .hero-frame
+    > div:first-child
+    > div:last-child {
+    padding-top: 1.2rem;
+    border-top: 1px solid #2f322c;
+    color: #72766c;
+  }
+
+  :root[data-home-style="archive"] .terminal-object {
+    position: relative;
+    min-height: 440px;
+    overflow: hidden;
+    border: 1px solid #50564b;
+    border-radius: 0 !important;
+    background: #0c0e0b !important;
+    box-shadow: 16px 16px 0 #151713;
+    color: #d7ff64;
+  }
+
+  :root[data-home-style="archive"]
+    .terminal-object
+    > :is(.terminal-object__header, .terminal-object__body) {
+    display: none;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map {
+    display: grid;
+    min-height: 438px;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__header {
+    display: flex;
+    min-height: 52px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--archive-line);
+    color: var(--archive-meta);
+    font: 0.62rem var(--font-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__diagram {
+    position: relative;
+    display: grid;
+    min-height: 260px;
+    place-items: center;
+    overflow: hidden;
+    background-image:
+      linear-gradient(rgba(215, 255, 100, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(215, 255, 100, 0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__diagram svg {
+    width: min(100%, 520px);
+    height: auto;
+    padding: 1.25rem;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__orbits {
+    fill: none;
+    stroke: #4f574b;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__nodes {
+    fill: #0c0e0b;
+    stroke: #d7ff64;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__core {
+    fill: #0c0e0b;
+    stroke: #d7ff64;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__core rect:first-child {
+    transform: rotate(45deg);
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+
+  :root[data-home-style="archive"]
+    .archive-system-map__core
+    :is(rect:last-of-type, circle) {
+    fill: #d7ff64;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__routes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid var(--archive-line);
+    border-left: 1px solid var(--archive-line);
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__routes > span {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: auto 1fr;
+    gap: 0.55rem;
+    padding: 0.72rem;
+    border-right: 1px solid var(--archive-line);
+    border-bottom: 1px solid var(--archive-line);
+    font: 0.6rem var(--font-mono);
+    letter-spacing: 0.035em;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__routes b {
+    color: var(--node-color);
+    font-weight: 600;
+  }
+
+  :root[data-home-style="archive"] .archive-system-map__routes em {
+    overflow: hidden;
+    color: #a8aaa2;
+    font-style: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :root[data-home-style="archive"] [data-resume] {
+    margin-top: 1px;
+    border: 0;
+    border-bottom: 1px solid #44473f;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  :root[data-home-style="archive"] [data-resume]::before {
+    display: none;
+  }
+
+  :root[data-home-style="archive"] [data-resume-progress],
+  :root[data-home-style="archive"] [data-resume-bar] {
+    border-radius: 0;
+  }
+
+  :root[data-home-style="archive"] main > section:not(#top) {
+    padding-top: 3.75rem !important;
+    padding-bottom: 3.75rem !important;
+  }
+
+  :root[data-home-style="archive"]
+    :is(
+      #metodo,
+      #rutas,
+      #certificaciones,
+      #portafolio,
+      #quien,
+      #agradecimientos
+    )
+    > div:first-child {
+    margin-bottom: 0.5rem !important;
+    padding-top: 1rem;
+    border-top: 1px solid #5a5d53;
+  }
+
+  :root[data-home-style="archive"]
+    :is(
+      #metodo,
+      #rutas,
+      #certificaciones,
+      #portafolio,
+      #quien,
+      #agradecimientos
+    )
+    h2 {
+    font-family: Georgia, "Times New Roman", serif !important;
+    font-size: clamp(2rem, 4vw, 3rem) !important;
+    font-weight: 400 !important;
+    line-height: 1 !important;
+    letter-spacing: -0.035em !important;
+  }
+
+  :root[data-home-style="archive"]
+    :is(
+      #metodo,
+      #rutas,
+      #certificaciones,
+      #portafolio,
+      #quien,
+      #agradecimientos
+    )
+    > div:first-child
+    > span {
+    color: #d7ff64;
+    font-size: 0.58rem;
+  }
+
+  :root[data-home-style="archive"]
+    :is(
+      #metodo,
+      #rutas,
+      #certificaciones,
+      #portafolio,
+      #quien,
+      #agradecimientos
+    )
+    > div:first-child
+    + p {
+    max-width: 700px;
+    margin-bottom: 2.25rem !important;
+    color: var(--archive-copy);
+    font-size: 0.85rem;
+    line-height: 1.65;
+  }
+
+  :root[data-home-style="archive"] main .card {
+    border-color: var(--archive-line);
+    border-radius: 0 !important;
+    background: var(--archive-surface);
+    box-shadow: none !important;
+  }
+
+  :root[data-home-style="archive"] main .card::before {
+    display: none;
+  }
+
+  :root[data-home-style="archive"] main a.card:is(:hover, :focus-visible) {
+    outline: 1px solid color-mix(in srgb, var(--accent, #d7ff64) 55%, #44473f);
+    outline-offset: -1px;
+    background: var(--archive-surface-raised);
+    transform: none !important;
+  }
+
+  :root[data-home-style="archive"] #confianza {
+    padding-top: 0 !important;
+    padding-bottom: 1rem !important;
+  }
+
+  :root[data-home-style="archive"] #confianza > div {
+    gap: 0;
+    border-top: 1px solid #44473f;
+    border-bottom: 1px solid #44473f;
+  }
+
+  :root[data-home-style="archive"] [data-trust-card] {
+    min-height: 128px;
+    padding: 1.2rem !important;
+    border: 0;
+    border-right: 1px solid #44473f;
+    background: transparent;
+  }
+
+  :root[data-home-style="archive"] [data-trust-card]:first-child {
+    padding-left: 0 !important;
+  }
+
+  :root[data-home-style="archive"] [data-trust-card]:last-child {
+    border-right: 0;
+  }
+
+  :root[data-home-style="archive"] [data-trust-card] > span:first-child {
+    position: relative;
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border: 1px solid #d7ff64;
+    color: #d7ff64;
+  }
+
+  :root[data-home-style="archive"] [data-trust-card] > span:first-child svg {
+    display: none;
+  }
+
+  :root[data-home-style="archive"] [data-trust-card] > span:first-child::before,
+  :root[data-home-style="archive"] [data-trust-card] > span:first-child::after {
+    position: absolute;
+    content: "";
+  }
+
+  :root[data-home-style="archive"]
+    [data-trust-card]:nth-child(1)
+    > span:first-child::before {
+    inset: 8px;
+    border: 1px solid currentColor;
+    transform: rotate(45deg);
+  }
+
+  :root[data-home-style="archive"]
+    [data-trust-card]:nth-child(2)
+    > span:first-child {
+    border-radius: 50%;
+  }
+
+  :root[data-home-style="archive"]
+    [data-trust-card]:nth-child(2)
+    > span:first-child::before {
+    inset: 10px 8px 6px;
+    border: 1px solid currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    [data-trust-card]:nth-child(2)
+    > span:first-child::after {
+    top: 5px;
+    left: 13px;
+    width: 12px;
+    height: 12px;
+    border: 1px solid currentColor;
+    border-bottom: 0;
+    border-radius: 50% 50% 0 0;
+  }
+
+  :root[data-home-style="archive"]
+    [data-trust-card]:nth-child(3)
+    > span:first-child::before,
+  :root[data-home-style="archive"]
+    [data-trust-card]:nth-child(3)
+    > span:first-child::after {
+    right: 7px;
+    left: 7px;
+    height: 1px;
+    background: currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    [data-trust-card]:nth-child(3)
+    > span:first-child::before {
+    top: 13px;
+  }
+
+  :root[data-home-style="archive"]
+    [data-trust-card]:nth-child(3)
+    > span:first-child::after {
+    bottom: 13px;
+  }
+
+  :root[data-home-style="archive"]
+    [data-trust-card]
+    > span:last-child
+    > span:first-child {
+    font-family: Georgia, "Times New Roman", serif !important;
+    font-size: 0.9rem;
+    font-weight: 400;
+  }
+
+  :root[data-home-style="archive"]
+    [data-trust-card]
+    > span:last-child
+    > span:last-child {
+    color: var(--archive-copy);
+    font-size: 0.75rem;
+    line-height: 1.55;
+  }
+
+  :root[data-home-style="archive"] #metodo > .grid {
+    gap: 1px;
+    background: #2f322c;
+  }
+
+  :root[data-home-style="archive"] [data-method-card] {
+    min-height: 260px;
+    padding: 1rem !important;
+    border: 0 !important;
+  }
+
+  :root[data-home-style="archive"] [data-method-card] > div:first-child {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+  }
+
+  :root[data-home-style="archive"]
+    [data-method-card]
+    > div:first-child
+    > span:first-child {
+    position: relative;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid;
+    width: 88px;
+    height: 88px;
+    place-items: center;
+    margin: 1.4rem auto;
+    border: 1px solid currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    [data-method-card]
+    > div:first-child
+    > span:first-child
+    svg {
+    display: none;
+  }
+
+  :root[data-home-style="archive"]
+    [data-method-card]
+    > div:first-child
+    > span:first-child::before,
+  :root[data-home-style="archive"]
+    [data-method-card]
+    > div:first-child
+    > span:first-child::after {
+    position: absolute;
+    content: "";
+  }
+
+  :root[data-home-style="archive"]
+    [data-method-card]:nth-child(1)
+    > div:first-child
+    > span:first-child::before {
+    inset: 14px 24px;
+    border: 1px solid currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    [data-method-card]:nth-child(1)
+    > div:first-child
+    > span:first-child::after {
+    inset: 25px 14px 25px 34px;
+    border: 1px solid currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    [data-method-card]:nth-child(2)
+    > div:first-child
+    > span:first-child::before {
+    inset: 16px;
+    border: 1px solid currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    [data-method-card]:nth-child(2)
+    > div:first-child
+    > span:first-child::after {
+    top: 37px;
+    right: 25px;
+    left: 25px;
+    height: 1px;
+    background: currentColor;
+    box-shadow: 0 13px 0 currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    [data-method-card]:nth-child(3)
+    > div:first-child
+    > span:first-child {
+    border-radius: 50%;
+  }
+
+  :root[data-home-style="archive"]
+    [data-method-card]:nth-child(3)
+    > div:first-child
+    > span:first-child::before {
+    inset: 17px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+  }
+
+  :root[data-home-style="archive"]
+    [data-method-card]:nth-child(3)
+    > div:first-child
+    > span:first-child::after {
+    inset: 34px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    [data-method-card]:nth-child(4)
+    > div:first-child
+    > span:first-child::before {
+    inset: 13px 22px;
+    border: 1px solid currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    [data-method-card]:nth-child(4)
+    > div:first-child
+    > span:first-child::after {
+    top: 34px;
+    right: 30px;
+    left: 30px;
+    height: 1px;
+    background: currentColor;
+    box-shadow: 0 14px 0 currentColor;
+  }
+
+  :root[data-home-style="archive"] [data-method-card] > div:nth-child(2) {
+    font-family: Georgia, "Times New Roman", serif !important;
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  :root[data-home-style="archive"] [data-method-card] > p {
+    color: var(--archive-copy);
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+
+  :root[data-home-style="archive"] #rutas > .grid {
+    gap: 1px;
+    background: #2f322c;
+  }
+
+  :root[data-home-style="archive"] #rutas [data-path-card] {
+    min-height: 390px;
+    padding: 1rem !important;
+    border: 0;
+    background: #0d0e0c;
+  }
+
+  :root[data-home-style="archive"] #rutas [data-path-card] > div:first-child {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    [data-path-card]
+    > div:first-child
+    > span:first-child {
+    position: relative;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: block;
+    width: 120px;
+    height: 120px;
+    margin: 1.55rem auto;
+    border: 1px solid var(--accent) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: var(--accent);
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    [data-path-card]
+    > div:first-child
+    > span:first-child
+    .path-icon-default {
+    display: none;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    [data-path-card]
+    > div:first-child
+    > span:first-child::before,
+  :root[data-home-style="archive"]
+    #rutas
+    [data-path-card]
+    > div:first-child
+    > span:first-child::after {
+    position: absolute;
+    content: "";
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    [data-path-card]
+    > div:first-child
+    > span:nth-child(2) {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    width: 100%;
+    justify-content: space-between;
+    color: var(--archive-meta);
+    font-size: 0.625rem;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(1)
+    > div:first-child
+    > span:first-child {
+    transform: rotate(45deg) scale(0.78);
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(1)
+    > div:first-child
+    > span:first-child::before,
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(1)
+    > div:first-child
+    > span:first-child::after {
+    border: 1px solid currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(1)
+    > div:first-child
+    > span:first-child::before {
+    inset: 20px;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(1)
+    > div:first-child
+    > span:first-child::after {
+    inset: 42px;
+    background: currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(2)
+    > div:first-child
+    > span:first-child {
+    border-radius: 50% !important;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(2)
+    > div:first-child
+    > span:first-child::before,
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(2)
+    > div:first-child
+    > span:first-child::after {
+    border: 1px solid currentColor;
+    border-radius: 50%;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(2)
+    > div:first-child
+    > span:first-child::before {
+    inset: 20px -12px;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(2)
+    > div:first-child
+    > span:first-child::after {
+    inset: -12px 20px;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(3)
+    > div:first-child
+    > span:first-child {
+    background-image:
+      linear-gradient(currentColor 1px, transparent 1px),
+      linear-gradient(90deg, currentColor 1px, transparent 1px) !important;
+    background-size: 33.333% 33.333% !important;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(3)
+    > div:first-child
+    > span:first-child::before {
+    inset: 40px;
+    background: currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(4)
+    > div:first-child
+    > span:first-child {
+    border: 0 !important;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(4)
+    > div:first-child
+    > span:first-child::before {
+    top: 18px;
+    left: 8px;
+    width: 64px;
+    height: 64px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    box-shadow:
+      42px 20px 0 -1px #0d0e0c,
+      42px 20px 0 0 currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(4)
+    > div:first-child
+    > span:first-child::after {
+    right: 14px;
+    bottom: 8px;
+    width: 76px;
+    height: 52px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(5)
+    > div:first-child
+    > span:first-child {
+    width: 100px;
+    height: 82px;
+    margin-top: 3.15rem;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(5)
+    > div:first-child
+    > span:first-child::before {
+    top: -46px;
+    left: 24px;
+    width: 50px;
+    height: 48px;
+    border: 1px solid currentColor;
+    border-bottom: 0;
+    border-radius: 50% 50% 0 0;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(5)
+    > div:first-child
+    > span:first-child::after {
+    top: 31px;
+    left: 46px;
+    width: 7px;
+    height: 25px;
+    background: currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(6)
+    > div:first-child
+    > span:first-child {
+    border: 0 !important;
+    background:
+      radial-gradient(circle at 50% 0, currentColor 0 6px, transparent 7px),
+      radial-gradient(circle at 100% 50%, currentColor 0 6px, transparent 7px),
+      radial-gradient(circle at 50% 100%, currentColor 0 6px, transparent 7px),
+      radial-gradient(circle at 0 50%, currentColor 0 6px, transparent 7px) !important;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(6)
+    > div:first-child
+    > span:first-child::before {
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: 1px;
+    background: currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:nth-of-type(6)
+    > div:first-child
+    > span:first-child::after {
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: currentColor;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:is(
+      [data-path-slug="redes-internet"],
+      [data-path-slug="cloud-produccion"],
+      [data-path-slug="ciberseguridad"],
+      [data-path-slug="devsecops-agentes"]
+    )
+    > div:first-child
+    > span:first-child {
+    width: 120px;
+    height: 120px;
+    margin: 1.55rem auto;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    transform: none;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:is(
+      [data-path-slug="redes-internet"],
+      [data-path-slug="cloud-produccion"],
+      [data-path-slug="ciberseguridad"],
+      [data-path-slug="devsecops-agentes"]
+    )
+    > div:first-child
+    > span:first-child::before,
+  :root[data-home-style="archive"]
+    #rutas
+    > .grid
+    > [data-path-card]:is(
+      [data-path-slug="redes-internet"],
+      [data-path-slug="cloud-produccion"],
+      [data-path-slug="ciberseguridad"],
+      [data-path-slug="devsecops-agentes"]
+    )
+    > div:first-child
+    > span:first-child::after {
+    display: none;
+  }
+
+  :root[data-home-style="archive"] #rutas .archive-route-art {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  :root[data-home-style="archive"] #rutas [data-path-card] h3 {
+    margin-top: auto;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.35rem;
+    font-weight: 400;
+  }
+
+  :root[data-home-style="archive"] #rutas [data-path-card] h3 + p {
+    min-height: 3.2em;
+    color: var(--archive-copy);
+    font-family: inherit;
+    font-size: 0.75rem;
+    line-height: 1.55;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    [data-path-card]
+    > div:nth-of-type(2)
+    span {
+    border-color: #2f322c;
+    border-radius: 0;
+    background: transparent;
+    color: var(--archive-meta);
+    font-size: 0.625rem;
+  }
+
+  :root[data-home-style="archive"]
+    #rutas
+    [data-path-card]
+    > div:nth-of-type(3) {
+    border-color: #2f322c;
+    color: var(--archive-meta);
+    font-size: 0.625rem;
+  }
+
+  :root[data-home-style="archive"] #certificaciones > .grid {
+    gap: 1px;
+    background: #2f322c;
+  }
+
+  :root[data-home-style="archive"] #certificaciones .card {
+    min-height: 290px;
+    padding: 1rem !important;
+    border: 0;
+  }
+
+  :root[data-home-style="archive"]
+    #certificaciones
+    .card
+    > div:first-child
+    > span {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 0 !important;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  :root[data-home-style="archive"] #certificaciones .card h3 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  :root[data-home-style="archive"] #certificaciones .card h3 + p {
+    color: var(--archive-copy);
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+
+  :root[data-home-style="archive"] #certificaciones .card > div:nth-of-type(2) {
+    gap: 1px;
+    background: #2f322c;
+  }
+
+  :root[data-home-style="archive"]
+    #certificaciones
+    .card
+    > div:nth-of-type(2)
+    > span {
+    border: 0;
+    border-radius: 0;
+    background: #11120f;
+    color: var(--archive-meta);
+    font-size: 0.625rem;
+  }
+
+  :root[data-home-style="archive"] #certificaciones .card > div:last-child {
+    border-color: #2f322c;
+    color: var(--archive-meta);
+    font-size: 0.625rem;
+  }
+
+  :root[data-home-style="archive"] #portafolio > div:nth-of-type(2) {
+    gap: 1.5rem;
+  }
+
+  :root[data-home-style="archive"] [data-portfolio-project] {
+    min-height: 104px;
+    padding: 1rem !important;
+    border: 0;
+    border-bottom: 1px solid #44473f;
+    background: transparent;
+  }
+
+  :root[data-home-style="archive"] [data-portfolio-project] > span:first-child {
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+
+  :root[data-home-style="archive"]
+    [data-portfolio-project]
+    > span:last-child
+    > span:nth-child(2) {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 0.9rem;
+    font-weight: 400;
+  }
+
+  :root[data-home-style="archive"]
+    [data-portfolio-project]
+    > span:last-child
+    > span:last-child {
+    color: var(--archive-copy);
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+
+  :root[data-home-style="archive"] #portafolio .btn-primary {
+    border-radius: 0;
+    background: #d7ff64;
+    color: #090a08;
+  }
+
+  :root[data-home-style="archive"] [data-portfolio-roadmap] {
+    min-height: 390px;
+    border-color: var(--archive-paper-line) !important;
+    border-radius: 0 !important;
+    background: var(--archive-paper) !important;
+    color: var(--archive-paper-ink);
+  }
+
+  :root[data-home-style="archive"] [data-portfolio-roadmap]::before,
+  :root[data-home-style="archive"] [data-portfolio-roadmap]::after {
+    position: absolute;
+    border: 1px solid rgba(17, 18, 15, 0.28);
+    content: "";
+  }
+
+  :root[data-home-style="archive"] [data-portfolio-roadmap]::before {
+    top: 3.5rem;
+    right: 3rem;
+    width: 130px;
+    height: 130px;
+    transform: rotate(45deg);
+  }
+
+  :root[data-home-style="archive"] [data-portfolio-roadmap]::after {
+    top: 5.3rem;
+    right: 4.8rem;
+    width: 72px;
+    height: 72px;
+    background: rgba(17, 18, 15, 0.08);
+    transform: rotate(45deg);
+  }
+
+  :root[data-home-style="archive"] [data-portfolio-roadmap] > div:first-child {
+    display: none;
+  }
+
+  :root[data-home-style="archive"] [data-portfolio-roadmap] > div:last-child {
+    z-index: 1;
+    display: flex;
+    min-height: 330px;
+    flex-direction: column;
+  }
+
+  :root[data-home-style="archive"] [data-portfolio-roadmap] p,
+  :root[data-home-style="archive"] [data-portfolio-roadmap] h3,
+  :root[data-home-style="archive"] [data-portfolio-roadmap] span {
+    color: #11120f !important;
+  }
+
+  :root[data-home-style="archive"] [data-portfolio-roadmap] h3 {
+    max-width: 300px;
+    margin-top: auto;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.8rem;
+    font-weight: 400;
+    line-height: 1;
+  }
+
+  :root[data-home-style="archive"] [data-portfolio-roadmap] h3 + p {
+    color: var(--archive-paper-muted) !important;
+    font-size: 0.75rem;
+    line-height: 1.55;
+  }
+
+  :root[data-home-style="archive"]
+    [data-portfolio-roadmap]
+    > div:last-child
+    > div:last-child {
+    gap: 1px;
+    background: rgba(17, 18, 15, 0.35);
+  }
+
+  :root[data-home-style="archive"]
+    [data-portfolio-roadmap]
+    > div:last-child
+    > div:last-child
+    > div {
+    border: 0;
+    border-radius: 0;
+    background: color-mix(in srgb, var(--archive-paper) 94%, white);
+  }
+
+  :root[data-home-style="archive"] #quien > .grid {
+    gap: 1px;
+    background: #2f322c;
+  }
+
+  :root[data-home-style="archive"] [data-audience-card] {
+    min-height: 126px;
+    padding: 1rem !important;
+    border: 0;
+  }
+
+  :root[data-home-style="archive"] [data-audience-card] > span:first-child {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border: 1px solid #d7ff64;
+    color: #d7ff64;
+  }
+
+  :root[data-home-style="archive"]
+    [data-audience-card]
+    > div
+    > div:first-child {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 0.98rem;
+    font-weight: 400;
+  }
+
+  :root[data-home-style="archive"] [data-audience-card] p {
+    color: var(--archive-copy);
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+
+  :root[data-home-style="archive"] #agradecimientos > ul {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    border-top: 1px solid #2f322c;
+    border-left: 1px solid #2f322c;
+    background: transparent;
+  }
+
+  :root[data-home-style="archive"] #agradecimientos li .card {
+    min-height: 88px;
+    padding: 0.9rem !important;
+    border: 0;
+    border-right: 1px solid #2f322c;
+    border-bottom: 1px solid #2f322c;
+  }
+
+  :root[data-home-style="archive"] #agradecimientos li img {
+    display: block;
+    width: 2.7rem;
+    height: 2.7rem;
+    flex: none;
+    border: 1px solid #5a5d53;
+    border-radius: 0 !important;
+    filter: grayscale(1) contrast(1.05);
+    opacity: 0.92;
+  }
+
+  :root[data-home-style="archive"] #agradecimientos li .card p:first-child {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 0.84rem;
+    font-weight: 400;
+  }
+
+  :root[data-home-style="archive"] #agradecimientos li .card p:last-child {
+    margin-top: 0.25rem;
+    color: var(--archive-copy);
+    font-size: 0.68rem;
+  }
+
+  :root[data-home-style="archive"] #comunidad {
+    padding-top: 2rem !important;
+  }
+
+  :root[data-home-style="archive"] [data-community-panel] {
+    border-color: var(--archive-paper-line) !important;
+    border-radius: 0 !important;
+    background: var(--archive-paper) !important;
+    color: var(--archive-paper-ink);
+  }
+
+  :root[data-home-style="archive"] [data-community-panel] img {
+    border-color: #11120f !important;
+    border-radius: 50% !important;
+  }
+
+  :root[data-home-style="archive"]
+    [data-community-panel]
+    > div
+    > div:first-child
+    > span {
+    border-radius: 0;
+    background: var(--archive-paper-ink);
+    color: var(--archive-paper);
+  }
+
+  :root[data-home-style="archive"] [data-community-panel] h2 {
+    color: #11120f !important;
+    font-family: Georgia, "Times New Roman", serif !important;
+    font-weight: 400 !important;
+  }
+
+  :root[data-home-style="archive"]
+    [data-community-panel]
+    .section-heading-icon {
+    border-color: #11120f;
+    color: #11120f;
+  }
+
+  :root[data-home-style="archive"] [data-community-panel] p,
+  :root[data-home-style="archive"]
+    [data-community-panel]
+    > div
+    > div:nth-child(2)
+    > div:first-child {
+    color: var(--archive-paper-muted) !important;
+  }
+
+  :root[data-home-style="archive"] [data-community-panel] .btn-primary,
+  :root[data-home-style="archive"] [data-community-panel] .btn-ghost {
+    border-color: #11120f;
+    border-radius: 0;
+    background: transparent;
+    color: #11120f;
+    box-shadow: none;
+  }
+
+  :root[data-home-style="archive"] [data-community-panel] .btn-primary {
+    background: var(--archive-paper-ink);
+    color: var(--archive-paper);
+  }
+
+  :root[data-home-style="archive"] body > footer {
+    margin-top: 2rem !important;
+    border-color: #2f322c;
+    background: #0d0e0c;
+  }
+
+  :root[data-home-style="archive"] body > footer img {
+    border-radius: 50% !important;
+  }
+
+  :root[data-home-style="archive"] body > footer .rule-label {
+    color: #d7ff64;
+  }
+
+  @media (max-width: 1023px) {
+    :root[data-home-style="archive"] .hero-frame {
+      grid-template-columns: 1fr !important;
+    }
+
+    :root[data-home-style="archive"] .terminal-object {
+      max-width: 680px;
+    }
+
+    :root[data-home-style="archive"] #agradecimientos > ul {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    :root[data-home-style="archive"] main > section:not(#top) {
+      padding-top: 3rem !important;
+      padding-bottom: 3rem !important;
+    }
+
+    :root[data-home-style="archive"] .hero-frame {
+      margin-inline: -1.25rem;
+      padding: 3.25rem 1.25rem 3.5rem !important;
+      border-right: 0;
+      border-left: 0;
+    }
+
+    :root[data-home-style="archive"] .terminal-object {
+      min-height: 400px;
+      box-shadow: 9px 9px 0 #151713;
+    }
+
+    :root[data-home-style="archive"] .archive-system-map {
+      min-height: 398px;
+    }
+
+    :root[data-home-style="archive"] .archive-system-map__header {
+      font-size: 0.56rem;
+    }
+
+    :root[data-home-style="archive"] .archive-system-map__diagram {
+      min-height: 230px;
+    }
+
+    :root[data-home-style="archive"] .archive-system-map__diagram svg {
+      padding: 0.75rem;
+    }
+
+    :root[data-home-style="archive"] .archive-system-map__routes > span {
+      gap: 0.4rem;
+      padding: 0.62rem 0.5rem;
+      font-size: 0.55rem;
+    }
+
+    :root[data-home-style="archive"] [data-trust-card] {
+      border-right: 0;
+      border-bottom: 1px solid #44473f;
+      padding-left: 0 !important;
+    }
+
+    :root[data-home-style="archive"] [data-method-card] {
+      min-height: 225px;
+    }
+
+    :root[data-home-style="archive"]
+      [data-method-card]
+      > div:first-child
+      > span:first-child {
+      margin-block: 1.15rem;
+    }
+
+    :root[data-home-style="archive"] #rutas [data-path-card] {
+      min-height: 350px;
+    }
+
+    :root[data-home-style="archive"]
+      #rutas
+      [data-path-card]
+      > div:first-child
+      > span:first-child {
+      margin-block: 1.25rem;
+    }
+
+    :root[data-home-style="archive"] [data-portfolio-roadmap] {
+      min-height: 360px;
+    }
+
+    :root[data-home-style="archive"] [data-portfolio-roadmap] > div:last-child {
+      min-height: 300px;
+    }
+
+    :root[data-home-style="archive"] [data-community-panel] {
+      margin-inline: -1.25rem;
+      padding: 2rem 1.25rem !important;
+      border-right: 0;
+      border-left: 0;
+    }
+
+    :root[data-home-style="archive"] [data-community-panel] img {
+      width: 6rem;
+      height: 6rem;
+    }
+
+    :root[data-home-style="archive"] #agradecimientos > ul {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
