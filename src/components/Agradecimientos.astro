@@ -4,13 +4,6 @@ import Icon from "./Icon.astro";
 
 const acks = [...contributors].sort((a, b) => b.commits - a.commits);
 const totalCommits = acks.reduce((n, c) => n + c.commits, 0);
-const initials = (name: string) =>
-  name
-    .split(" ")
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
 ---
 
 <section id="agradecimientos" class="scroll-mt-20 py-8">
@@ -39,9 +32,6 @@ const initials = (name: string) =>
             rel="noopener noreferrer"
             class="card group flex items-center gap-4 p-4 hover:-translate-y-0.5"
           >
-            <span class="archive-contributor-mark" aria-hidden="true">
-              {initials(c.name)}
-            </span>
             <img
               src={avatarUrl(c.github, 64)}
               alt={`Avatar de ${c.name}`}

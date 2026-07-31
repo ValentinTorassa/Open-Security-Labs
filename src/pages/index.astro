@@ -771,7 +771,6 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
     background: color-mix(in srgb, var(--color-base-850) 72%, transparent);
   }
 
-  .archive-contributor-mark,
   .archive-system-map {
     display: none;
   }
@@ -2063,20 +2062,14 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
   }
 
   :root[data-home-style="archive"] #agradecimientos li img {
-    display: none;
-  }
-
-  :root[data-home-style="archive"] .archive-contributor-mark {
-    display: grid;
+    display: block;
     width: 2.7rem;
     height: 2.7rem;
     flex: none;
-    place-items: center;
     border: 1px solid #5a5d53;
-    background: rgba(215, 255, 100, 0.04);
-    color: #d7ff64;
-    font: 700 0.68rem var(--font-mono);
-    letter-spacing: 0.04em;
+    border-radius: 0 !important;
+    filter: grayscale(1) contrast(1.05);
+    opacity: 0.92;
   }
 
   :root[data-home-style="archive"] #agradecimientos li .card p:first-child {
