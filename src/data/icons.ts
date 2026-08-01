@@ -34,7 +34,12 @@ export type IconName =
   | "calendar"
   | "gauge"
   | "banknote"
-  | "list-checks";
+  | "list-checks"
+  | "home"
+  | "book-open"
+  | "briefcase"
+  | "user"
+  | "plus";
 
 export const icons: Record<IconName, string> = {
   terminal:
@@ -90,4 +95,11 @@ export const icons: Record<IconName, string> = {
     '<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01"/><path d="M18 12h.01"/>',
   "list-checks":
     '<path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>',
+  home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  "book-open":
+    '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  briefcase:
+    '<rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+  user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
 };
