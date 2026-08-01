@@ -1,14 +1,16 @@
 ---
 import { REPO_URL } from "../data/site";
+import Icon from "./Icon.astro";
+import type { IconName } from "../data/icons";
 
-const links = [
-  { href: "/", label: "Inicio" },
-  { href: "/labs/", label: "Aprender" },
-  { href: "/rutas/", label: "Rutas" },
-  { href: "/certificaciones/", label: "Certificaciones" },
-  { href: "/portafolio/", label: "Portafolio" },
-  { href: "/perfil/", label: "Perfil" },
-  { href: "/crear-lab/", label: "Crear lab" },
+const links: { href: string; label: string; icon: IconName }[] = [
+  { href: "/", label: "Inicio", icon: "home" },
+  { href: "/labs/", label: "Aprender", icon: "book-open" },
+  { href: "/rutas/", label: "Rutas", icon: "git-branch" },
+  { href: "/certificaciones/", label: "Certificaciones", icon: "award" },
+  { href: "/portafolio/", label: "Portafolio", icon: "briefcase" },
+  { href: "/perfil/", label: "Perfil", icon: "user" },
+  { href: "/crear-lab/", label: "Crear lab", icon: "plus" },
 ];
 
 const path = Astro.url.pathname;
@@ -47,19 +49,25 @@ const isActive = (href: string) =>
 
     <div class="flex min-w-0 items-center gap-2">
       <!-- Nav Desktop -->
-      <nav class="hidden items-center gap-2 xl:flex" aria-label="Principal">
+      <nav class="hidden items-center gap-1 xl:flex" aria-label="Principal">
         {
           links.map((l) => (
             <a
               href={l.href}
               class:list={[
-                "shrink-0 rounded-md px-3 py-1.5 font-mono text-sm transition-colors",
+                "inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 font-mono text-sm whitespace-nowrap transition-colors",
                 isActive(l.href)
                   ? "text-term-green"
                   : "text-base-300 hover:text-base-50",
               ]}
               aria-current={isActive(l.href) ? "page" : undefined}
             >
+              <Icon
+                name={l.icon}
+                size={14}
+                strokeWidth={1.8}
+                class="shrink-0 opacity-75"
+              />
               {l.label}
             </a>
           ))
@@ -242,12 +250,18 @@ const isActive = (href: string) =>
         <a
           href={l.href}
           class:list={[
-            "font-mono text-lg transition-colors",
+            "flex items-center gap-3.5 font-mono text-lg transition-colors",
             isActive(l.href)
               ? "text-term-green font-bold"
               : "text-base-200 hover:text-base-50 font-medium",
           ]}
         >
+          <Icon
+            name={l.icon}
+            size={19}
+            strokeWidth={1.8}
+            class="shrink-0 opacity-80"
+          />
           {l.label}
         </a>
       ))
