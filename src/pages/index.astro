@@ -25,6 +25,25 @@ const firstLabHref = firstLab ? `/labs/${firstLab.id}/` : "/labs/";
 const allLabIds = sortedLabs.map((l) => l.id);
 const portfolioTeaser = portfolioProjects.slice(0, 3);
 
+// Entradas rápidas según de dónde venga cada uno.
+const quickStarts = [
+  {
+    label: "Vengo de cero",
+    href: firstLabHref,
+    body: "Hacé un primer lab corto y conseguí evidencia rápido.",
+  },
+  {
+    label: "Soy dev/backend",
+    href: "/rutas/backend-arquitectura/",
+    body: "Arrancá por APIs, permisos, sesiones y modos de falla.",
+  },
+  {
+    label: "Quiero cloud/security",
+    href: "/rutas/cloud-produccion/",
+    body: "Seguí por IAM, logs, redes cloud y blast radius.",
+  },
+];
+
 // Pasos del método (la 4ª, "evidencia", en dorado).
 const method = [
   {
@@ -318,6 +337,24 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
       ver tu perfil →
     </span>
   </a>
+
+  <!-- ===================== EMPEZAR (quick start) ===================== -->
+  <section id="empezar" class="scroll-mt-20 py-8">
+    <div class="grid gap-3 md:grid-cols-3">
+      {
+        quickStarts.map((item) => (
+          <a href={item.href} class="card group p-4 hover:-translate-y-0.5">
+            <span class="text-base-100 group-hover:text-term-green block font-mono text-sm font-semibold">
+              {item.label}
+            </span>
+            <span class="text-base-400 mt-1 block text-sm leading-relaxed">
+              {item.body}
+            </span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
 
   <!-- ===================== CONFIANZA ===================== -->
   <section id="confianza" class="py-8">
@@ -1080,6 +1117,14 @@ const discord = "https://discord.com/invite/z6cr5JF6bJ";
 
   :root[data-home-style="archive"] [data-resume]::before {
     display: none;
+  }
+
+  /* En mobile la tarjeta de progreso queda pegada a la línea del hero:
+     le damos aire sin tocar el look apilado de desktop. */
+  @media (max-width: 639px) {
+    :root[data-home-style="archive"] [data-resume] {
+      margin-top: 1.5rem;
+    }
   }
 
   :root[data-home-style="archive"] [data-resume-progress],
