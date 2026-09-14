@@ -34,7 +34,7 @@ export const contributors: Contributor[] = [
     commits: 1,
   },
   {
-    github: "Luciano-plaza",
+    github: "c4cker",
     name: "Luciano Plaza",
     role: "Infra, SEO y performance",
     commits: 1,
