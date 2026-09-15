@@ -9,6 +9,9 @@ ciberseguridad **entendiendo los sistemas de verdad**.
 Creado por [VT Security](https://www.youtube.com/@vtcibersecurity), el
 espacio de Valentín Torassa Colombero.
 
+Escribo notas largas en **[vtsecurity.com.ar](https://vtsecurity.com.ar)**: Linux,
+Git y seguridad, con las figuras y los comandos que uso de verdad.
+
 ---
 
 ## ¿Qué es?
