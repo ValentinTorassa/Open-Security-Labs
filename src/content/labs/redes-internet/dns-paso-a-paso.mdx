@@ -23,7 +23,7 @@ commands:
   - "dig example.com MX"
 challenge: "Elegí un dominio y corré dig +trace. Anotá cuántos saltos hubo y qué servidor dio la respuesta final. Después mirá el TTL del registro A y explicá en dos líneas cuánto tardaría en propagarse un cambio."
 nextLabs:
-  - "redes-internet/una-request-no-es-magia"
+  - "redes-internet/tls-sin-magia"
   - "redes-internet/status-codes-4xx-vs-5xx"
 tags:
   - "redes"
@@ -78,13 +78,13 @@ Y la cadena completa, salto por salto:
 <TerminalBlock title="vt@labs:~">
 
 ```bash
-# +trace simula la resolución recursiva desde los roots
+# +trace realiza la resolución iterativa directamente desde los root servers
 dig +trace example.com
 ```
 
 </TerminalBlock>
 
-En una respuesta normal de `dig` mirás tres bloques: `ANSWER` (la respuesta), `AUTHORITY` (quién manda en esa zona) y el **TTL**, el número a la izquierda del registro.
+En una respuesta normal de `dig` mirás tres bloques: `ANSWER` (la respuesta), `AUTHORITY` (quién manda en esa zona) y el **TTL**, la segunda columna (a la izquierda de la clase `IN` y del tipo de registro):
 
 ```text
 ;; ANSWER SECTION:
@@ -101,7 +101,7 @@ example.com.        3600    IN    A    93.184.216.34
 ## Los registros que más vas a ver
 
 ```text
-A       nombre → IPv4              example.com → 93.184.216.34
+A       nombre → IPv4             example.com → 93.184.216.34
 AAAA    nombre → IPv6             example.com → 2606:2800:220:1::...
 CNAME   alias → otro nombre       www → example.com
 MX      a dónde va el mail        example.com → mail.example.com
@@ -122,8 +122,9 @@ dig example.com NS +short
 <Callout type="error">
   El "funciona en mi máquina" clásico de DNS: vos ya tenés la **respuesta vieja
   cacheada** (en el SO, en el navegador o en tu resolver) y el otro no. No es
-  magia ni mala suerte: es el TTL todavía corriendo. `dig` siempre pregunta de
-  nuevo, por eso es mejor que confiar en el navegador para debuggear.
+  magia ni mala suerte: es el TTL todavía corriendo. `dig` saltea la caché
+  interna del navegador y te muestra el TTL decreciente que todavía le queda a
+  la caché de tu resolver. Por eso es la herramienta correcta para debuggear.
 </Callout>
 
 ## El criterio
@@ -142,3 +143,29 @@ Cuando un dominio "no anda", DNS es la primera parada:
   cosas: el registro está mal, o estás viendo una respuesta vieja que todavía no
   expiró. Saber leer el TTL te dice cuál de las dos.
 </Callout>
+
+## Evidencia esperada
+
+Para completar este lab y registrar tu aprendizaje técnico, guardá tu writeup con este formato:
+
+```text
+[1] Saltos observados con dig +trace (ejemplo sintetizado):
+- Salto 1: . (Root Servers)           → deriva a los servidores de .com (a.gtld-servers.net)
+- Salto 2: .com (TLD Servers)         → deriva a los autoritativos del dominio (a.iana-servers.net)
+- Salto 3: example.com (Autoritativo) → devuelve registro A: 93.184.216.34
+
+[2] Tabla de registros clave consultados:
+- A:     IPv4 del host final
+- AAAA:  IPv6 del host final
+- MX:    Servidor de intercambio de correo y prioridad
+- NS:    Servidor autoritativo delegado para la zona
+
+[3] Writeup de propagación y caché:
+Un cambio reciente no se refleja de inmediato porque los resolvers intermedios
+retienen la respuesta anterior en memoria hasta que su TTL decrece a 0.
+```
+
+<Callout type="evidencia">
+  En ciberseguridad y operaciones, el DNS trace es tu evidencia primaria de delegación autoritativa y verificación de integridad frente a desvíos o secuestros de tráfico.
+</Callout>
+

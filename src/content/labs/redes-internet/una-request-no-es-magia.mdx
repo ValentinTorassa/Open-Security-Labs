@@ -1,5 +1,5 @@
 ---
-title: "Una request no es magia: DNS, TCP, HTTP y logs"
+title: "Una request no es magia: DNS, TCP, HTTP y latencia"
 description: "Qué pasa de verdad entre que escribís una URL y ves una respuesta. Resolución de nombres, conexión, request, respuesta y dónde mirar cuando falla."
 path: "redes-internet"
 order: 1
@@ -23,10 +23,10 @@ commands:
   - "dig"
   - "curl -v"
   - "curl -w"
-challenge: "Elegí un sitio, medí con curl -w el tiempo de DNS, conexión y total. Cambiá el dominio por su IP directa y compará. Explicá en dos líneas qué etapa desapareció y por qué."
+challenge: "Elegí un sitio, medí con curl -w el tiempo de DNS, conexión y total usando curl https://example.com. Luego probá resolviendo directamente por IP con curl --resolve example.com:443:<IP> https://example.com (o probando sobre HTTP simple). Explicá en dos líneas qué etapa de tiempo desapareció y por qué."
 nextLabs:
-  - "backend-arquitectura/jwt-no-es-autorizacion"
-  - "cloud-produccion/cloudtrail-quien-hizo-que"
+  - "redes-internet/status-codes-4xx-vs-5xx"
+  - "redes-internet/dns-paso-a-paso"
 tags:
   - "redes"
   - "dns"
@@ -59,7 +59,13 @@ dig +short example.com
 
 </TerminalBlock>
 
-Eso te devuelve la IP, limpia. Para ver el detalle completo:
+Eso te devuelve la IP, limpia:
+
+```text
+93.184.216.34
+```
+
+Para ver el detalle completo:
 
 <TerminalBlock title="vt@labs:~">
 
@@ -69,7 +75,12 @@ dig example.com
 
 </TerminalBlock>
 
-Mirá la sección `ANSWER`: ahí está el registro, su tipo (`A` para IPv4, `AAAA` para IPv6) y el **TTL**, los segundos que se puede cachear esa respuesta.
+Mirá la sección `ANSWER`: ahí está el registro, su tipo (`A` para IPv4, `AAAA` para IPv6) y el **TTL**, los segundos que se puede cachear esa respuesta:
+
+```text
+;; ANSWER SECTION:
+example.com.        3600    IN    A    93.184.216.34
+```
 
 <Callout type="error">
   "El cambio de DNS no toma efecto." Casi siempre es **caché + TTL**: tu
@@ -95,6 +106,23 @@ Leelo por símbolos:
 - Líneas con `*` → lo que hace curl por debajo (conectar, TLS, etc.).
 - Líneas con `>` → **lo que vos enviás** (tu request y tus headers).
 - Líneas con `<` → **lo que el servidor responde** (status y sus headers).
+
+Un fragmento real se ve así:
+
+```text
+*   Trying 93.184.216.34:443...
+* Connected to example.com (93.184.216.34) port 443
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384
+* Server certificate: example.com
+> GET / HTTP/2
+> Host: example.com
+> User-Agent: curl/8.5.0
+> Accept: */*
+> 
+< HTTP/2 200 
+< content-type: text/html
+< cache-control: max-age=604800
+```
 
 ## 3. Status codes: no los adivines
 
@@ -131,11 +159,20 @@ Los headers son metadata. Algunos que importan seguido:
 
 ```bash
 curl -o /dev/null -s -w \
-  "dns:    %{time_namelookup}s\nconexion: %{time_connect}s\ntls:    %{time_appconnect}s\ntotal:  %{time_total}s\n" \
+  "dns:       %{time_namelookup}s\nconexion:  %{time_connect}s\ntls:       %{time_appconnect}s\ntotal:     %{time_total}s\n" \
   https://example.com
 ```
 
 </TerminalBlock>
+
+La terminal imprime los tiempos medidos en segundos:
+
+```text
+dns:       0.024180s
+conexion:  0.081240s
+tls:       0.158320s
+total:     0.210450s
+```
 
 Ahora "está lento" se convierte en una pregunta concreta: _¿qué etapa es la que pesa?_ Si es `time_namelookup`, es DNS. Si es `time_total` pero las demás son bajas, el servidor tarda en pensar la respuesta.
 
@@ -163,3 +200,30 @@ Ahora "está lento" se convierte en una pregunta concreta: _¿qué etapa es la q
 />
 
 Guardá ese diagrama. Cada flecha es una etapa que podés medir con `curl -w` y un lugar donde algo puede fallar.
+
+## Evidencia esperada
+
+Para completar este lab y guardar tu evidencia técnica, documentá tu prueba con una estructura similar a esta:
+
+```text
+[1] Trace de conexión (curl -v redactado):
+* Connected to example.com (93.184.216.34) port 443
+* TLS handshake completado (TLSv1.3)
+> GET / HTTP/2
+< HTTP/2 200
+
+[2] Desglose de latencias (curl -w):
+- DNS lookup:    0.024s
+- Conexión TCP:  0.057s
+- Handshake TLS: 0.077s
+- Tiempo total:  0.210s
+
+[3] Conclusión técnica:
+La etapa de mayor impacto fue el handshake TLS (cifrado y negociación de certificados).
+Al consultar directamente por IP con --resolve, el tiempo de DNS se reduce a 0s.
+```
+
+<Callout type="evidencia">
+  Un buen writeup de red no necesita volcados gigantes de paquetes: alcanza con aislar el estado de la conexión, los headers clave y las latencias medidas en cada salto.
+</Callout>
+
