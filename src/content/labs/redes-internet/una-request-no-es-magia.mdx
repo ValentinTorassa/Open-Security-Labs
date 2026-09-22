@@ -23,7 +23,7 @@ commands:
   - "dig"
   - "curl -v"
   - "curl -w"
-challenge: "Elegí un sitio, medí con curl -w el tiempo de DNS, conexión y total usando curl https://example.com. Luego probá resolviendo directamente por IP con curl --resolve example.com:443:<IP> https://example.com (o probando sobre HTTP simple). Explicá en dos líneas qué etapa de tiempo desapareció y por qué."
+challenge: "Medí dos veces DNS, conexión, TLS y tiempo total con curl -w. Después repetí la prueba con --resolve como se muestra en el lab. Compará time_namelookup y explicá qué parte de la resolución evitaste, sin asumir que todos los tiempos deben ser iguales."
 nextLabs:
   - "redes-internet/status-codes-4xx-vs-5xx"
   - "redes-internet/dns-paso-a-paso"
@@ -59,10 +59,10 @@ dig +short example.com
 
 </TerminalBlock>
 
-Eso te devuelve la IP, limpia:
+Eso devuelve una o varias direcciones. El resultado puede variar según el momento y el resolver:
 
 ```text
-93.184.216.34
+<IPv4 observada>
 ```
 
 Para ver el detalle completo:
@@ -75,11 +75,11 @@ dig example.com
 
 </TerminalBlock>
 
-Mirá la sección `ANSWER`: ahí está el registro, su tipo (`A` para IPv4, `AAAA` para IPv6) y el **TTL**, los segundos que se puede cachear esa respuesta:
+Mirá la sección `ANSWER`: ahí está el registro, su tipo (`A` para IPv4, `AAAA` para IPv6) y el **TTL**, los segundos que se puede cachear esa respuesta. Esta salida es ilustrativa:
 
 ```text
 ;; ANSWER SECTION:
-example.com.        3600    IN    A    93.184.216.34
+example.com.        3600    IN    A    <IPv4 observada>
 ```
 
 <Callout type="error">
@@ -107,21 +107,15 @@ Leelo por símbolos:
 - Líneas con `>` → **lo que vos enviás** (tu request y tus headers).
 - Líneas con `<` → **lo que el servidor responde** (status y sus headers).
 
-Un fragmento real se ve así:
+Un fragmento ilustrativo se ve así; la IP, los headers y la versión de TLS/HTTP pueden cambiar:
 
 ```text
-*   Trying 93.184.216.34:443...
-* Connected to example.com (93.184.216.34) port 443
-* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384
-* Server certificate: example.com
+*   Trying <IPv4 observada>:443...
+* Connected to example.com (<IPv4 observada>) port 443
+* SSL connection using TLSv1.3
 > GET / HTTP/2
-> Host: example.com
-> User-Agent: curl/8.5.0
-> Accept: */*
-> 
-< HTTP/2 200 
+< HTTP/2 200
 < content-type: text/html
-< cache-control: max-age=604800
 ```
 
 ## 3. Status codes: no los adivines
@@ -158,23 +152,39 @@ Los headers son metadata. Algunos que importan seguido:
 <TerminalBlock title="vt@labs:~">
 
 ```bash
-curl -o /dev/null -s -w \
-  "dns:       %{time_namelookup}s\nconexion:  %{time_connect}s\ntls:       %{time_appconnect}s\ntotal:     %{time_total}s\n" \
+curl -o /dev/null -sS -w \
+  "dns:       %{time_namelookup}s\nconexion:  %{time_connect}s\ntls:       %{time_appconnect}s\nprimer byte: %{time_starttransfer}s\ntotal:     %{time_total}s\n" \
   https://example.com
 ```
 
 </TerminalBlock>
 
-La terminal imprime los tiempos medidos en segundos:
+La terminal imprime los tiempos medidos en segundos. Estos números son ilustrativos:
 
 ```text
 dns:       0.024180s
 conexion:  0.081240s
 tls:       0.158320s
+primer byte: 0.190450s
 total:     0.210450s
 ```
 
-Ahora "está lento" se convierte en una pregunta concreta: _¿qué etapa es la que pesa?_ Si es `time_namelookup`, es DNS. Si es `time_total` pero las demás son bajas, el servidor tarda en pensar la respuesta.
+Estos valores son **acumulados desde el inicio**, no la duración aislada de cada etapa. En el ejemplo, TCP tomó aproximadamente `time_connect - time_namelookup` (0,057 s), TLS tomó `time_appconnect - time_connect` (0,077 s), y la espera hasta el primer byte tomó `time_starttransfer - time_appconnect` (0,032 s). El resto incluye recibir la respuesta. Si `time_total` es alto, compará también `time_starttransfer` antes de culpar al servidor: el cuerpo puede tardar en descargarse.
+
+Para repetir la prueba sin la resolución DNS normal de `curl`, primero obtené una IPv4 actual y pasásela con `--resolve`. Conservás el nombre de la URL para HTTP y TLS:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+resolved_ip=$(dig +short A example.com | head -n 1)
+curl --resolve "example.com:443:$resolved_ip" -o /dev/null -sS -w \
+  "dns: %{time_namelookup}s\ntotal: %{time_total}s\n" \
+  https://example.com
+```
+
+</TerminalBlock>
+
+Compará `time_namelookup` entre ejecuciones; con `--resolve` puede quedar cerca de cero. Los demás tiempos pueden variar entre pruebas. Si usás un proxy, la ruta y los tiempos medidos pueden ser distintos.
 
 <Callout type="concepto">
   Tres palabras que vas a vivir en producción: **latencia** (cuánto tarda cada
@@ -207,7 +217,7 @@ Para completar este lab y guardar tu evidencia técnica, documentá tu prueba co
 
 ```text
 [1] Trace de conexión (curl -v redactado):
-* Connected to example.com (93.184.216.34) port 443
+* Connected to example.com (<IPv4 observada>) port 443
 * TLS handshake completado (TLSv1.3)
 > GET / HTTP/2
 < HTTP/2 200
@@ -216,14 +226,15 @@ Para completar este lab y guardar tu evidencia técnica, documentá tu prueba co
 - DNS lookup:    0.024s
 - Conexión TCP:  0.057s
 - Handshake TLS: 0.077s
+- Espera hasta el primer byte: 0.032s
 - Tiempo total:  0.210s
 
 [3] Conclusión técnica:
 La etapa de mayor impacto fue el handshake TLS (cifrado y negociación de certificados).
-Al consultar directamente por IP con --resolve, el tiempo de DNS se reduce a 0s.
+Al fijar la IP con --resolve, curl evita su consulta DNS normal para ese host y puerto;
+time_namelookup puede acercarse a 0s. La URL mantiene el nombre para HTTP y TLS.
 ```
 
 <Callout type="evidencia">
   Un buen writeup de red no necesita volcados gigantes de paquetes: alcanza con aislar el estado de la conexión, los headers clave y las latencias medidas en cada salto.
 </Callout>
-
