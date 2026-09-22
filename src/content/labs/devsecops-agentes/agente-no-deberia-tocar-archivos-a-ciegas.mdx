@@ -45,7 +45,7 @@ Un agente de IA dejó de ser un chatbot hace rato. Lee archivos, ejecuta comando
 
 ## El problema: permisos amplios "por las dudas"
 
-Lo cómodo es darle al agente acceso total al filesystem y a una shell, "así no se traba". Eso es el equivalente a `chmod 777` para agentes: funciona hasta que una instrucción maliciosa —escondida en un archivo que el agente lee, en una página, en un issue— lo convence de leer `.env`, exfiltrar `~/.ssh/id_rsa` o borrar algo importante.
+Lo cómodo es darle al agente acceso total al filesystem y a una shell, "así no se traba". Eso es el equivalente a `chmod 777` para agentes: funciona hasta que una instrucción maliciosa -escondida en un archivo que el agente lee, en una página, en un issue- lo convence de leer `.env`, exfiltrar `~/.ssh/id_rsa` o borrar algo importante.
 
 <Callout type="error">
   "Le doy acceso a todo y confío en el modelo." El modelo no es el límite de
@@ -66,7 +66,7 @@ cat agent-policy.yaml
 </TerminalBlock>
 
 ```yaml
-# agent-policy.yaml — política de un agente de archivos
+# agent-policy.yaml - política de un agente de archivos
 filesystem:
   allow_write:
     - "./workspace/**" # única zona donde puede escribir
@@ -111,7 +111,7 @@ No hubo "criterio del modelo" en el medio: hubo una regla que se ejecuta siempre
 
 ## Auditoría: si no quedó registrado, no pasó
 
-Toda acción —permitida o bloqueada— se escribe en un log append-only. Es tu CloudTrail del agente.
+Toda acción -permitida o bloqueada- se escribe en un log append-only. Es tu CloudTrail del agente.
 
 ```json
 {"ts":"2026-05-02T14:03:11Z","tool":"file.write","path":"./workspace/out.md","decision":"allow"}
@@ -128,7 +128,7 @@ Toda acción —permitida o bloqueada— se escribe en un log append-only. Es tu
 
 ## Confirmación humana para lo irreversible
 
-No todo se automatiza. Las acciones destructivas o de alto impacto —borrar, ejecutar shell arbitraria, mandar datos afuera— pasan por un **approval gate**: el agente propone, un humano confirma.
+No todo se automatiza. Las acciones destructivas o de alto impacto -borrar, ejecutar shell arbitraria, mandar datos afuera- pasan por un **approval gate**: el agente propone, un humano confirma.
 
 ```text
 ┌────────────┐   propone   ┌──────────────┐   aprueba   ┌──────────┐

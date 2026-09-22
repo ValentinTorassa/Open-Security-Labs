@@ -1,7 +1,7 @@
 # Contribuir a Open Security Labs
 
-¡Gracias por querer sumar! Esto se construye en público y tu aporte —corregir un
-error, mejorar una explicación o escribir un lab nuevo— es bienvenido.
+¡Gracias por querer sumar! Esto se construye en público y tu aporte -corregir un
+error, mejorar una explicación o escribir un lab nuevo- es bienvenido.
 
 ## Filosofía
 
@@ -61,7 +61,7 @@ renderizan automáticamente desde el frontmatter; no los repitas en el cuerpo.
 
 ### Lecciones quirúrgicas
 
-Preferí labs **cortos y enfocados** (un concepto, 10–15 min) por sobre labs
+Preferí labs **cortos y enfocados** (un concepto, 10-15 min) por sobre labs
 enormes. Para secuenciarlos dentro de una ruta, usá el campo `order` en el
 frontmatter (menor = primero). Sumá un juego (`Quiz`, `PermissionsGame`) o un
 diagrama (`Mermaid`) cuando ayuden a practicar, no de adorno.

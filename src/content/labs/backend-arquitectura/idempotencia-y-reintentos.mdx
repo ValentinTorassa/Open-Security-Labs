@@ -33,7 +33,7 @@ published: 2026-06-24
 import Callout from "../../../components/Callout.astro";
 import TerminalBlock from "../../../components/TerminalBlock.astro";
 
-El cliente manda un cobro. El servidor lo procesa, pero la respuesta se pierde en la red: timeout. El cliente, que no sabe si funcionó, hace lo razonable: reintenta. Y el usuario aparece con **dos cobros**. El bug no está en el retry —el retry es correcto—. Está en que el endpoint no es idempotente.
+El cliente manda un cobro. El servidor lo procesa, pero la respuesta se pierde en la red: timeout. El cliente, que no sabe si funcionó, hace lo razonable: reintenta. Y el usuario aparece con **dos cobros**. El bug no está en el retry -el retry es correcto-. Está en que el endpoint no es idempotente.
 
 <Callout type="concepto">
   Una operación es **idempotente** si ejecutarla una vez o varias veces produce
