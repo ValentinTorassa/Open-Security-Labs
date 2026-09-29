@@ -15,6 +15,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "lab:check": "node scripts/lab-checks.mjs",
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",

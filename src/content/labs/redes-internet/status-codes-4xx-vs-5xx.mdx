@@ -81,6 +81,16 @@ Cuando algo falla por HTTP, la primera bifurcación te ahorra horas: **¿el prob
 
 ## Comprobalo en la terminal
 
+Si clonaste este repo, podés comprobar cinco respuestas de un servidor que el
+script levanta solo en `127.0.0.1` y cierra al terminar:
+
+```bash
+npm run lab:check -- http
+```
+
+Vas a ver 200, 401, 403, 404 y 503 sin llamar a un sitio externo. Guardá la
+salida como evidencia y explicá qué cambiarías en el cliente o en el servidor.
+
 <TerminalBlock title="vt@labs:~">
 
 ```bash

@@ -121,6 +121,19 @@ función crear_cobro(request):
   resultado ya existente. El código solo no alcanza bajo concurrencia.
 </Callout>
 
+## Probalo en local
+
+Con el repo clonado, corré `npm run lab:check -- idempotencia`. Un servidor
+descartable en `127.0.0.1` recibe cuatro POST: el primer intento crea un ID,
+el reintento con la misma clave devuelve ese ID, reutilizar la clave con otro
+monto da 409 y una intención nueva crea otro ID. Copiá la salida y explicá
+por qué el segundo POST no duplica el registro.
+
+La demo usa un mapa en memoria: se pierde al reiniciar y no cobra nada. En un
+sistema real necesitás persistir la clave y coordinar el efecto con el
+proveedor de pagos; la restricción UNIQUE local no alcanza si la respuesta del
+proveedor se pierde después de cobrar.
+
 <Callout type="concepto">
   Clave por **intención**, no por request: el cliente la genera una vez cuando
   el usuario aprieta "pagar", y la reusa en todos los reintentos de ese mismo
