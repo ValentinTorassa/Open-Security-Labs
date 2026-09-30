@@ -23,6 +23,7 @@ tags:
   - "permisos"
   - "octal"
 published: 2026-06-20
+updated: 2026-09-29
 ---
 
 import Callout from "../../../components/Callout.astro";
@@ -74,6 +75,8 @@ Para verificar permisos en octal directo desde la terminal, sin contar a mano:
 Con el repo clonado, `npm run lab:check -- permisos` crea un archivo temporal
 con datos sintéticos, comprueba `600`, lo cambia a `640`, comprueba el nuevo
 modo y borra solo ese archivo. Compará la salida con los bloques `rw-` y `r--`.
+En Windows el script lo omite, porque no usa bits `rwx` POSIX: probalo en
+Linux, macOS o WSL.
 
 <TerminalBlock title="vt@labs:~">
 

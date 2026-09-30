@@ -28,6 +28,7 @@ tags:
   - "apis"
   - "idempotencia"
 published: 2026-06-24
+updated: 2026-09-29
 ---
 
 import Callout from "../../../components/Callout.astro";
@@ -106,8 +107,10 @@ función crear_cobro(request):
         responder 400   # exigimos la clave en operaciones que cobran
 
     existente = db.buscar_por_clave(clave)
+    si existente y existente.monto != monto:
+        responder 422               # misma clave, otro pedido: error del cliente
     si existente:
-        responder 200, existente            # ya se procesó: devolvemos lo mismo
+        responder 201, existente    # ya se procesó: repetimos la respuesta original
 
     cobro = db.insertar_cobro(usuario.id, monto, clave)   # clave UNIQUE en la tabla
     proveedor.cobrar(usuario.tarjeta, monto)
@@ -124,10 +127,15 @@ función crear_cobro(request):
 ## Probalo en local
 
 Con el repo clonado, corré `npm run lab:check -- idempotencia`. Un servidor
-descartable en `127.0.0.1` recibe cuatro POST: el primer intento crea un ID,
-el reintento con la misma clave devuelve ese ID, reutilizar la clave con otro
-monto da 409 y una intención nueva crea otro ID. Copiá la salida y explicá
-por qué el segundo POST no duplica el registro.
+descartable en `127.0.0.1` recibe cuatro POST: el primer intento crea un ID
+(201), el reintento con la misma clave repite esa misma respuesta (201, mismo
+ID, con `Idempotent-Replayed: true`), reutilizar la clave con otro monto da 422
+y una intención nueva crea otro ID. Copiá la salida y explicá por qué el
+segundo POST no duplica el registro.
+
+Los códigos siguen el borrador IETF del header `Idempotency-Key`: 422 cuando la
+clave llega con otro contenido, y 409 cuando el primer pedido con esa clave
+todavía se está procesando.
 
 La demo usa un mapa en memoria: se pierde al reiniciar y no cobra nada. En un
 sistema real necesitás persistir la clave y coordinar el efecto con el

@@ -40,7 +40,11 @@ async function httpStatus() {
             : request.url === "/boom"
               ? 503
               : 404;
-      response.writeHead(code, { "Content-Type": "text/plain" });
+      const headers = { "Content-Type": "text/plain" };
+      // RFC 9110: a 401 must say how to authenticate; without this header
+      // the client has no way to know what credentials to send.
+      if (code === 401) headers["WWW-Authenticate"] = 'Demo realm="vt-lab"';
+      response.writeHead(code, headers);
       response.end("respuesta sintética");
     },
     async (base) => {
@@ -55,12 +59,18 @@ async function httpStatus() {
       for (const [path, headers, expected] of cases) {
         const response = await fetch(base + path, { headers });
         assert.equal(response.status, expected);
+        if (expected === 401) {
+          assert.match(
+            response.headers.get("www-authenticate") ?? "",
+            /realm=/,
+          );
+        }
         result.push(`${path} → ${response.status}`);
       }
       return result;
     },
   );
-  console.log(`HTTP: ${observed.join(" · ")}`);
+  console.log(`HTTP: ${observed.join(" · ")} (el 401 trae WWW-Authenticate)`);
 }
 
 async function idempotency() {
@@ -86,12 +96,18 @@ async function idempotency() {
       }
       if (charges.has(key)) {
         const prior = charges.get(key);
+        // draft-ietf-httpapi-idempotency-key-header: the same key with a
+        // different payload is 422; 409 is for a first request still running.
         if (prior.body !== body) {
-          response.writeHead(409).end("clave reutilizada con otro monto");
+          response.writeHead(422).end("clave reutilizada con otro monto");
           return;
         }
+        // A retry gets the original response back, status included.
         response
-          .writeHead(200, { "Content-Type": "application/json" })
+          .writeHead(201, {
+            "Content-Type": "application/json",
+            "Idempotent-Replayed": "true",
+          })
           .end(JSON.stringify(prior));
         return;
       }
@@ -114,12 +130,13 @@ async function idempotency() {
       const second = await post("intencion-2", "5000");
       assert.deepEqual(
         [first.status, retry.status, conflict.status, second.status],
-        [201, 200, 409, 201],
+        [201, 201, 422, 201],
       );
+      assert.equal(retry.headers.get("idempotent-replayed"), "true");
       assert.equal((await first.json()).id, (await retry.json()).id);
       assert.equal(charges.size, 2);
       console.log(
-        "Idempotencia: primer intento 201 · mismo intento 200/mismo ID · otro monto 409 · nueva intención 201",
+        "Idempotencia: primer intento 201 · reintento 201 repetido (mismo ID) · otro monto 422 · nueva intención 201",
       );
     },
   );
@@ -129,6 +146,12 @@ async function idempotency() {
 }
 
 async function permissions() {
+  if (process.platform === "win32") {
+    console.log(
+      "Permisos: se omite en Windows (no usa bits rwx POSIX; probalo en Linux, macOS o WSL)",
+    );
+    return;
+  }
   const directory = await mkdtemp(join(tmpdir(), "vt-lab-permissions-"));
   const file = join(directory, "ejemplo.txt");
   try {

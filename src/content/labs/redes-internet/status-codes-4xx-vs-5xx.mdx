@@ -24,7 +24,7 @@ tags:
   - "http"
   - "debugging"
 published: 2026-06-20
-updated: 2026-06-23
+updated: 2026-09-29
 ---
 
 import Callout from "../../../components/Callout.astro";
@@ -88,8 +88,10 @@ script levanta solo en `127.0.0.1` y cierra al terminar:
 npm run lab:check -- http
 ```
 
-Vas a ver 200, 401, 403, 404 y 503 sin llamar a un sitio externo. Guardá la
-salida como evidencia y explicá qué cambiarías en el cliente o en el servidor.
+Vas a ver 200, 401, 403, 404 y 503 sin llamar a un sitio externo. El 401 trae
+el header `WWW-Authenticate`: es lo que le dice al cliente cómo autenticarse, y
+un 401 sin él está incompleto. Guardá la salida como evidencia y explicá qué
+cambiarías en el cliente o en el servidor.
 
 <TerminalBlock title="vt@labs:~">
 
