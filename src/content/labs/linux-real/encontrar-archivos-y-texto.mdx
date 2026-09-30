@@ -1,0 +1,190 @@
+---
+title: "Encontrar archivos y texto: Find y Grep"
+description: "Sabés que hay un archivo con un problema en algún lado, pero no cuál. Aprendé a buscar por nombre con find y por contenido con grep."
+path: "linux-real"
+order: 4
+level: "beginner"
+estimatedMinutes: 25
+prerequisites:
+  - "Una terminal Linux o WSL"
+  - "Haber hecho el lab de filesystem real"
+objectives:
+  - "Distinguir búsqueda por nombre (find) de búsqueda por contenido (grep)"
+  - "Buscar archivos por nombre, patrón y tipo con find"
+  - "Buscar texto en uno o varios archivos con grep"
+  - "Usar -n para ubicar la línea y -i para ignorar mayúsculas"
+evidence:
+  - "Salida de find y grep guardada en un archivo de evidencia"
+  - "Writeup corto: qué encontraste, dónde y con qué comando"
+commands:
+  - 'find . -name "*.txt"'
+  - "find . -type f"
+  - 'grep "linux" *.txt'
+  - 'grep -rn "linux" .'
+  - 'grep -i "Linux" notas.txt'
+challenge: "Creá un archivo de texto con una palabra especial (por ejemplo BUSCARME), salí de esa carpeta, localizalo por nombre con find y confirmá con grep que el archivo contiene la palabra. Guardá los comandos y la salida en evidencia.txt."
+nextLabs:
+  - "ciberseguridad/por-que-chmod-777"
+  - "linux-real/permisos-en-octal"
+tags:
+  - "linux"
+  - "find"
+  - "grep"
+  - "shell"
+contributor: "knighthw"
+published: 2026-09-30
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+Sabés que hay un archivo con información que necesitás, pero no recordás el nombre ni dónde lo guardaste. O querés saber qué error ocurrió en un log, pero hay cientos de líneas. `find` y `grep` son las herramientas que usan los sysadmins todo el día para esto.
+
+La diferencia es clara: **`find` busca archivos por atributos (nombre, tipo). `grep` busca texto dentro de archivos.**
+
+<Callout type="concepto">
+  Debugging en Linux = "no sé qué falló, pero sé dónde mirar". Find y grep te
+  permiten reducir "todo el disco" a "este archivo, esta línea". Sin memorizar
+  nada, solo entendiendo la sintaxis.
+</Callout>
+
+## Empecemos por lo básico
+
+Creá una carpeta de práctica y un archivo adentro:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+mkdir proyecto
+cd proyecto
+echo "Estas son mis notas" > notas.txt
+echo "para linux real" >> notas.txt
+
+find . -name "notas.txt"
+grep "notas" notas.txt
+```
+
+</TerminalBlock>
+
+`>` crea el archivo y `>>` le agrega una línea al final. `find` te responde **dónde está** (`./notas.txt`). `grep` te responde **qué dice**: imprime la línea que contiene la palabra (`Estas son mis notas`).
+
+
+
+## Find: buscar archivos por nombre y tipo
+
+Cuando no recordás dónde guardaste algo, `find` es tu respuesta.
+
+<TerminalBlock title="vt@labs:~/proyecto">
+
+```bash
+# Sumá un segundo archivo y una subcarpeta con otro archivo
+echo "Mis apuntes" > apuntes.txt
+mkdir clases
+echo "Practicar cuentas en linux" > clases/matematicas.txt
+
+# Buscar todos los .txt desde la carpeta actual
+find . -name "*.txt"
+
+# Solo archivos (no directorios)
+find . -type f
+
+# Solo directorios
+find . -type d
+```
+
+</TerminalBlock>
+
+Entendamos la sintaxis:
+
+- `find .` = buscar desde acá (`.` = carpeta actual) y en todas sus subcarpetas
+- `-name "*.txt"` = archivos cuyo nombre termine en `.txt`
+- `-type f` = solo archivos
+- `-type d` = solo directorios
+
+Tu carpeta quedó así:
+
+```text
+proyecto/
+├─ notas.txt
+├─ apuntes.txt
+└─ clases/
+   └─ matematicas.txt
+```
+
+`find . -name "*.txt"` te devuelve los tres archivos, incluido `./clases/matematicas.txt`, aunque esté dentro de una subcarpeta: `find` entra solo a cada carpeta que encuentra. `find . -type f` te da lo mismo, porque acá todos los archivos son `.txt`. `find . -type d` devuelve `.` (la carpeta actual) y `./clases`. El orden puede variar en tu máquina.
+
+<Callout type="comando">
+  Así como lo usamos acá, find no toca nada: solo lista. Es seguro explorar con
+  find sin miedo a romper.
+</Callout>
+
+## Grep: buscar texto dentro de archivos
+
+Ya encontraste un archivo (o varios). Ahora querés saber si contiene la palabra que buscás.
+
+<TerminalBlock title="vt@labs:~/proyecto">
+
+```bash
+# Buscar una palabra que no está en el archivo
+grep "error" notas.txt
+
+# Buscar una palabra que sí está
+grep "linux" notas.txt
+
+# Buscar en varios archivos
+grep "linux" *.txt
+
+# Mostrar el número de línea
+grep -n "linux" notas.txt
+
+# Ignorar mayúsculas
+grep -i "Linux" notas.txt
+
+# Buscar recursivamente en carpetas
+grep -r "linux" .
+```
+
+</TerminalBlock>
+
+La sintaxis:
+
+- `grep "patrón" archivo` = buscar el patrón en ese archivo
+- `-n` = mostrar el número de línea
+- `-i` = ignorar mayúsculas (ERROR, Error y error son iguales)
+- `-r` = recursivo (buscar en la carpeta y sus subcarpetas)
+
+**Output:** las líneas que contienen lo que buscás.
+
+```text
+$ grep "linux" notas.txt
+para linux real
+
+$ grep "linux" *.txt
+notas.txt:para linux real
+
+$ grep -n "linux" notas.txt
+2:para linux real
+
+$ grep -r "linux" .
+./clases/matematicas.txt:Practicar cuentas en linux
+./notas.txt:para linux real
+```
+
+Fijate cuatro cosas:
+
+- `grep "error" notas.txt` no devuelve nada: si no hay coincidencias, grep no imprime ningún mensaje. Que no salga nada también es una respuesta.
+- grep distingue mayúsculas: `grep "Linux" notas.txt` no encuentra nada, porque el archivo dice `linux`. Con `grep -i "Linux" notas.txt` sí aparece la línea.
+- Cuando buscás en varios archivos (con `*.txt` o con `-r`), grep antepone el nombre del archivo a cada línea, así sabés **en cuál** está la coincidencia. `grep "linux" *.txt` revisó `apuntes.txt` y `notas.txt`, pero solo muestra `notas.txt` porque es el único que contiene la palabra.
+- `*.txt` solo mira la carpeta actual: no entra a `clases/`, por eso no encuentra `matematicas.txt`. `grep -r "linux" .` recorre también las subcarpetas y encuentra los dos. Si buscás algo y no sabés en qué carpeta está, usá `-r`.
+
+<Callout type="concepto">
+**Find busca archivos. Grep busca dentro de archivos.**
+
+- `find . -name "*notas*"` = archivos cuyo NOMBRE contiene "notas"
+- `grep "notas" *.txt` = líneas DENTRO de archivos que contienen "notas"
+
+</Callout>
+
+<Callout type="evidencia">
+  Guardá las salidas de find y grep en un archivo. Sumá dos o tres líneas propias: qué buscaste, con qué comando y qué encontraste.
+</Callout>
