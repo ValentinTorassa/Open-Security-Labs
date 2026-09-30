@@ -62,17 +62,19 @@ Abrí <http://localhost:4321>.
 
 ### Scripts
 
-| Script            | Qué hace                                           |
-| ----------------- | -------------------------------------------------- |
-| `npm run dev`     | Servidor de desarrollo con hot reload.             |
-| `npm run build`   | Build estático de producción en `dist/`.           |
-| `npm run preview` | Sirve el build de producción localmente.           |
-| `npm run check`   | Chequeo de tipos y de contenido con `astro check`. |
-| `npm run format`  | Formatea el código con Prettier.                   |
-| `npm run lint`    | Verifica formato + chequeo de Astro.               |
+| Script              | Qué hace                                                                               |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| `npm run dev`       | Servidor de desarrollo con hot reload.                                                 |
+| `npm run build`     | Build estático de producción en `dist/`.                                               |
+| `npm run preview`   | Sirve el build de producción localmente.                                               |
+| `npm run check`     | Chequeo de tipos y de contenido con `astro check`.                                     |
+| `npm run format`    | Formatea el código con Prettier.                                                       |
+| `npm run lint`      | Verifica formato + chequeo de Astro.                                                   |
+| `npm run lab:check` | Corre las comprobaciones locales de los labs (solo `127.0.0.1` y archivos temporales). |
 
-El sitio es estático: el `dist/` se despliega tal cual en **GitHub Pages**,
-**Cloudflare Pages** o **Vercel**.
+El sitio es estático y se publica en **Vercel** (integración de Git del proyecto
+`vt-security-labs`, sin workflow de deploy propio). El `dist/` también sirve tal
+cual en cualquier hosting estático.
 
 ---
 
