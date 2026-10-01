@@ -1,0 +1,118 @@
+---
+title: "Seccomp: observá una carga de juguete antes de bloquear"
+description: "Capturá syscalls de un contenedor descartable con AutoConfine, revisá la procedencia de la traza y usá audit para buscar diferencias sin romper la carga."
+path: "ciberseguridad"
+order: 6
+level: "intermediate"
+estimatedMinutes: 30
+prerequisites:
+  - "VM descartable Linux amd64 con cgroup v2, Podman, Go y permisos sudo"
+  - "Saber qué son un contenedor y una syscall"
+objectives:
+  - "Distinguir una traza eBPF observada de una traza sintética"
+  - "Generar y validar un perfil seccomp para una carga concreta"
+  - "Leer drift en modo audit antes de considerar una restricción"
+  - "Explicar por qué una ventana corta no prueba cobertura completa"
+evidence:
+  - "Conteo de eventos y syscalls únicas de una traza del contenedor de juguete"
+  - "Perfil validado y tres líneas de drift audit con contenido del host omitido"
+  - "Writeup breve sobre procedencia, cobertura y pasos previos a aplicar el perfil"
+commands:
+  - "autoconfine learn --from-start"
+  - "autoconfine generate"
+  - "autoconfine validate"
+  - "autoconfine enforce --audit"
+challenge: "Explicá por qué el perfil observado para nginx no debe aplicarse sin pruebas a otro comando o imagen. Entregá el conteo de la traza, el resultado de validate y una interpretación de audit."
+nextLabs:
+  - "ciberseguridad/threat-modeling-app-chica"
+  - "linux-real/proceso-socket-evidencia-demo"
+tags:
+  - "linux"
+  - "contenedores"
+  - "seccomp"
+  - "ebpf"
+published: 2026-10-01
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+Una lista de syscalls permitidas sólo sirve si sabés **de dónde salió** y **qué ejecutó el contenedor durante la medición**. En este lab usás [AutoConfine](https://github.com/ValentinTorassa/AutoConfine) sobre una imagen pública de juguete, en una VM que puedas descartar. No uses un servicio, datos ni credenciales reales.
+
+## Capturá desde el arranque
+
+En la VM, cloná AutoConfine y compilá el binario. Estos comandos no publican puertos:
+
+<TerminalBlock title="vt@vm:~">
+
+```bash
+git clone https://github.com/ValentinTorassa/AutoConfine.git
+cd AutoConfine
+go build -o autoconfine ./cmd/autoconfine
+sudo podman pull docker.io/library/nginx:alpine
+sudo ./autoconfine learn --image docker.io/library/nginx:alpine \
+  --from-start --duration 8s --out trace.jsonl
+sudo ./autoconfine generate trace.jsonl --out profile.json
+sudo ./autoconfine validate profile.json
+```
+
+</TerminalBlock>
+
+`--from-start` prepara el contenedor, conecta la sonda eBPF y recién entonces inicia la aplicación. La traza debe contener eventos con `phase: observed-ebpf` y `capture_mode: from-exec`. `validate` comprueba que el perfil tenga una estructura seccomp válida; no comprueba que la carga esté cubierta en todos sus estados.
+
+<Callout type="concepto">
+  AutoConfine tiene un modo `--synthetic` para pruebas. Su salida está marcada
+  como sintética y `generate` la rechaza por defecto. No cambies la etiqueta de
+  origen para hacer que una simulación parezca una captura del kernel.
+</Callout>
+
+## Leé los datos que juntaste
+
+Usá un resumen que no imprima el contenido de cada evento:
+
+<TerminalBlock title="vt@vm:~/AutoConfine">
+
+```bash
+sudo ./autoconfine summary trace.jsonl
+sudo python3 - <<'PY'
+import collections, json
+events = [json.loads(line) for line in open('trace.jsonl') if line.strip()]
+print('eventos:', len(events))
+print('syscalls únicas:', len({e['syscall'] for e in events}))
+print('orígenes:', dict(collections.Counter(e.get('capture_mode') for e in events)))
+PY
+```
+
+</TerminalBlock>
+
+Esos números describen ocho segundos de **esa** ejecución. Otro pedido, configuración o versión de la imagen puede usar otras syscalls. Tampoco asumás que una syscall observada es necesaria o segura: el perfil es un punto de partida para revisión.
+
+## Auditá una segunda carga
+
+El modo audit permite ejecutar syscalls fuera del perfil y las anota. Probá el comando `id` dentro de la misma imagen, sin publicar puertos ni montar archivos:
+
+<TerminalBlock title="vt@vm:~/AutoConfine">
+
+```bash
+sudo ./autoconfine enforce --profile profile.json --audit \
+  --out audit.jsonl -- podman run --rm --entrypoint /bin/sh \
+  docker.io/library/nginx:alpine -c 'id >/dev/null'
+sudo python3 - <<'PY'
+import collections, json
+events = [json.loads(line) for line in open('audit.jsonl') if line.strip()]
+print('drift audit:', len(events))
+print('por syscall:', dict(collections.Counter(e['syscall'] for e in events)))
+PY
+```
+
+</TerminalBlock>
+
+AutoConfine sale con código `2` si detecta drift; en este ejercicio puede ser el resultado esperado. Si no registra diferencias, documentá cero y el comando exacto: una observación vacía también es un dato. `--audit` cambia la acción por defecto del perfil a `SCMP_ACT_LOG`; no bloquea esas llamadas. Para comparar de verdad, repetí con cargas representativas antes de restringir nada.
+
+<Callout type="evidencia">
+  Entregá conteos, resultado de `validate` y una explicación de hasta diez
+  líneas: qué se observó, qué quedó sin probar y por qué empezarías por audit.
+  Compartí sólo los nombres y cantidades de syscalls del contenedor de juguete.
+</Callout>
+
+El [ensayo Linux del proyecto](https://github.com/ValentinTorassa/AutoConfine/actions/runs/36905476621) comprobó además los dos mecanismos de drift en vivo: audit con `sys_enter` y monitor con `sys_exit`. Para el segundo usó un perfil de prueba derivado del perfil normal de Podman; un perfil aprendido con nginx no tiene por qué iniciar un comando diferente. Esa evidencia demuestra el funcionamiento de las sondas en esa VM, no que el perfil generado sea apto para producción.
