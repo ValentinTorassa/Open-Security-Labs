@@ -1,0 +1,332 @@
+---
+title: "find a fondo: tamaño, fecha, lógica y acciones"
+description: "El disco se llenó o algo cambió ayer y no sabés qué. Filtrá con find por tamaño, fecha, tipo y profundidad, combiná y negá condiciones, y ejecutá comandos sobre lo que encontrás."
+path: "linux-real"
+order: 6
+level: "intermediate"
+estimatedMinutes: 30
+prerequisites:
+  - "Una terminal Linux o WSL (touch -d y head -c 2M son de GNU)"
+  - "Haber hecho el lab Encontrar archivos y texto"
+objectives:
+  - "Filtrar archivos por tamaño con -size y por fecha con -mtime"
+  - "Distinguir tipos (archivo, directorio, enlace) y encontrar vacíos"
+  - "Limitar la profundidad de búsqueda con -maxdepth y -mindepth"
+  - "Combinar condiciones con -o y paréntesis, y negarlas con -not"
+  - "Ejecutar un comando sobre cada resultado con -exec"
+evidence:
+  - "Salidas de find por tamaño, fecha y tipo guardadas en ~/evidencia.txt"
+  - "Writeup corto: qué archivo ocupaba más, cuáles cambiaron y con qué comando lo encontraste"
+commands:
+  - "find . -type f -size +1M"
+  - "find . -type f -mtime -1"
+  - "find . -type l"
+  - "find . -maxdepth 1"
+  - 'find . -type f \( -name "*.log" -o -name "*.txt" \)'
+  - 'find . -type f -not -name "*.log"'
+  - 'find . -name "*.log" -exec wc -l {} +'
+challenge: "En ~/lab-find, encontrá con un solo comando find los archivos de más de 1 MB modificados hace más de 7 días y mostrá su tamaño con -exec ls -lh. Guardá el comando y la salida en ~/evidencia.txt, fuera de la carpeta de práctica."
+nextLabs:
+  - "linux-real/systemd-y-journalctl"
+tags:
+  - "linux"
+  - "find"
+  - "shell"
+contributor: "knighthw"
+published: 2026-10-01
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import Quiz from "../../../components/Quiz.astro";
+
+Un servidor se quedó sin espacio después de un deploy, o algo dejó de andar ayer y nadie sabe qué cambió. En el lab anterior buscabas por nombre. Ahora necesitás preguntas más finas: **qué pesa mucho, qué cambió hace poco, qué tipo de archivo es y qué hago con lo que encontré.**
+
+<Callout type="concepto">
+  find no solo busca por nombre: filtra por cualquier atributo del archivo
+  (tamaño, fecha, tipo, profundidad) y puede combinarlos. Cada filtro es una
+  pregunta, y find te devuelve solo lo que cumple todas.
+</Callout>
+
+## Armá la carpeta de práctica
+
+Todo el lab pasa en `~/lab-find`. No vas a buscar en tu sistema real.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+mkdir -p ~/lab-find/logs ~/lab-find/notas ~/lab-find/viejo
+cd ~/lab-find
+
+printf "[ERROR] Sin conexión\n[INFO] Servidor iniciado\n" > logs/app.log
+printf "[ERROR] Clave incorrecta\n" > logs/login.log
+printf "PENDIENTE: revisar login\n" > notas/tareas.txt
+touch notas/vacio.txt
+
+echo "copia vieja" > viejo/respaldo.txt
+head -c 2M /dev/zero > viejo/grande.bin
+touch -d "30 days ago" viejo/*
+
+ln -sf notas/tareas.txt enlace-tareas
+```
+
+</TerminalBlock>
+
+Tu carpeta quedó así:
+
+```text
+lab-find/
+├─ enlace-tareas -> notas/tareas.txt
+├─ logs/
+│  ├─ app.log
+│  └─ login.log
+├─ notas/
+│  ├─ tareas.txt
+│  └─ vacio.txt
+└─ viejo/
+   ├─ grande.bin      (2 MB, hace 30 días)
+   └─ respaldo.txt    (hace 30 días)
+```
+
+## Tamaño: qué ocupa espacio
+
+<TerminalBlock title="vt@labs:~/lab-find">
+
+```bash
+# Más de 1 MB
+find . -type f -size +1M
+
+# Menos de 1 KB
+find . -type f -size -1k
+
+# Menos de 100 bytes
+find . -type f -size -100c
+```
+
+</TerminalBlock>
+
+Como vimos en el lab anterior, `-type f` se queda solo con archivos. Con `-size` buscamos por tamaño, el `+` significa "mayor que" y el `-` "menor que". Las unidades son `c` (bytes), `k` (kilobytes), `M` (megabytes) y `G` (gigabytes).
+
+- `-size +1M` devuelve `./viejo/grande.bin`, que pesa 2 MB.
+- `-size -1k` devuelve **solo** `./notas/vacio.txt`.
+- `-size -100c` devuelve los cinco archivos chicos: los dos `.log`, `tareas.txt`, `vacio.txt` y `respaldo.txt`.
+
+<Callout type="error">
+  `-size` redondea hacia arriba a la unidad que pedís. `tareas.txt` pesa 25
+  bytes, pero para `-size -1k` cuenta como "1k", y 1 no es menor que 1: por eso
+  no aparece. Solo pasa el que pesa 0. Si necesitás precisión con archivos
+  chicos, usá bytes: `-size -100c`.
+</Callout>
+
+## Fecha: qué cambió
+
+<TerminalBlock title="vt@labs:~/lab-find">
+
+```bash
+# Modificados hace más de 7 días
+find . -type f -mtime +7
+
+# Modificados en las últimas 24 horas
+find . -type f -mtime -1
+```
+
+</TerminalBlock>
+
+`-mtime` cuenta en días: `+7` es "hace más de 7 días" y `-1` es "hace menos de 1 día".
+
+- `-mtime +7` devuelve `./viejo/grande.bin` y `./viejo/respaldo.txt`, los que pusimos con fecha de hace 30 días.
+- `-mtime -1` devuelve los archivos de `logs/` y `notas/` que creaste recién.
+
+<Callout type="nota">
+  Si retomás el lab otro día, `-mtime -1` te va a devolver vacío: los archivos
+  ya tienen más de 24 horas. Volvé a correr el bloque de la carpeta de práctica
+  y se actualizan.
+</Callout>
+
+## Tipo y atributos
+
+<TerminalBlock title="vt@labs:~/lab-find">
+
+```bash
+# Solo enlaces simbólicos
+find . -type l
+
+# Archivos o carpetas vacíos
+find . -empty
+```
+
+</TerminalBlock>
+
+- `-type l` = links (enlaces simbólicos). Devuelve `./enlace-tareas`.
+- `-empty` = tamaño 0, ya sea un archivo sin contenido o una carpeta sin nada adentro. Devuelve `./notas/vacio.txt`.
+
+## Profundidad
+
+<TerminalBlock title="vt@labs:~/lab-find">
+
+```bash
+# No entrar a subcarpetas
+find . -maxdepth 1
+
+# Solo lo que está dentro de subcarpetas
+find . -mindepth 2
+```
+
+</TerminalBlock>
+
+- `-maxdepth 1` devuelve `.`, `./logs`, `./notas`, `./viejo` y `./enlace-tareas`. Fijate que muestra las carpetas pero **no** lo que hay adentro.
+- `-mindepth 2` empieza a mostrar desde el segundo nivel: devuelve los archivos dentro de `logs/`, `notas/` y `viejo/`, pero no las carpetas en sí ni el enlace.
+
+El orden de la salida puede variar en tu máquina.
+
+## Lógica: combinar y negar condiciones
+
+<TerminalBlock title="vt@labs:~/lab-find">
+
+```bash
+# Los .log o .txt (solo archivos)
+find . -type f \( -name "*.log" -o -name "*.txt" \)
+
+# Los que no son .log
+find . -type f -not -name "*.log"
+```
+
+</TerminalBlock>
+
+`-o` significa "o" (OR). Los paréntesis `\( \)` agrupan las dos condiciones de nombre para que `-type f` se aplique a las dos. Van con `\` porque el shell usa los paréntesis para otra cosa. Devuelve cinco archivos: `app.log`, `login.log`, `tareas.txt`, `vacio.txt` y `respaldo.txt`.
+
+Sin paréntesis, find lo lee como "(archivo **y** `.log`) **o** `.txt`", y la condición `-type f` solo cuida la primera parte. En esta carpeta el resultado es el mismo, pero si hubiera un enlace o una carpeta terminada en `.txt`, sin paréntesis también aparecería.
+
+`-not` niega la condición que le sigue. También funciona con `!` en lugar de `-not`. Devuelve `tareas.txt`, `vacio.txt`, `grande.bin` y `respaldo.txt`. Para comprobarlo, sacá el `-not`: vas a ver solo los dos `.log`.
+
+## Ejecutar comandos sobre lo que encontrás
+
+<TerminalBlock title="vt@labs:~/lab-find">
+
+```bash
+# Contar las líneas de cada .log
+find . -name "*.log" -exec wc -l {} +
+```
+
+</TerminalBlock>
+
+Vamos parte por parte, porque este comando tiene varias piezas que trabajan juntas. Se lee así: "buscá los `.log` desde acá, y a los que encuentres, pasáselos a `wc -l`".
+
+### Cada pieza
+
+```text
+find .           buscá desde la carpeta actual
+-name "*.log"    solo los que terminan en .log
+-exec            "con los resultados, ejecutá esto"
+wc -l            el comando a correr (wc = contar, -l = líneas)
+{}               marcador: acá van los archivos encontrados
++                fin del -exec: decide cómo se pasan los archivos
+```
+
+Todo lo que va entre `-exec` y el `+` es el comando que find corre: acá, `wc -l {}`. El `{}` es un marcador de posición que find reemplaza por los nombres de archivo; pensalo como "acá van los archivos". Y el `+` es lo más importante: decide **cómo** se le pasan los archivos al comando. Lo vemos abajo.
+
+Antes del `-exec`, find ya tiene esta lista:
+
+```text
+./logs/app.log
+./logs/login.log
+```
+
+Lo que hace `-exec` es usar esa lista para armar y correr otro comando.
+
+### La diferencia entre `+` y `\;`
+
+Esta es la parte que confunde. `-exec` se puede cerrar de dos formas.
+
+**Con `+`: una sola ejecución con todos los archivos.** find junta todos los resultados en lugar de `{}` y corre `wc` **una vez**. Es como si escribieras:
+
+```text
+wc -l ./logs/app.log ./logs/login.log
+```
+
+Salida:
+
+```text
+ 2 ./logs/app.log
+ 1 ./logs/login.log
+ 3 total
+```
+
+**Con `\;`: una ejecución por archivo.**
+
+<TerminalBlock title="vt@labs:~/lab-find">
+
+```bash
+find . -name "*.log" -exec wc -l {} \;
+```
+
+</TerminalBlock>
+
+find corre `wc` una vez por cada archivo, por separado. Es como si escribieras:
+
+```text
+wc -l ./logs/app.log
+wc -l ./logs/login.log
+```
+
+Salida:
+
+```text
+2 ./logs/app.log
+1 ./logs/login.log
+```
+
+El `;` va con `\` por la misma razón que los paréntesis: para el shell, `;` separa comandos, y sin la barra se lo quedaría él en vez de pasárselo a find. El orden de los archivos puede variar en tu máquina.
+
+<Callout type="concepto">
+  Con `\;` no hay línea de `total`, porque `wc` nunca vio los dos archivos al
+  mismo tiempo: corrió dos veces, cada una con un solo archivo.
+</Callout>
+
+<Callout type="nota">
+  Regla práctica: usá `+` por defecto, porque es más rápido (con miles de
+  archivos, `\;` lanza miles de procesos). Cambiá a `\;` solo si el comando que
+  corrés no sabe manejar varios archivos juntos.
+</Callout>
+
+## Quiz
+
+<Quiz
+  questions={[
+    {
+      q: "¿Cómo buscás los archivos modificados en los últimos 3 días?",
+      options: [
+        "find . -type f -mtime +3",
+        "find . -type f -mtime -3",
+        "find . -type f -size -3",
+      ],
+      answer: 1,
+      explain:
+        "-mtime -3 = hace menos de 3 días. +3 sería hace más de 3 días, y -size filtra por tamaño, no por fecha.",
+    },
+    {
+      q: "¿Cómo listás solo los enlaces simbólicos?",
+      options: ["find . -type f", "find . -type d", "find . -type l"],
+      answer: 2,
+      explain: "l = link. f son archivos regulares y d son directorios.",
+    },
+    {
+      q: "¿Cómo buscás todos los archivos que no son .txt?",
+      options: [
+        'find . -type f -name "*.txt"',
+        'find . -type f -not -name "*.txt"',
+        "find . -not -type f",
+      ],
+      answer: 1,
+      explain:
+        "-not niega la condición que le sigue. La última opción niega el tipo, no el nombre: te devuelve carpetas y enlaces.",
+    },
+  ]}
+/>
+
+<Callout type="evidencia">
+  Guardá las salidas en `~/evidencia.txt`, fuera de `~/lab-find`, para que no
+  aparezca en tus propias búsquedas: por ejemplo `find . -type f -size +1M >>
+  ~/evidencia.txt`. Sumá dos o tres líneas propias: qué archivo ocupaba más,
+  cuáles cambiaron y con qué comando lo encontraste.
+</Callout>
