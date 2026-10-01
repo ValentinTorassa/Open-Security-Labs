@@ -1,0 +1,82 @@
+---
+title: "Del proceso al socket: una investigación con datos de juguete"
+description: "Leé procesos y conexiones juntos en VT Lens, distinguí escuchar de conectarse y armá evidencia sin capturar datos de tu equipo."
+path: "linux-real"
+order: 5
+level: "beginner"
+estimatedMinutes: 20
+prerequisites:
+  - "Linux de escritorio con VT Lens instalado, o la tabla sintética de este lab"
+  - "Saber qué son un proceso, un PID y un puerto TCP"
+objectives:
+  - "Relacionar una conexión con el proceso que la posee"
+  - "Distinguir LISTEN de ESTABLISHED y una dirección local de una remota"
+  - "Separar lo que muestra una captura de lo que todavía habría que comprobar"
+  - "Documentar una observación con datos exclusivamente sintéticos"
+evidence:
+  - "Captura de VT Lens con la etiqueta DEMO visible, o tabla del ejemplo anotada"
+  - "Tabla con proceso, PID, extremo local, extremo remoto, estado e interpretación"
+  - "Dos hipótesis y dos límites de la observación, sin afirmar que hubo un incidente"
+commands:
+  - "vt-lens --demo"
+challenge: "Elegí la conexión del navegador del conjunto de demo. Explicá qué extremo es local, cuál remoto, qué indica ESTABLISHED y qué no podés concluir sobre el contenido del tráfico. Entregá la tabla y una captura de DEMO o el ejemplo anotado."
+nextLabs:
+  - "linux-real/systemd-y-journalctl"
+  - "redes-internet/una-request-no-es-magia"
+tags:
+  - "linux"
+  - "procesos"
+  - "redes"
+  - "observabilidad"
+published: 2026-10-01
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+Un puerto abierto por sí solo dice poco. Para investigar necesitás unir **proceso**, **PID**, **extremo local**, **extremo remoto** y **estado**. Vamos a practicar con el [modo demo de VT Lens](https://github.com/ValentinTorassa/VT-Lens), que muestra datos de juguete sin capturar procesos ni sockets del equipo.
+
+## Abrí una captura sintética
+
+Si ya tenés VT Lens instalado en un escritorio Linux, ejecutá:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+vt-lens --demo
+```
+
+</TerminalBlock>
+
+Comprobá que la ventana diga **DEMO · datos sintéticos · sin captura del equipo**. El botón de refrescar mantiene ese modo. Si no tenés la aplicación, podés completar el lab con la tabla de abajo; no hace falta inspeccionar tu máquina ni subir una captura real.
+
+<Callout type="concepto">
+  Los PID, direcciones y nombres siguientes son parte del conjunto sintético
+  definido en el código de VT Lens. No representan un host ni una conexión real.
+</Callout>
+
+## Uní cada socket con su proceso
+
+El conjunto de demo incluye estas conexiones TCP:
+
+| PID | Proceso | Extremo local | Extremo remoto | Estado |
+| --- | --- | --- | --- | --- |
+| 1842 | `web-server` | `127.0.0.1:8080` | `0.0.0.0:0` | `LISTEN` |
+| 1420 | `browser` | `192.0.2.10:53918` | `198.51.100.42:443` | `ESTABLISHED` |
+| 2714 | `database` | `127.0.0.1:5432` | `0.0.0.0:0` | `LISTEN` |
+
+`LISTEN` indica que el proceso espera conexiones en el extremo local. En esas filas, `0.0.0.0:0` en la columna remota no es un cliente observado. `ESTABLISHED` indica una conexión activa entre dos extremos: el navegador usa un puerto local efímero y se comunica con el puerto remoto `443`.
+
+El `web-server` y la `database` escuchan en `127.0.0.1`, la interfaz de loopback del ejemplo. La tabla no demuestra que sean accesibles desde otra máquina. Tampoco revela el contenido de la conexión del navegador ni prueba que el destino sea confiable: un estado de socket no es un veredicto de seguridad.
+
+## Armá evidencia, no una historia inventada
+
+Copiá las tres filas y agregá dos columnas: **qué observaste** y **qué comprobarías después**. Por ejemplo, para `browser`: “hay una conexión TCP activa asociada al PID 1420”; después comprobarías qué aplicación inició la conexión y, si fuera una investigación real autorizada, revisarías registros del servicio y contexto temporal. Con esta demo no podés verificar esas preguntas.
+
+Escribí dos hipótesis distintas compatibles con la tabla. Una puede ser actividad normal de una aplicación web local; otra, que necesites más contexto para explicar la conexión externa. Indicá qué dato adicional distinguiría ambas. No llames “incidente” a una fila por su aspecto.
+
+<Callout type="evidencia">
+  Entregá la captura con la etiqueta DEMO visible o la tabla sintética anotada,
+  más dos hipótesis y dos límites de la observación. Antes de compartir una
+  captura fuera del lab, verificá que siga en modo demo.
+</Callout>
