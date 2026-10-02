@@ -1,0 +1,178 @@
+---
+title: "Moverte en la terminal: cd sin perderte"
+description: "Abriste la terminal y no sabés dónde estás ni cómo llegar a tus archivos. Aprendé a ubicarte con pwd y ls y a moverte con cd, sin perderte en el camino."
+path: "linux-real"
+order: 0
+level: "beginner"
+estimatedMinutes: 15
+prerequisites:
+  - "Una terminal Linux o WSL"
+objectives:
+  - "Saber dónde estás con pwd y qué hay con ls"
+  - "Entrar y salir de carpetas con cd y cd .."
+  - "Ir directo a la raíz con cd / y a tu home con cd"
+  - "Volver a la carpeta anterior con cd -"
+  - "Distinguir rutas absolutas de relativas"
+evidence:
+  - "Salida de pwd al inicio y final del laboratorio"
+  - "Writeup corto: qué comando usaste en cada paso y si la ruta era absoluta o relativa"
+commands:
+  - "pwd"
+  - "ls"
+  - "cd .."
+  - "cd /"
+  - "cd"
+  - "cd /var/log"
+  - "cd -"
+challenge: "Desde tu home, entrá a /var/log con una ruta absoluta, subí una carpeta con cd .., volvé con cd - y terminá en tu home con cd. Corré pwd después de cada paso."
+nextLabs:
+  - "linux-real/filesystem-real"
+tags:
+  - "linux"
+  - "shell"
+  - "cd"
+contributor: "knighthw"
+published: 2026-10-01
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+Abriste la terminal y no sabés dónde estás ni cómo llegar a tus archivos. Antes de cualquier otro comando, necesitás saber ubicarte y moverte.
+
+
+## ¿Dónde estoy?
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+pwd
+ls
+```
+
+</TerminalBlock>
+
+`pwd` te muestra la carpeta en la que estás. Cuando abrís la terminal, casi siempre es tu **home**, tu carpeta personal:
+
+```text
+/home/tu-usuario
+```
+
+`ls` te muestra qué hay adentro. En vez de `tu-usuario` vas a ver tu nombre de usuario.
+
+## Retroceder una carpeta
+
+Ahora movete. Corré estos comandos de a uno y mirá qué cambia:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+pwd
+cd ..
+pwd
+```
+
+</TerminalBlock>
+
+```text
+/home/tu-usuario
+/home
+```
+
+El primer `pwd` te mostró tu home. `cd ..` te llevó a la carpeta de arriba, y el segundo `pwd` lo confirma: retrocediste una carpeta. Los dos puntos (`..`) significan "la carpeta que contiene a esta".
+
+
+## Ir a la raíz o a tu home con un solo cd
+
+No hace falta subir de a una carpeta. Hay dos lugares a los que llegás directo, estés donde estés:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# A la raíz
+cd /
+pwd
+
+# A tu home
+cd
+pwd
+```
+
+</TerminalBlock>
+
+```text
+/
+/home/tu-usuario
+```
+
+```text
+cd /     te lleva a la raíz
+cd       te lleva a tu home
+cd ~     lo mismo que cd: ~ es un atajo que significa "mi home"
+```
+
+Si alguna vez te perdés, `cd` te devuelve a un lugar conocido.
+
+## Rutas absolutas y relativas
+
+Hay dos formas de decirle a `cd` adónde ir.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# Absoluta: empieza con /
+cd /var/log
+pwd
+
+# Subí una carpeta
+cd ..
+pwd
+
+# Relativa: no empieza con /
+cd log
+pwd
+```
+
+</TerminalBlock>
+
+
+
+```text
+/var/log    absoluta: el camino completo desde la raíz.
+log         relativa: el camino desde donde estás parado.
+```
+
+`cd log` funcionó porque estabas en `/var`, y `log` está adentro de `/var`. Si lo corrés desde tu home, falla: ahí no hay ninguna carpeta `log`.
+
+<Callout type="comando">
+  Usá **Tab** para autocompletar. Escribí `cd /va` y apretá Tab: la terminal
+  completa `/var/`. Si hay varias opciones, apretá Tab dos veces y te las
+  muestra. Así escribís menos y evitás errores de tipeo.
+</Callout>
+
+<Callout type="error">
+  Los nombres con espacios necesitan comillas. Si tenés una carpeta llamada
+  `mis documentos`, `cd mis documentos` falla, porque la terminal lo entiende
+  como dos cosas distintas: `mis` y `documentos`. Escribí `cd "mis documentos"`
+  o `cd mis\ documentos`. Con Tab, la terminal pone la `\` por vos.
+</Callout>
+
+## Volver a donde estabas: cd -
+
+<TerminalBlock title="vt@labs:/var/log">
+
+```bash
+cd -
+cd -
+```
+
+</TerminalBlock>
+
+
+
+`cd -` te lleva a la carpeta en la que estabas antes, y te imprime cuál es. Si lo repetís, saltás de una a otra. Es útil cuando vas y venís entre dos lugares.
+
+<Callout type="evidencia">
+  Mientras hacés el lab, después de cada `cd` verificá dónde estás con `pwd`. Así practicás ubicarte en la terminal.
+</Callout>
+
