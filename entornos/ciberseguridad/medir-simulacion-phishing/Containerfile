@@ -1,0 +1,43 @@
+# Entorno: ciberseguridad/medir-simulacion-phishing
+# Construilo desde la raíz del repo (el contexto es entornos/):
+#   podman build -t osl/medir-simulacion-phishing -f entornos/ciberseguridad/medir-simulacion-phishing/Containerfile entornos
+FROM docker.io/library/python:3.13-slim
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl less procps \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --create-home --uid 1000 --shell /bin/bash vt
+
+# PhantomLog, con sus tests corriendo en el build: si fallan, no hay imagen.
+COPY ciberseguridad/medir-simulacion-phishing/phantomlog/requirements.txt /opt/phantomlog/requirements.txt
+RUN pip install --no-cache-dir --root-user-action=ignore -r /opt/phantomlog/requirements.txt
+COPY ciberseguridad/medir-simulacion-phishing/phantomlog/ /opt/phantomlog/
+RUN cd /opt/phantomlog \
+ && python -m pytest -q -p no:cacheprovider \
+ && find /opt/phantomlog -name __pycache__ -prune -exec rm -rf {} +
+
+COPY _lib/lab-check /usr/local/bin/lab-check
+COPY _lib/lab-check.sh /usr/local/lib/osl/lab-check.sh
+COPY _lib/bienvenida.sh /etc/profile.d/osl.sh
+COPY ciberseguridad/medir-simulacion-phishing/check.sh /usr/local/lib/osl/check.sh
+COPY ciberseguridad/medir-simulacion-phishing/bienvenida.txt /usr/local/lib/osl/bienvenida.txt
+COPY ciberseguridad/medir-simulacion-phishing/arranque.sh /usr/local/lib/osl/arranque.sh
+COPY ciberseguridad/medir-simulacion-phishing/herramientas/proxy.py /usr/local/lib/osl/proxy.py
+COPY ciberseguridad/medir-simulacion-phishing/herramientas/phantomlog-ctl /usr/local/bin/phantomlog-ctl
+COPY ciberseguridad/medir-simulacion-phishing/herramientas/filtros.py /home/vt/phishing/filtros.py
+COPY ciberseguridad/medir-simulacion-phishing/herramientas/reporte.py /home/vt/phishing/reporte.py
+COPY ciberseguridad/medir-simulacion-phishing/datos/ /home/vt/phishing/datos/
+COPY ciberseguridad/medir-simulacion-phishing/plantillas/ /home/vt/phishing/plantillas/
+
+# Contraseña falsa del panel, solo para este entorno: osl-lab-de-juguete.
+RUN chmod 0755 /usr/local/bin/lab-check /usr/local/bin/phantomlog-ctl /usr/local/lib/osl/arranque.sh \
+ && mkdir -p /etc/osl \
+ && python -c "from werkzeug.security import generate_password_hash as g; print(g('osl-lab-de-juguete'))" > /etc/osl/admin.hash \
+ && chown -R vt:vt /home/vt/phishing
+
+ENV OSL_LAB=ciberseguridad/medir-simulacion-phishing
+USER vt
+WORKDIR /home/vt/phishing
+ENTRYPOINT ["/usr/local/lib/osl/arranque.sh"]
+CMD ["bash", "-l"]

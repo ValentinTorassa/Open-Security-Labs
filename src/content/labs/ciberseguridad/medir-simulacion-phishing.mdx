@@ -1,0 +1,183 @@
+---
+title: "Medir una simulación de phishing sin vigilar a nadie"
+description: "Un clic en un link de prueba no siempre es una persona. Medí una simulación autorizada con PhantomLog: permiso por escrito, reporte agregado, clics de escáneres filtrados y la IP real detrás de un proxy."
+path: "ciberseguridad"
+order: 7
+level: "intermediate"
+estimatedMinutes: 45
+prerequisites:
+  - "Saber leer un CSV y correr un script de Python"
+  - "Idea básica de HTTP: método, headers y User-Agent"
+  - "El entorno con Podman de este lab, o Python 3 con Flask"
+objectives:
+  - "Escribir la autorización de una simulación antes de enviar un solo link"
+  - "Separar clics de personas de previsualizaciones, escáneres y gateways de correo"
+  - "Reportar una campaña en forma agregada, sin rankings ni nombres"
+  - "Explicar por qué remote_addr miente detrás de un proxy y cuándo confiar en X-Forwarded-For"
+evidence:
+  - "Autorización completa de una campaña ficticia: alcance, datos, retención y comunicación"
+  - "Reporte agregado con los clics descartados y el motivo de cada descarte"
+  - "Tres líneas de log: la IP sin ProxyFix, con ProxyFix y con un X-Forwarded-For falso"
+  - "Writeup sobre qué datos hacían falta de verdad para medir la campaña"
+commands:
+  - "python3 reporte.py datos"
+  - "curl --interface 127.0.0.2 'http://127.0.0.1:8081/log?id=prueba'"
+  - "phantomlog-ctl restart --proxies 1"
+  - "curl -H 'X-Forwarded-For: 203.0.113.66' 'http://127.0.0.1:5000/log?id=prueba'"
+challenge: "La campaña sintética del entorno reporta 65% de clics. Implementá la regla de ráfagas en filtros.py hasta que el reporte dé la tasa real, y explicá en cuatro líneas qué fueron los 42,5 puntos de diferencia, qué regla los atrapó y qué clic de persona podría estar descartando mal esa regla."
+nextLabs:
+  - "ciberseguridad/threat-modeling-app-chica"
+  - "backend-arquitectura/api-http-base"
+tags:
+  - "phishing"
+  - "awareness"
+  - "privacidad"
+  - "http"
+published: 2026-10-03
+resources:
+  - type: "video"
+    title: "Phishing por $20: así montan campañas (y cómo frenarlo)"
+    url: "https://www.youtube.com/watch?v=4io3vDf6_h8"
+    note: "Short: por qué conviene medir con simulaciones autorizadas antes de que llegue una campaña real."
+  - type: "repo"
+    title: "PhantomLog"
+    url: "https://github.com/ValentinTorassa/PhantomLog"
+    note: "El tracker de clics original. La versión del lab vive en entornos/ de este repo."
+environment:
+  summary: "PhantomLog corriendo detrás de un proxy de juguete, con los datos sintéticos de una campaña de 40 personas y el reporte agregado. lab-check revisa la autorización, el filtro de ráfagas, el reporte y las tres IP del experimento del proxy."
+  ports:
+    - "127.0.0.1:5000:5000"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import Mermaid from "../../../components/Mermaid.astro";
+
+Una simulación de phishing sirve para una sola cosa: saber si la capacitación funciona y dónde reforzarla. No sirve para escrachar a nadie. Y medirla bien es más difícil de lo que parece, porque buena parte de los "clics" no los hace una persona.
+
+En este lab usás [PhantomLog](https://github.com/ValentinTorassa/PhantomLog), un tracker de clics chico: genera un link único por destinatario y registra cuándo lo abren. No tiene formularios ni pide credenciales, y eso es a propósito. Todo lo que ves acá es sintético: personas seudónimas, IP de los rangos de documentación y una organización inventada.
+
+<Callout type="error">
+  Una simulación sin autorización escrita no es una simulación: es phishing.
+  No uses esta herramienta, ni ninguna parecida, sobre personas que no forman
+  parte de un ejercicio aprobado por quien tiene autoridad para aprobarlo.
+</Callout>
+
+## 1. Antes del primer link: la autorización
+
+La autorización no es un trámite. Es el documento que define qué vas a medir y qué no, y es lo primero que te van a pedir si algo sale mal. Como mínimo responde:
+
+```text
+quién autoriza y quién opera        por escrito, con cargo
+alcance                             áreas, cantidad de personas, canal, fechas
+fuera de alcance                    qué no se toca (por ejemplo, pedir contraseñas)
+qué se registra y qué no            PhantomLog: hora, id, IP, User-Agent, método
+quién ve los resultados             y en qué forma (agregada)
+retención y borrado                 cuándo se borran los logs crudos
+comunicación                        cómo y cuándo se avisa a las personas
+consecuencias                       qué pasa con quien hizo clic (debería ser: capacitación)
+```
+
+<Callout type="concepto">
+  La pregunta de la campaña es "¿qué porcentaje de la organización hace clic,
+  y en qué áreas conviene reforzar?". No es "¿quién hizo clic?". Esa diferencia
+  decide qué datos guardás y quién los ve.
+</Callout>
+
+## 2. Un clic no es una persona
+
+Cuando un mail llega a una organización, varias máquinas abren el link antes, o en lugar, de la persona:
+
+- **Gateways de correo** que "detonan" los links para revisarlos antes de entregar el mensaje. Suelen abrir los links de muchos destinatarios en segundos, desde la misma IP y con un User-Agent de navegador común.
+- **Escáneres** que solo piden `HEAD` para ver si el link responde.
+- **Previsualizaciones**: Slack, Telegram, WhatsApp y compañía piden la página para armar la tarjeta del link cuando alguien lo pega en un chat. A veces es justo la persona que pregunta "¿esto es phishing?", que es lo que querés que haga.
+- **Tu propio equipo** probando el link con `curl`.
+
+<Mermaid
+  caption="Tres de estos cuatro pedidos no son una persona haciendo clic."
+  code={`sequenceDiagram
+  participant G as Gateway de correo
+  participant S as Previsualización (Slack)
+  participant P as Persona
+  participant L as PhantomLog
+  G->>L: GET /log?id=… (22 ids en 8 s, misma IP)
+  G->>L: HEAD /log?id=…
+  S->>L: GET /log?id=… (User-Agent: Slackbot)
+  P->>L: GET /log?id=… (una vez, a su hora)`}
+/>
+
+Si contás todo, tu tasa de clics es la del gateway. En el entorno, la campaña sintética de 40 personas da **65%** con un conteo ingenuo. Las reglas de `filtros.py` descartan `HEAD` y User-Agents de bots; la de ráfagas (misma IP, tres o más ids distintos en diez segundos) te toca escribirla a vos.
+
+<TerminalBlock title="vt@labs:~/phishing">
+
+```bash
+python3 reporte.py datos      # 26 de 40 (65.0%): el gateway cuenta como gente
+nano filtros.py               # implementá es_rafaga
+python3 reporte.py datos      # la tasa real, con 30 clics descartados
+```
+
+</TerminalBlock>
+
+<Callout type="nota">
+  Ninguna regla es perfecta. Una oficina con NAT puede hacer que tres personas
+  reales compartan IP; un gateway nuevo puede no matchear ningún patrón. Por
+  eso el reporte dice cuántos clics descartó y por qué. Un número sin esa
+  línea no es un dato, es una opinión.
+</Callout>
+
+## 3. El reporte es agregado
+
+`reporte.py` no tiene una opción para listar personas, y eso también es a propósito. Muestra la tasa de la campaña y la de cada área, pero esconde las áreas con menos de cinco personas: un "1 de 4" en dirección señala a alguien con nombre y apellido aunque el reporte no lo diga.
+
+```text
+Personas que hicieron clic: 9 de 40 (22.5%)
+Por área (solo grupos de 5 o más):
+  finanzas     2 de 9 (22.2%)
+  ...
+  (1 área(s) con menos de 5 personas no se muestran)
+```
+
+El panel de PhantomLog sí muestra cada clic con su id. Es una herramienta de operación: la ve quien opera la campaña, con acceso restringido, y sus datos crudos se borran cuando vence la retención acordada.
+
+## 4. La IP que miente detrás de un proxy
+
+Casi ninguna app se publica sola: delante hay un nginx, un balanceador o el proxy de la plataforma donde la desplegás. Para la app, quien se conecta es **el proxy**, y `request.remote_addr` vale lo mismo para todos los clics. El proxy avisa la IP real en el header `X-Forwarded-For`.
+
+<TerminalBlock title="vt@labs:~/phishing">
+
+```bash
+# PhantomLog arrancó sin confiar en X-Forwarded-For (TRUSTED_PROXIES=0)
+curl --interface 127.0.0.2 'http://127.0.0.1:8081/log?id=prueba-1'
+tail -n 1 ~/phantomlog-datos/logs.csv     # IP: 127.0.0.1, la del proxy
+
+# Confiá en un salto: el único proxy que hay
+phantomlog-ctl restart --proxies 1
+curl --interface 127.0.0.3 'http://127.0.0.1:8081/log?id=prueba-2'
+tail -n 1 ~/phantomlog-datos/logs.csv     # IP: 127.0.0.3, la de origen
+```
+
+</TerminalBlock>
+
+`--interface` elige la IP de origen dentro de `127.0.0.0/8`, así podés simular clientes distintos en un solo contenedor. `TRUSTED_PROXIES` activa `ProxyFix` de Werkzeug, que toma la última IP de `X-Forwarded-For`: la que agregó tu proxy.
+
+<Callout type="error">
+  `X-Forwarded-For` lo puede escribir cualquiera. Si confiás en un salto pero
+  la app también se puede alcanzar sin pasar por el proxy, cualquier cliente
+  elige su IP. Probalo pegándole directo al 5000:
+
+`curl -H 'X-Forwarded-For: 203.0.113.66' 'http://127.0.0.1:5000/log?id=prueba-3'`
+
+Confiá en tantos saltos como proxies haya de verdad, y que la app escuche
+solo donde el proxy la alcanza.
+
+</Callout>
+
+## 5. Guardá menos
+
+Después de todo esto, mirá el log con otra pregunta: ¿qué hacía falta de verdad? Para la tasa de clics alcanza con el id seudónimo y una marca de "parece automático". La IP ayudó a detectar el gateway, pero se puede truncar o descartar cuando la campaña cierra. Lo que no guardás no se puede filtrar.
+
+<Callout type="evidencia">
+  Entregá la autorización completa, el reporte agregado con el filtro de
+  ráfagas, las tres líneas de log del experimento del proxy y un writeup corto:
+  qué datos hacían falta, cuáles guardarías y por cuánto tiempo.
+</Callout>

@@ -1,0 +1,61 @@
+#!/bin/bash
+# phantomlog-ctl: arranca, para y muestra PhantomLog en el entorno del lab.
+#   phantomlog-ctl start [--proxies N]   (N = TRUSTED_PROXIES, por defecto 0)
+#   phantomlog-ctl stop
+#   phantomlog-ctl restart [--proxies N]
+#   phantomlog-ctl estado
+set -u
+PID_FILE="$HOME/.phantomlog.pid"
+DATOS="$HOME/phantomlog-datos"
+
+proxies=0
+accion=${1:-estado}
+shift || true
+while [ $# -gt 0 ]; do
+  case $1 in
+    --proxies) proxies=${2:?falta el número}; shift 2 ;;
+    *) echo "opción desconocida: $1" >&2; exit 2 ;;
+  esac
+done
+
+corriendo() { [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; }
+
+start() {
+  if corriendo; then echo "PhantomLog ya corre (phantomlog-ctl restart para cambiarlo)."; return 0; fi
+  mkdir -p "$DATOS"
+  echo "$proxies" > "$HOME/.phantomlog.proxies"
+  DATA_DIR="$DATOS" ADMIN_USER=admin ADMIN_PASSWORD_HASH="$(cat /etc/osl/admin.hash)" \
+    TRUSTED_PROXIES="$proxies" \
+    gunicorn --chdir /opt/phantomlog --bind 0.0.0.0:5000 --workers 1 \
+      --pid "$PID_FILE" --daemon --error-logfile "$DATOS/gunicorn.log" app:app
+  # Espera a que responda. Pide el panel (401 sin login): /log registraría un clic.
+  for _ in $(seq 1 30); do
+    curl -s -o /dev/null --max-time 1 http://127.0.0.1:5000/ && break
+    sleep 0.2
+  done
+  estado
+}
+
+stop() {
+  if corriendo; then kill "$(cat "$PID_FILE")"; fi
+  for _ in 1 2 3 4 5 6 7 8 9 10; do corriendo || break; sleep 0.3; done
+  rm -f "$PID_FILE"
+}
+
+estado() {
+  if corriendo; then
+    echo "PhantomLog corre en :5000 con TRUSTED_PROXIES=$(cat "$HOME/.phantomlog.proxies" 2>/dev/null || echo 0)."
+    echo "Datos en $DATOS. Proxy de juguete en 127.0.0.1:8081."
+  else
+    echo "PhantomLog no está corriendo: phantomlog-ctl start"
+    return 1
+  fi
+}
+
+case $accion in
+  start) start ;;
+  stop) stop ;;
+  restart) stop; start ;;
+  estado) estado ;;
+  *) echo "uso: phantomlog-ctl start|stop|restart [--proxies N] | estado" >&2; exit 2 ;;
+esac

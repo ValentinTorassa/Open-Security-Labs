@@ -1,0 +1,17 @@
+Medir una simulación de phishing · entorno de Open Security Labs
+
+Corren PhantomLog en :5000 (sin confiar en X-Forwarded-For) y un proxy de
+juguete en 127.0.0.1:8081. Panel: http://127.0.0.1:5000, usuario admin,
+contraseña falsa osl-lab-de-juguete. phantomlog-ctl estado te dice cómo está.
+
+En ~/phishing tenés los datos sintéticos de una campaña (datos/), el reporte
+agregado (reporte.py), las reglas de filtrado (filtros.py) y una plantilla de
+autorización (plantillas/).
+
+Para lab-check, en ~/evidencia:
+  autorizacion.md  la plantilla completa, sin ningún <completar>
+  reporte.txt      la salida de: python3 reporte.py datos  (con la regla de
+                   ráfagas de filtros.py implementada)
+  proxy.md         qué IP registró PhantomLog detrás del proxy sin y con
+                   TRUSTED_PROXIES=1, y qué pasó con un X-Forwarded-For falso
+  writeup.md       ¿necesitabas la IP para medir la campaña? qué guardarías

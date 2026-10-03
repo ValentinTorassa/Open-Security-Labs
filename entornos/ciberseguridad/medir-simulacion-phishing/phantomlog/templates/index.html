@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PhantomLog · Open Security Labs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse at top left, rgba(94, 234, 212, 0.2), transparent),
+                  radial-gradient(ellipse at bottom right, rgba(147, 51, 234, 0.15), transparent);
+      z-index: -1;
+      animation: float 20s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0% { transform: translate(0, 0); }
+      50% { transform: translate(20px, 10px); }
+      100% { transform: translate(0, 0); }
+    }
+
+    .gradient-text {
+      background: linear-gradient(to right, #14b8a6, #8b5cf6, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-gray-200 font-sans">
+
+  <div class="max-w-5xl mx-auto py-10 px-4">
+    <h1 class="text-5xl font-extrabold mb-10 text-center gradient-text">🕵️ PhantomLog</h1>
+
+    <!-- Generador de Link -->
+    <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-lg p-6 mb-10">
+      <h2 class="text-2xl font-semibold mb-4">🚀 Generar nuevo link de rastreo</h2>
+      <form method="post" action="/generate" class="flex flex-col sm:flex-row gap-4">
+        <input type="text" name="user_id" placeholder="ID seudónimo (ej: persona-07)"
+               class="flex-1 px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400" required>
+        <button type="submit"
+                class="bg-cyan-500 text-white px-6 py-2 rounded-lg hover:bg-cyan-600 transition">⚡ Generar</button>
+      </form>
+    </div>
+
+    <!-- Logs de Acceso -->
+    <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-lg p-6 mb-10">
+      <h2 class="text-2xl font-semibold mb-4">📈 Logs de Acceso</h2>
+      <div class="overflow-auto">
+        <table class="w-full text-sm table-auto border-collapse">
+          <thead class="bg-gray-700 text-cyan-300">
+            <tr>
+              <th class="px-4 py-2 text-left">📅 Fecha/Hora</th>
+              <th class="px-4 py-2 text-left">🧑 ID Usuario</th>
+              <th class="px-4 py-2 text-left">🌐 IP</th>
+              <th class="px-4 py-2 text-left">🖥️ User-Agent</th>
+              <th class="px-4 py-2 text-left">Método</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if logs|length == 0 %}
+              <tr><td colspan="5" class="text-center text-gray-500 py-4">Sin accesos registrados aún.</td></tr>
+            {% else %}
+              {% for row in logs %}
+                <tr class="border-b border-gray-700">
+                  <td class="px-4 py-2">{{ row[0] }}</td>
+                  <td class="px-4 py-2">{{ row[1] }}</td>
+                  <td class="px-4 py-2">{{ row[2] }}</td>
+                  <td class="px-4 py-2 text-xs text-gray-400">{{ row[3] }}</td>
+                  <td class="px-4 py-2">{{ row[4] if row|length > 4 else '' }}</td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Links Generados -->
+    <div class="bg-gray-800 border border-gray-700 rounded-xl shadow-lg p-6">
+      <h2 class="text-2xl font-semibold mb-4">🔗 Links Generados</h2>
+      <div class="overflow-auto">
+        <table class="w-full text-sm table-auto border-collapse">
+          <thead class="bg-gray-700 text-pink-300">
+            <tr>
+              <th class="px-4 py-2 text-left">🧑 ID Usuario</th>
+              <th class="px-4 py-2 text-left">🔗 Link de Rastreo</th>
+              <th class="px-4 py-2 text-left">📋 Copiar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if links|length == 0 %}
+              <tr><td colspan="3" class="text-center text-gray-500 py-4">No hay links generados aún.</td></tr>
+            {% else %}
+              {% for user_id, full_url in links %}
+                <tr class="border-b border-gray-700">
+                  <td class="px-4 py-2">{{ user_id }}</td>
+                  <td class="px-4 py-2"><a href="{{ full_url }}" class="text-cyan-400 hover:underline" target="_blank">{{ full_url }}</a></td>
+                  <td class="px-4 py-2">
+                    <button data-url="{{ full_url }}" onclick="navigator.clipboard.writeText(this.dataset.url)"
+                            class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm text-white">Copiar</button>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
