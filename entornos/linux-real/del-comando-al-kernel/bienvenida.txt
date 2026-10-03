@@ -1,0 +1,13 @@
+Del comando al kernel · entorno de Open Security Labs
+
+Tenés strace instalado. Todo lo que traces corre adentro del contenedor.
+
+Para lab-check, guardá en ~/evidencia:
+  strace-c.txt        la salida de: strace -c ls /tmp
+  primer-archivo.txt  la línea de strace -e trace=openat ls /tmp que muestra
+                      el primer archivo que abre ls
+  fork-exec.txt       la traza de: strace -f -e trace=process bash -c 'ls >/dev/null; echo listo'
+  segfault.txt        lo que pasó con: bash -c 'kill -SEGV $$'; echo "salida: $?"
+  writeup.md          tres líneas: dónde termina user space y por qué importa
+
+Tip: strace escribe en stderr. Para guardarlo: strace -o archivo ... o 2> archivo.

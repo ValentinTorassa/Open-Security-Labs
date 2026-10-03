@@ -1,0 +1,244 @@
+---
+title: "Del comando al kernel: capas, syscalls y strace"
+description: "Qué pasa entre que escribís ls y aparece la lista. User space, kernel space y las syscalls que cruzan la frontera, vistas con strace en vez de imaginadas."
+path: "linux-real"
+order: 6
+level: "intermediate"
+estimatedMinutes: 30
+prerequisites:
+  - "Una terminal Linux con strace, o el entorno con Podman de este lab"
+  - "Haber hecho el lab de permisos, usuarios y procesos"
+objectives:
+  - "Ubicar las capas de un sistema Linux: programas, glibc, syscalls, kernel, drivers y hardware"
+  - "Explicar por qué un segfault mata un proceso y un bug en el kernel tira el sistema"
+  - "Leer una traza de strace y reconocer openat, read, write, clone, execve y wait4"
+  - "Ver el patrón fork + exec con el que la shell lanza cada comando"
+evidence:
+  - "Resumen de strace -c sobre ls con las syscalls que más se repiten"
+  - "El primer archivo que abre ls antes de llegar a main(), con la línea de strace que lo muestra"
+  - "Traza de bash -c lanzando un comando, con el clone, el execve y el wait4 marcados"
+  - "Writeup de tres líneas: dónde termina user space y por qué importa"
+commands:
+  - "strace -e trace=openat ls /tmp"
+  - "strace -c ls /tmp"
+  - "strace -f -e trace=process bash -c 'ls >/dev/null; echo listo'"
+  - "grep -E '^(Uid|Gid)' /proc/$$/status"
+challenge: "Elegí un comando que uses todos los días (cat, grep, curl). Corré strace -c y strace -e trace=openat sobre él. Explicá en tres líneas qué archivos abrió que no esperabas y qué syscalls dominan."
+nextLabs:
+  - "ciberseguridad/seccomp-observar-antes-de-bloquear"
+  - "linux-real/proceso-socket-evidencia-demo"
+tags:
+  - "linux"
+  - "kernel"
+  - "syscalls"
+  - "strace"
+published: 2026-10-03
+resources:
+  - type: "video"
+    title: "NO SABES COMO FUNCIONA TU COMPUTADORA (y es un PROBLEMA)"
+    url: "https://www.youtube.com/watch?v=e0PXJWR3VJ0"
+    note: "Capas, procesos, scheduler y syscalls: el mismo recorrido, explicado en video."
+  - type: "repo"
+    title: "Linux-Study-Notes-VT: notas de estudio para la LFCA"
+    url: "https://github.com/ValentinTorassa/Linux-Study-Notes-VT"
+    note: "Las notas originales en inglés de las que sale este lab (CC BY 4.0)."
+environment:
+  summary: "Debian con strace para trazar ls y la shell sin tocar tu sistema. lab-check revisa tus trazas, el resumen de syscalls y el segfault que no tira nada."
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import Mermaid from "../../../components/Mermaid.astro";
+import Quiz from "../../../components/Quiz.astro";
+
+Escribís `ls` y aparece una lista. En el medio, `ls` nunca tocó el disco: le pidió al kernel que abra un directorio, que le pase las entradas y que escriba el resultado en tu terminal. Este lab es sobre ese pedido, que tiene nombre (**syscall**) y se puede ver entero con `strace`.
+
+<Callout type="concepto">
+  Cada capa de Linux solo le habla a la de abajo. Por eso el mismo `write()`
+  funciona igual sobre un archivo, un pipe o un socket, en cualquier disco: tu
+  programa nunca sabe qué hardware tiene debajo, y no le hace falta.
+</Callout>
+
+## Las capas
+
+<Mermaid
+  caption="La línea que importa es la interfaz de syscalls: arriba, user space; abajo, kernel space."
+  code={`graph TD
+  A["Programas<br/>bash · ls · tu código"]
+  B["Biblioteca de C (glibc)<br/>envuelve las syscalls en funciones"]
+  C["Interfaz de syscalls<br/>openat · read · write · clone · execve · mmap"]
+  D["Kernel<br/>procesos · memoria · VFS · red"]
+  E["Drivers<br/>hablan con cada dispositivo"]
+  F["Hardware<br/>CPU · RAM · disco · placa de red"]
+  A --> B --> C --> D --> E --> F`}
+/>
+
+El código de user space corre en el **ring 3** de la CPU. Las instrucciones que tocan hardware necesitan **ring 0**, donde corre el kernel. Si un programa intenta leer memoria que no es suya o hablarle directo a un dispositivo, la CPU genera una falla antes de que pase nada y el kernel mata al proceso. No es una política escrita en un archivo: lo hace el silicio.
+
+## La frontera: user space y kernel space
+
+Cada proceso tiene su propio espacio de direcciones virtual. Las **tablas de páginas** que arma el kernel traducen esas direcciones a memoria física, y un proceso no tiene ninguna entrada que apunte a las páginas de otro. No hay un camino que bloquear: el camino no existe.
+
+Eso explica la diferencia entre dos fallas que suenan parecidas:
+
+```text
+segfault en user space   el proceso muere, el kernel limpia y el sistema sigue
+bug en el kernel         no hay nadie más arriba que lo ataje: kernel panic
+```
+
+Probalo con un proceso que se manda a sí mismo `SIGSEGV`:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+{ bash -c 'kill -SEGV $$'; echo "salida: $?"; }
+# bash: line 1: 22 Segmentation fault (core dumped) bash -c 'kill -SEGV $$'
+# salida: 139
+```
+
+</TerminalBlock>
+
+`139` es `128 + 11`, y `11` es el número de `SIGSEGV`. El hijo murió; tu shell siguió como si nada. Por eso un módulo del kernel de origen dudoso es un riesgo distinto a un programa con bugs: los módulos corren en ring 0, con todos los privilegios, y un error ahí no queda contenido.
+
+## Syscalls: la única puerta
+
+Para cruzar de forma legítima, el programa pone el número de syscall en un registro (`rax` en x86-64), los argumentos en otros y ejecuta la instrucción `syscall`. La CPU pasa a ring 0, el kernel busca el handler en una tabla por ese número, hace el trabajo y devuelve el resultado. El programa nunca estuvo en ring 0: esperó.
+
+| Syscall | Qué hace |
+| --- | --- |
+| `openat` | Abre un archivo y devuelve un file descriptor |
+| `read` / `write` | Lee o escribe bytes sobre un file descriptor |
+| `close` | Libera el file descriptor |
+| `clone` | Crea un proceso hijo (lo que glibc usa para `fork()`) |
+| `execve` | Reemplaza la imagen del proceso por otro programa |
+| `mmap` | Mapea memoria; es lo que termina llamando `malloc` |
+| `wait4` | Espera a que un hijo termine |
+| `exit_group` | Termina el proceso |
+
+Casi nunca las llamás directo: glibc las envuelve. `fopen()` termina en `openat`, `malloc()` en `mmap` o `brk`, y los runtimes de Python, Go o Node se apoyan en la misma interfaz.
+
+<Callout type="nota">
+  En muchos apuntes vas a ver `open` y `fork`. Los programas actuales usan
+  `openat` y `clone`, que hacen lo mismo con más opciones. Si buscás `open(` en
+  una traza moderna, no lo vas a encontrar.
+</Callout>
+
+## strace: lo que el programa hace de verdad
+
+`strace` muestra cada syscall de un proceso con sus argumentos y su resultado. Es honesto: no muestra lo que el código dice que hace, muestra lo que le pide al kernel.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+# Solo las aperturas de archivos
+strace -e trace=openat ls /tmp
+
+# Un resumen: cuántas veces se llamó cada syscall
+strace -c ls /tmp
+```
+
+</TerminalBlock>
+
+La primera línea de la traza de `ls` casi seguro es esta:
+
+```text
+openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+```
+
+Es el linker dinámico buscando dónde están las bibliotecas compartidas, antes de que `main()` de `ls` empiece a correr. Después vienen `libc.so.6`, `libselinux` y compañía. Un "programa corriendo" es bastante más que el código que escribió su autor.
+
+<Callout type="error">
+  `strace` frena mucho al proceso que traza y puede mostrar datos sensibles en
+  los argumentos (rutas, contenidos que se escriben, a veces secretos). Usalo
+  en tu máquina o en un entorno descartable, no colgado de un proceso de
+  producción sin entender el costo.
+</Callout>
+
+## fork + exec: cómo la shell lanza un comando
+
+Cada comando que escribís sigue el mismo patrón: la shell se **clona**, el hijo se **reemplaza** con el programa pedido y el padre **espera**.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+strace -f -e trace=process bash -c 'ls >/dev/null; echo listo'
+```
+
+</TerminalBlock>
+
+```text
+execve("/usr/bin/bash", ["bash", "-c", "ls >/dev/null; echo listo"], ...) = 0
+clone(child_stack=NULL, flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLD, ...) = 21
+[pid    20] wait4(-1,  <unfinished ...>
+[pid    21] execve("/usr/bin/ls", ["ls"], ...) = 0
+[pid    21] exit_group(0)               = ?
+<... wait4 resumed>[{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 21
+```
+
+`-f` hace que strace siga a los hijos. El `; echo listo` está a propósito: si le das a `bash -c` un solo comando, bash se ahorra el `clone` y hace `execve` directo, y la traza no muestra el patrón.
+
+## Root también es un número
+
+El kernel nunca escuchó hablar de `vt`. Conoce el UID `1000`, y todas sus decisiones de permisos se toman con números. Cada proceso lleva varios:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+grep -E '^(Uid|Gid)' /proc/$$/status
+# Uid:	1000	1000	1000	1000   real, efectivo, guardado y de filesystem
+```
+
+</TerminalBlock>
+
+El que el kernel mira para decidir es el **efectivo**. Root es el UID `0` y nada más: el kernel tiene condiciones del tipo "si el UID efectivo es 0, saltá este chequeo". `sudo` es un binario setuid: al ejecutarlo, su UID efectivo pasa a ser 0, revisa `/etc/sudoers` y deja un registro por comando. Trabajar siempre como root no deja ese registro y hace que cada typo corra con todos los privilegios.
+
+## Quiz
+
+<Quiz
+  questions={[
+    {
+      q: "Un programa hace un segfault. ¿Qué pasa con el resto del sistema?",
+      options: [
+        "Se reinicia, porque el kernel no puede seguir",
+        "Sigue funcionando: el proceso muere y el kernel limpia sus recursos",
+        "Se cuelgan todos los procesos del mismo usuario",
+      ],
+      answer: 1,
+      explain:
+        "El proceso nunca tuvo acceso a memoria ajena ni al hardware, así que no puede llevarse nada puesto. Un kernel panic es otra cosa: un bug en código que corre en ring 0.",
+    },
+    {
+      q: "¿Cuál es el primer archivo que abre ls, antes de su main()?",
+      options: ["/etc/passwd", "/etc/ld.so.cache", "El directorio que le pasaste"],
+      answer: 1,
+      explain:
+        "El linker dinámico consulta /etc/ld.so.cache para encontrar las bibliotecas compartidas. Lo ves en la primera línea de strace -e trace=openat ls.",
+    },
+    {
+      q: "Con strace -f, la shell lanza ls. ¿En qué orden aparecen las syscalls?",
+      options: [
+        "execve en el padre y después clone",
+        "clone, execve en el hijo y wait4 en el padre",
+        "Solo execve: la shell no crea procesos",
+      ],
+      answer: 1,
+      explain:
+        "fork + exec: la shell se clona, el hijo se reemplaza con ls usando execve y el padre espera con wait4.",
+    },
+  ]}
+/>
+
+<Callout type="evidencia">
+  Guardá el resumen de `strace -c`, la línea del primer `openat`, la traza de
+  fork + exec y el resultado del segfault. Cerrá con tres líneas propias: dónde
+  termina user space, qué la protege y por qué te importa al debuggear.
+</Callout>
+
+<Callout type="nota">
+  Este lab adapta y traduce al español las notas de estudio para la LFCA de
+  Valentín Torassa Colombero, sección "01 · big picture" de
+  [Linux-Study-Notes-VT](https://github.com/ValentinTorassa/Linux-Study-Notes-VT),
+  publicadas bajo [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+  Cambios: traducción, recorte, ejemplos verificados con strace en Debian 13 y
+  ejercicios nuevos.
+</Callout>

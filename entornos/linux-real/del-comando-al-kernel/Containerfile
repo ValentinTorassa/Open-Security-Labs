@@ -1,0 +1,26 @@
+# Entorno: linux-real/del-comando-al-kernel
+# Construilo desde la raíz del repo (el contexto es entornos/):
+#   podman build -t osl/del-comando-al-kernel -f entornos/linux-real/del-comando-al-kernel/Containerfile entornos
+#
+# strace usa ptrace sobre procesos hijos tuyos: el perfil seccomp por defecto
+# de Podman y de Docker lo permite sin capabilities extra.
+FROM docker.io/library/debian:trixie-slim
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends less procps strace \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --create-home --uid 1000 --shell /bin/bash vt
+
+COPY _lib/lab-check /usr/local/bin/lab-check
+COPY _lib/lab-check.sh /usr/local/lib/osl/lab-check.sh
+COPY _lib/bienvenida.sh /etc/profile.d/osl.sh
+COPY linux-real/del-comando-al-kernel/check.sh /usr/local/lib/osl/check.sh
+COPY linux-real/del-comando-al-kernel/bienvenida.txt /usr/local/lib/osl/bienvenida.txt
+
+RUN chmod 0755 /usr/local/bin/lab-check
+
+ENV OSL_LAB=linux-real/del-comando-al-kernel
+USER vt
+WORKDIR /home/vt
+CMD ["bash", "-l"]
