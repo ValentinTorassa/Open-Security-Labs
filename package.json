@@ -15,6 +15,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "audit": "node scripts/audit-deps.mjs",
     "lab:check": "node scripts/lab-checks.mjs",
     "lab:env": "node scripts/lab-env.mjs",
     "dev": "astro dev",
