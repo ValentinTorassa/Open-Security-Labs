@@ -7,3 +7,4 @@ yarn.lock
 src/content/**/*.mdx
 # Código copiado de PhantomLog: conserva su formato original.
 entornos/ciberseguridad/medir-simulacion-phishing/phantomlog/
+entornos/ciberseguridad/sql-injection-parametrizada/sqli/

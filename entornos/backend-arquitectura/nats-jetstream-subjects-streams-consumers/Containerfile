@@ -1,0 +1,31 @@
+# Entorno: backend-arquitectura/nats-jetstream-subjects-streams-consumers
+# Construilo desde la raíz del repo (el contexto es entornos/):
+#   podman build -t osl/nats-jetstream-subjects-streams-consumers -f entornos/backend-arquitectura/nats-jetstream-subjects-streams-consumers/Containerfile entornos
+FROM docker.io/library/nats:2.11-alpine AS servidor
+FROM docker.io/natsio/nats-box:0.20.0 AS cli
+
+FROM docker.io/library/debian:trixie-slim
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends jq less procps \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --create-home --uid 1000 --shell /bin/bash vt
+
+COPY --from=servidor /usr/local/bin/nats-server /usr/local/bin/nats-server
+COPY --from=cli /usr/local/bin/nats /usr/local/bin/nats
+
+COPY _lib/lab-check /usr/local/bin/lab-check
+COPY _lib/lab-check.sh /usr/local/lib/osl/lab-check.sh
+COPY _lib/bienvenida.sh /etc/profile.d/osl.sh
+COPY backend-arquitectura/nats-jetstream-subjects-streams-consumers/check.sh /usr/local/lib/osl/check.sh
+COPY backend-arquitectura/nats-jetstream-subjects-streams-consumers/bienvenida.txt /usr/local/lib/osl/bienvenida.txt
+COPY backend-arquitectura/nats-jetstream-subjects-streams-consumers/arranque.sh /usr/local/lib/osl/arranque.sh
+
+RUN chmod 0755 /usr/local/bin/lab-check /usr/local/lib/osl/arranque.sh
+
+ENV OSL_LAB=backend-arquitectura/nats-jetstream-subjects-streams-consumers
+USER vt
+WORKDIR /home/vt
+ENTRYPOINT ["/usr/local/lib/osl/arranque.sh"]
+CMD ["bash", "-l"]

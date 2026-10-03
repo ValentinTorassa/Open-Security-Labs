@@ -1,0 +1,19 @@
+TLS sin magia · entorno de Open Security Labs
+
+Hay cuatro servidores TLS de juguete en 127.0.0.1 y una CA de juguete en
+~/tls/ca.crt. Ninguno sale a internet.
+
+  8443  tienda.lab.test (probá también pedir api.lab.test por SNI)
+  8444  viejo.lab.test
+  8445  pagos.lab.test (eso dice el cliente que busca)
+  8446  interno.lab.test
+
+Para leerlos:
+  openssl s_client -connect 127.0.0.1:8443 -servername tienda.lab.test </dev/null 2>/dev/null \
+    | openssl x509 -noout -subject -issuer -dates -ext subjectAltName
+  curl -v --cacert ~/tls/ca.crt --resolve tienda.lab.test:8443:127.0.0.1 https://tienda.lab.test:8443/ -o /dev/null
+
+Para lab-check, en ~/evidencia:
+  curl-ok.txt  el curl -v que valida tienda.lab.test contra la CA de juguete
+  tls.md       una fila por puerto: qué pediste, qué certificado llegó
+               (subject, SAN, issuer, notAfter), qué falló y por qué

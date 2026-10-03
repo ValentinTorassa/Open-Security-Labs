@@ -1,0 +1,14 @@
+SQL injection defensiva · entorno de Open Security Labs
+
+En ~/sqli hay una base SQLite de juguete (usuarios.db, cinco usuarios
+inventados) y dos scripts:
+  buscar_vulnerable.py   concatena el email en el SQL (el bug)
+  buscar_seguro.py       tu turno: pasalo a query parametrizada
+
+Probá los dos con un email normal y con este input de juguete:  ' OR '1'='1
+
+Para lab-check:
+  1. buscar_seguro.py con parámetro: un email devuelve un usuario, el input
+     de juguete no devuelve ninguno.
+  2. ~/evidencia/sqli.md con la tabla source, sink, impacto y mitigación, y
+     qué devolvió cada script con cada input.

@@ -1,0 +1,12 @@
+NATS y JetStream · entorno de Open Security Labs
+
+nats-server corre con JetStream en 127.0.0.1:4222 y el CLI ya tiene el
+contexto local-lab seleccionado. Saltéate la parte de docker run del lab:
+seguí desde "Subjects y wildcards". Para los ejercicios de dos terminales,
+abrí otra con: podman exec -it osl-nats-jetstream-subjects-streams-consumers bash -l
+
+Para lab-check, hacé el reto del lab:
+  1. Un stream TASKS que capture tasks y tasks.>
+  2. Tres eventos JSON publicados en esos subjects
+  3. Un consumer durable con ACK explícito que los consuma
+  4. ~/evidencia/nats.md: por qué tasks.> no captura el subject exacto tasks

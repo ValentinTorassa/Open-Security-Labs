@@ -1,0 +1,37 @@
+# Entorno: ciberseguridad/por-que-chmod-777
+# Construilo desde la raíz del repo (el contexto es entornos/):
+#   podman build -t osl/por-que-chmod-777 -f entornos/ciberseguridad/por-que-chmod-777/Containerfile entornos
+FROM docker.io/library/debian:trixie-slim
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends less nano \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --create-home --uid 1000 --shell /bin/bash vt
+
+COPY _lib/lab-check /usr/local/bin/lab-check
+COPY _lib/lab-check.sh /usr/local/lib/osl/lab-check.sh
+COPY _lib/bienvenida.sh /etc/profile.d/osl.sh
+COPY ciberseguridad/por-que-chmod-777/check.sh /usr/local/lib/osl/check.sh
+COPY ciberseguridad/por-que-chmod-777/bienvenida.txt /usr/local/lib/osl/bienvenida.txt
+
+# ~/app: una app de juguete donde alguien "arregló" todo con 777 y 666.
+RUN chmod 0755 /usr/local/bin/lab-check \
+ && install -d -o vt -g vt /home/vt/app /home/vt/app/uploads /home/vt/app/logs /home/vt/app/data \
+ && cd /home/vt/app \
+ && printf 'DB_PASSWORD=falsa-solo-para-el-lab\nAPI_TOKEN=tok_falso_000\n' > .env \
+ && printf '#!/bin/sh\n# lo corre un cron como root todas las noches\necho deploy de juguete\n' > deploy.sh \
+ && printf '{"puerto": 8080, "modo": "demo"}\n' > config.json \
+ && printf 'id,monto\n1,100\n' > data/reporte.csv \
+ && printf '# app de juguete\n' > README.md \
+ && printf 'arranque ok\n' > logs/app.log \
+ && chown -R vt:vt /home/vt/app \
+ && chmod 666 .env \
+ && chmod 777 deploy.sh config.json uploads logs \
+ && chmod 646 data/reporte.csv \
+ && chmod 644 README.md logs/app.log
+
+ENV OSL_LAB=ciberseguridad/por-que-chmod-777
+USER vt
+WORKDIR /home/vt/app
+CMD ["bash", "-l"]

@@ -1,0 +1,12 @@
+Por qué chmod 777 es un problema · entorno de Open Security Labs
+
+En ~/app hay una app de juguete donde alguien "arregló" los problemas de
+permisos con 777 y 666. deploy.sh lo corre un cron como root todas las
+noches (en la historia del lab).
+
+Para lab-check:
+  1. Encontrá lo que cualquiera puede escribir: find . -perm -o=w
+  2. Dejá cada cosa con el permiso mínimo que la deje funcionar: el secreto
+     solo para vos, el script ejecutable pero no escribible por otros.
+  3. Escribí ~/evidencia/777.md: una línea por archivo con el permiso que
+     elegiste y por qué.
