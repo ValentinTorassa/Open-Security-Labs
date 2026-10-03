@@ -1,0 +1,55 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  items: CollectionEntry<"labs">["data"]["resources"];
+}
+const { items } = Astro.props;
+
+const label = {
+  video: "video",
+  doc: "doc",
+  repo: "repo",
+  guide: "guía",
+} as const;
+
+const heading = items.every((r) => r.type === "video")
+  ? "Miralo en video"
+  : "Para ver y leer";
+---
+
+{
+  items.length > 0 && (
+    <section
+      class="border-base-700 bg-base-850/60 my-6 rounded-lg border p-4"
+      aria-label="Material complementario"
+    >
+      <h3 class="rule-label mb-3">{heading}</h3>
+      <ul class="space-y-2.5">
+        {items.map((r) => (
+          <li class="flex gap-2.5 text-sm">
+            <span class="text-term-red mt-0.5 font-mono" aria-hidden="true">
+              {r.type === "video" ? "▶" : "→"}
+            </span>
+            <span>
+              <a
+                href={r.url}
+                class="text-base-50 hover:text-term-green font-medium hover:underline"
+                rel="noopener"
+                target="_blank"
+              >
+                {r.title}
+              </a>
+              <span class="text-base-500 ml-1.5 font-mono text-xs">
+                {r.type === "video" ? "VT Security · YouTube" : label[r.type]}
+              </span>
+              {r.note && (
+                <span class="text-base-400 block text-xs">{r.note}</span>
+              )}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}

@@ -38,6 +38,29 @@ const labs = defineCollection({
     published: z.coerce.date().optional(),
     updated: z.coerce.date().optional(),
     draft: z.boolean().default(false),
+    // Material complementario. Los videos son de VT Security y tratan el
+    // mismo tema o herramienta del lab; nunca un link "parecido".
+    resources: z
+      .array(
+        z
+          .object({
+            type: z.enum(["video", "doc", "repo", "guide"]),
+            title: z.string().min(1),
+            url: z.string().url(),
+            // Una línea: qué parte del lab cubre.
+            note: z.string().min(1).optional(),
+          })
+          .refine(
+            (r) =>
+              r.type !== "video" ||
+              /^https:\/\/www\.youtube\.com\/watch\?v=[\w-]{11}$/.test(r.url),
+            {
+              message:
+                "un video va como https://www.youtube.com/watch?v=<id de 11 caracteres>",
+            },
+          ),
+      )
+      .default([]),
   }),
 });
 

@@ -118,6 +118,10 @@ generan automáticamente desde el frontmatter.
    ---
    ```
 
+   Opcional: `resources` suma material para ver o leer. Un video de VT Security
+   va con `type: "video"`, `title`, `url` (`https://www.youtube.com/watch?v=<id>`)
+   y una `note` de una línea, y solo si trata el mismo tema o herramienta del lab.
+
 3. Escribí la lección. Importá los componentes que necesites arriba del MDX.
 4. Verificá con `npm run check` y mirá el resultado con `npm run dev`.
 5. Abrí un Pull Request. Mirá [`CONTRIBUTING.md`](./CONTRIBUTING.md).
