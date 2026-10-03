@@ -36,3 +36,7 @@ evidencia/
 yarn.lock
 pnpm-lock.yaml
 .vercel
+
+# artefactos locales de Python en los entornos
+__pycache__/
+*.py[cod]
