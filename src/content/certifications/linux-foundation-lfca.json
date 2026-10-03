@@ -1,0 +1,222 @@
+{
+  "slug": "linux-foundation-lfca",
+  "order": 10,
+  "name": "Linux Foundation Certified IT Associate (LFCA)",
+  "code": "LFCA",
+  "vendor": "Linux Foundation",
+  "badge": "LF",
+  "level": "Fundamental",
+  "icon": "terminal",
+  "accent": "#003778",
+  "summary": "La certificación de entrada de la Linux Foundation: fundamentos de Linux, administración de sistemas, cloud, seguridad, DevOps y gestión de proyectos IT. Opción múltiple, pensada para quien arranca en IT.",
+  "prepTips": [
+    "Administración de sistemas pesa 30%: usuarios, permisos, procesos, servicios y red desde la terminal. Practicalo en una máquina o en los entornos de los labs, no solo leyendo.",
+    "Entendé el modelo antes que los comandos: capas del sistema, user space y kernel space, syscalls y root como UID 0. Las preguntas premian saber por qué pasa algo, no memorizar flags.",
+    "Repasá el vocabulario de base: Unix en Bell Labs, kernel Linux más userland GNU, qué es una distribución y qué define POSIX.",
+    "Cloud, DevOps y gestión de proyectos son conceptuales (IaaS, PaaS y SaaS, contenedores, CI/CD, Git, metodologías ágiles). Si ya trabajás con eso, priorizá Linux: es la parte que más preparación pide.",
+    "How Linux Works (Brian Ward, No Starch Press) cubre la parte de Linux con la profundidad que hace falta, y un poco más."
+  ],
+  "studyResources": [
+    {
+      "name": "Así saqué mi certificación de Linux (y esto aprendí)",
+      "platform": "YouTube / VT Security",
+      "type": "video",
+      "url": "https://www.youtube.com/watch?v=BDAZs4XnJ1A",
+      "free": true,
+      "desc": "Experiencia real preparando y rindiendo la LFCA: qué entra, qué tan difícil es, cuánto estudio llevó y qué material sirvió."
+    },
+    {
+      "name": "Mi estrategia para aprobar la LFCA (con Obsidian)",
+      "platform": "YouTube / VT Security",
+      "type": "video",
+      "url": "https://www.youtube.com/watch?v=q55uWbE3hh4",
+      "free": true,
+      "desc": "Short: cómo se organizaron las notas de estudio en un vault de Obsidian y por qué Linux fue la parte que más preparación pidió."
+    },
+    {
+      "name": "Linux-Study-Notes-VT",
+      "platform": "GitHub / VT Security",
+      "type": "doc",
+      "url": "https://github.com/ValentinTorassa/Linux-Study-Notes-VT",
+      "free": true,
+      "desc": "Notas de estudio para la LFCA en inglés, como vault de Obsidian y bajo CC BY 4.0. Cubren la sección de panorama general (kernel, syscalls, usuarios, historia de Unix); el lab Del comando al kernel las adapta al español."
+    },
+    {
+      "name": "Introduction to Linux (LFS101)",
+      "platform": "Linux Foundation",
+      "type": "course",
+      "url": "https://training.linuxfoundation.org/training/introduction-to-linux/",
+      "free": true,
+      "desc": "El curso gratuito de la Linux Foundation para arrancar con Linux desde cero, la parte más pesada del examen."
+    },
+    {
+      "name": "LFCA: página oficial del examen",
+      "platform": "Linux Foundation",
+      "type": "guide",
+      "url": "https://training.linuxfoundation.org/certification/certified-it-associate/",
+      "free": true,
+      "desc": "Dominios con su peso, precio, elegibilidad de 12 meses y la política de un reintento incluido."
+    }
+  ],
+  "meta": {
+    "questions": 60,
+    "durationMin": 90,
+    "passingScore": "75%",
+    "cost": "USD 250",
+    "validityYears": 2,
+    "format": "Opción múltiple, online y supervisado (proctored)"
+  },
+  "outcomes": [
+    "Moverte por un sistema Linux desde la terminal: archivos, permisos, procesos y servicios.",
+    "Explicar cómo se arma un sistema: kernel, userland, distribución y la frontera entre user space y kernel space.",
+    "Entender los modelos de cloud y los conceptos base de seguridad, DevOps y gestión de proyectos IT.",
+    "Mostrar una credencial de entrada verificable para tu primer trabajo en IT."
+  ],
+  "domains": [
+    {
+      "name": "Fundamentos de Linux",
+      "weight": 16,
+      "labIds": [
+        "linux-real/filesystem-real",
+        "linux-real/del-comando-al-kernel",
+        "linux-real/encontrar-archivos-y-texto"
+      ]
+    },
+    {
+      "name": "Administración de sistemas",
+      "weight": 30,
+      "labIds": [
+        "linux-real/permisos-usuarios-procesos",
+        "linux-real/permisos-en-octal",
+        "linux-real/systemd-y-journalctl",
+        "linux-real/proceso-socket-evidencia-demo",
+        "redes-internet/una-request-no-es-magia"
+      ]
+    },
+    {
+      "name": "Fundamentos de cloud",
+      "weight": 18,
+      "labIds": [
+        "cloud-produccion/aws-desde-cero",
+        "cloud-produccion/vpc-security-groups"
+      ]
+    },
+    {
+      "name": "Fundamentos de seguridad",
+      "weight": 14,
+      "labIds": [
+        "ciberseguridad/por-que-chmod-777",
+        "ciberseguridad/hashear-no-es-cifrar",
+        "redes-internet/tls-sin-magia"
+      ]
+    },
+    {
+      "name": "Fundamentos de DevOps",
+      "weight": 12,
+      "labIds": [
+        "devsecops-agentes/secret-scanning-token-al-repo",
+        "devsecops-agentes/docker-image-hardening"
+      ]
+    },
+    {
+      "name": "Gestión de proyectos IT",
+      "weight": 10,
+      "labIds": []
+    }
+  ],
+  "relatedPaths": ["linux-real", "redes-internet", "cloud-produccion"],
+  "exam": [
+    {
+      "q": "¿Cuáles son las tres tareas centrales del kernel de Linux?",
+      "options": [
+        "Gestión de procesos, gestión de memoria y drivers de dispositivos",
+        "Compilar programas, instalar paquetes y manejar el escritorio",
+        "Resolver DNS, servir páginas web y guardar logs"
+      ],
+      "answer": 0,
+      "explain": "El kernel reparte la CPU entre procesos, mantiene la memoria virtual de cada uno y habla con el hardware a través de los drivers. Compilar, instalar paquetes o resolver DNS son programas de user space."
+    },
+    {
+      "q": "¿Qué tipo de kernel es Linux?",
+      "options": [
+        "Microkernel, como Mach",
+        "Monolítico con módulos que se cargan en tiempo de ejecución",
+        "Un kernel distinto por cada distribución"
+      ],
+      "answer": 1,
+      "explain": "Scheduler, memoria, filesystems, red y drivers corren en un mismo bloque privilegiado. Los módulos (modprobe) se cargan sin recompilar, pero corren en ring 0 con todos los privilegios."
+    },
+    {
+      "q": "Un programa hace un segfault. ¿Qué pasa con el resto del sistema?",
+      "options": [
+        "Sigue funcionando: el kernel mata al proceso y libera sus recursos",
+        "Se reinicia, porque la falla llega al kernel",
+        "Se cuelgan los procesos del mismo usuario"
+      ],
+      "answer": 0,
+      "explain": "Un proceso de user space no tiene acceso a memoria ajena ni al hardware, así que su caída queda contenida. Un bug en código que corre en el kernel, en cambio, puede terminar en kernel panic."
+    },
+    {
+      "q": "¿Cuál es la única forma legítima de que un programa le pida algo al kernel?",
+      "options": [
+        "Escribir directo en la memoria del kernel",
+        "Una syscall (por ejemplo openat, read, write o execve)",
+        "Un archivo en /etc"
+      ],
+      "answer": 1,
+      "explain": "Las syscalls son la interfaz entre user space y kernel space. glibc las envuelve en funciones como fopen() o malloc()."
+    },
+    {
+      "q": "¿Qué herramienta muestra en vivo las syscalls que hace un proceso?",
+      "options": ["top", "strace", "chmod"],
+      "answer": 1,
+      "explain": "strace muestra cada syscall con sus argumentos y su resultado. top muestra consumo de recursos; chmod cambia permisos."
+    },
+    {
+      "q": "¿Qué hace especial al usuario root para el kernel?",
+      "options": [
+        "Su nombre de usuario",
+        "Su UID, que es 0",
+        "Que esté en el grupo sudo"
+      ],
+      "answer": 1,
+      "explain": "El kernel decide con números: el UID efectivo 0 saltea los chequeos de permisos. El nombre root vive en /etc/passwd solo para las personas."
+    },
+    {
+      "q": "¿Qué es una distribución de Linux?",
+      "options": [
+        "Un kernel distinto, escrito por cada empresa",
+        "El kernel Linux empaquetado con userland, sistema de init y gestor de paquetes",
+        "Una versión de Linux que solo corre en servidores"
+      ],
+      "answer": 1,
+      "explain": "El kernel es la parte común. Debian, Fedora o Alpine lo combinan con herramientas GNU (o equivalentes), un init como systemd y un gestor de paquetes como apt o dnf."
+    },
+    {
+      "q": "¿Para qué existe POSIX?",
+      "options": [
+        "Para definir una interfaz común entre sistemas tipo Unix y que el software sea portable",
+        "Para licenciar el kernel Linux",
+        "Para certificar distribuciones de escritorio"
+      ],
+      "answer": 0,
+      "explain": "La familia Unix se había fragmentado. POSIX define la API de C, la shell y las utilidades estándar. Linux no tiene la certificación formal, pero en la práctica es compatible."
+    },
+    {
+      "q": "Un archivo tiene permisos 640. ¿Quién puede leerlo?",
+      "options": [
+        "Solo el dueño",
+        "El dueño y su grupo",
+        "Cualquier usuario del sistema"
+      ],
+      "answer": 1,
+      "explain": "6 = rw- para el dueño, 4 = r-- para el grupo, 0 = --- para otros."
+    },
+    {
+      "q": "Usás una plataforma donde subís tu código y el proveedor maneja servidores, sistema operativo y runtime. ¿Qué modelo de cloud es?",
+      "options": ["IaaS", "PaaS", "On-premise"],
+      "answer": 1,
+      "explain": "En PaaS administrás la aplicación y sus datos. En IaaS también administrás el sistema operativo de las máquinas virtuales."
+    }
+  ]
+}
