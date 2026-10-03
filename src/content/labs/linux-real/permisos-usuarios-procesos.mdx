@@ -40,6 +40,10 @@ resources:
     title: "Linux EXPLICADO FACIL (como ingeniero)"
     url: "https://www.youtube.com/watch?v=fWutG1RsOuk"
     note: "Los mismos tres ejes del lab: usuarios, permisos y procesos."
+environment:
+  summary: "Debian con dos usuarios, un servidor de juguete que corre como www-data y sudo descartable para ver el dueño de cada puerto. lab-check revisa notas.txt en 600 y tu evidencia de ls, ps y ss."
+  flags:
+    - "--cap-add=SYS_PTRACE"
 ---
 
 import Callout from "../../../components/Callout.astro";

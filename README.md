@@ -62,15 +62,16 @@ Abrí <http://localhost:4321>.
 
 ### Scripts
 
-| Script              | Qué hace                                                                               |
-| ------------------- | -------------------------------------------------------------------------------------- |
-| `npm run dev`       | Servidor de desarrollo con hot reload.                                                 |
-| `npm run build`     | Build estático de producción en `dist/`.                                               |
-| `npm run preview`   | Sirve el build de producción localmente.                                               |
-| `npm run check`     | Chequeo de tipos y de contenido con `astro check`.                                     |
-| `npm run format`    | Formatea el código con Prettier.                                                       |
-| `npm run lint`      | Verifica formato + chequeo de Astro.                                                   |
-| `npm run lab:check` | Corre las comprobaciones locales de los labs (solo `127.0.0.1` y archivos temporales). |
+| Script              | Qué hace                                                                                                                                                                                                         |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`       | Servidor de desarrollo con hot reload.                                                                                                                                                                           |
+| `npm run build`     | Build estático de producción en `dist/`.                                                                                                                                                                         |
+| `npm run preview`   | Sirve el build de producción localmente.                                                                                                                                                                         |
+| `npm run check`     | Chequeo de tipos y de contenido con `astro check`.                                                                                                                                                               |
+| `npm run format`    | Formatea el código con Prettier.                                                                                                                                                                                 |
+| `npm run lint`      | Verifica formato + chequeo de Astro.                                                                                                                                                                             |
+| `npm run lab:check` | Corre las comprobaciones locales de los labs (solo `127.0.0.1` y archivos temporales) y valida la convención de entornos. Con un id (`-- linux-real/permisos-en-octal`) corre `lab-check` en el entorno abierto. |
+| `npm run lab:env`   | Construye, abre y prueba los entornos con Podman de los labs (`list`, `build`, `run`, `smoke`).                                                                                                                  |
 
 El sitio es estático y se publica en **Vercel** (integración de Git del proyecto
 `vt-security-labs`, sin workflow de deploy propio). El `dist/` también sirve tal
@@ -81,6 +82,7 @@ cual en cualquier hosting estático.
 ## Cómo está estructurado el contenido
 
 ```
+entornos/<ruta>/<slug>/            # entorno con Podman de un lab (opcional)
 src/
 ├─ content/labs/<ruta>/<slug>.mdx   # cada lab es un archivo MDX
 ├─ data/paths.ts                    # las rutas de aprendizaje (datos)
@@ -94,6 +96,11 @@ Un **lab** vive en `src/content/labs/<ruta>/<slug>.mdx` y se valida contra el
 schema de `src/content.config.ts`. El cuerpo del lab usa componentes como
 `<Callout>` y `<TerminalBlock>`; la evidencia, el reto y los labs siguientes se
 generan automáticamente desde el frontmatter.
+
+Si el lab se practica mejor en un contenedor, su entorno vive en
+`entornos/<ruta>/<slug>/`: un `Containerfile`, un `lab-check` que revisa la
+evidencia y un README. La convención está en
+[`entornos/README.md`](./entornos/README.md).
 
 ## Cómo agregar un lab
 

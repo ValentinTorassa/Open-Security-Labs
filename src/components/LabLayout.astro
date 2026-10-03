@@ -8,6 +8,7 @@ import ChallengeBox from "./ChallengeBox.astro";
 import NextLabLinks from "./NextLabLinks.astro";
 import LabLevel from "./LabLevel.astro";
 import LabResources from "./LabResources.astro";
+import LabEnvironment from "./LabEnvironment.astro";
 
 interface Props {
   lab: CollectionEntry<"labs">;
@@ -70,6 +71,7 @@ const accent = path?.accent ?? "#56d364";
   <Prerequisites items={data.prerequisites} />
   <Objectives items={data.objectives} />
   <LabResources items={data.resources} />
+  {data.environment && <LabEnvironment labId={lab.id} env={data.environment} />}
 
   <!-- Cuerpo del lab (MDX) -->
   <div class="lab-prose prose prose-invert mt-8 max-w-none">

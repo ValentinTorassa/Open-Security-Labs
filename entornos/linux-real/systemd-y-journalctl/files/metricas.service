@@ -1,0 +1,8 @@
+[Unit]
+Description=metricas (servicio de juguete, deshabilitado a propósito)
+
+[Service]
+ExecStart=/bin/sleep infinity
+
+[Install]
+WantedBy=multi-user.target

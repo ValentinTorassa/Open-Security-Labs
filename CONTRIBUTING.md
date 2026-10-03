@@ -59,6 +59,14 @@ npm run dev
 La evidencia, el reto, los prerequisitos, los objetivos y los labs siguientes se
 renderizan automáticamente desde el frontmatter; no los repitas en el cuerpo.
 
+### Entorno con Podman (opcional)
+
+Si el lab se practica mejor con un escenario armado (archivos, usuarios, un
+servicio que falla), sumale un entorno en `entornos/<ruta>/<slug>/` y el campo
+`environment` en el frontmatter. La página muestra los comandos de `podman` y
+`lab-check` revisa la evidencia. Convención, reglas y cómo probarlo:
+[`entornos/README.md`](./entornos/README.md).
+
 ### Lecciones quirúrgicas
 
 Preferí labs **cortos y enfocados** (un concepto, 10-15 min) por sobre labs

@@ -1,0 +1,10 @@
+#!/bin/bash
+# reportes: servicio de juguete que necesita la clave "puerto" en su config.
+CONFIG=/etc/reportes.conf
+puerto=$(sed -n 's/^puerto *= *//p' "$CONFIG")
+if [ -z "$puerto" ]; then
+  echo "reportes: falta la clave 'puerto' en $CONFIG" >&2
+  exit 1
+fi
+echo "reportes escuchando (de mentira) en el puerto $puerto"
+exec sleep infinity

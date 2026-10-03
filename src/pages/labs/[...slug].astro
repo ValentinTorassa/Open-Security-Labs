@@ -4,6 +4,8 @@ import type { GetStaticPaths } from "astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import LabLayout from "../../components/LabLayout.astro";
 import { SITE_URL } from "../../data/site";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 
 export const getStaticPaths = (async () => {
   const labs = await getCollection("labs", ({ data }) => !data.draft);
@@ -19,6 +21,22 @@ export const getStaticPaths = (async () => {
   if (broken.length > 0) {
     throw new Error(
       `nextLabs apunta a labs inexistentes (o en draft):\n${broken.join("\n")}`,
+    );
+  }
+
+  // Validación en build: un lab con `environment` tiene su carpeta en
+  // entornos/ con los cuatro archivos de la convención (ver entornos/README.md).
+  const ENV_FILES = ["Containerfile", "README.md", "check.sh", "solucion.sh"];
+  const missingEnv = labs.flatMap((l) =>
+    l.data.environment
+      ? ENV_FILES.filter(
+          (f) => !existsSync(join(process.cwd(), "entornos", l.id, f)),
+        ).map((f) => `  - "${l.id}" → falta entornos/${l.id}/${f}`)
+      : [],
+  );
+  if (missingEnv.length > 0) {
+    throw new Error(
+      `environment sin su carpeta completa:\n${missingEnv.join("\n")}`,
     );
   }
 

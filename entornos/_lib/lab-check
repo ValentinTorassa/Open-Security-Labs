@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# lab-check: corre las comprobaciones de este entorno y guarda el resultado
+# en ~/evidencia/lab-check.txt. Lo instala cada Containerfile en
+# /usr/local/bin/lab-check; las comprobaciones viven en
+# /usr/local/lib/osl/check.sh.
+set -uo pipefail
+# `podman exec --user` no siempre define HOME: lo tomamos de /etc/passwd.
+if [ -z "${HOME:-}" ] || [ "$HOME" = "/" ]; then
+  HOME=$(getent passwd "$(id -un)" | cut -d: -f6)
+  export HOME
+fi
+export EVIDENCIA="${EVIDENCIA:-$HOME/evidencia}"
+mkdir -p "$EVIDENCIA"
+{
+  printf 'lab-check · %s · %s\n' "${OSL_LAB:-entorno}" "$(date -u '+%Y-%m-%d %H:%M UTC')"
+  bash /usr/local/lib/osl/check.sh
+} 2>&1 | tee "$EVIDENCIA/lab-check.txt"
+exit "${PIPESTATUS[0]}"

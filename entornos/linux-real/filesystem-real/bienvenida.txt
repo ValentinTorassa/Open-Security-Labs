@@ -1,0 +1,10 @@
+Filesystem real · entorno de Open Security Labs
+
+Hay un servicio de juguete corriendo: notas-api. Este lab es de solo
+lectura: mirá todo, no edites nada.
+
+Armá tu recorrido en ~/evidencia/recorrido.md:
+  1. Una tabla con 8 rutas (/etc, /var/log, /home, /usr/bin, /bin, /tmp,
+     /proc, /dev...) y qué guarda cada una.
+  2. Para notas-api: su binario, su archivo de configuración, dónde están
+     sus logs y su PID con la carpeta /proc/<PID> que lo representa.

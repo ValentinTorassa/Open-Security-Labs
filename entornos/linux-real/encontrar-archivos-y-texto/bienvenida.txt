@@ -1,0 +1,12 @@
+Encontrar archivos y texto · entorno de Open Security Labs
+
+En ~/servidor hay una copia de juguete de un servidor: configuración y
+cientos de líneas de log en carpetas por día. El worker se cayó la
+madrugada del 1/10 y una sola línea dice por qué.
+
+Para lab-check:
+  1. Encontrá esa línea con find y grep (ojo con las mayúsculas).
+  2. Hacé el reto del lab: un archivo tuyo con la palabra BUSCARME,
+     encontralo desde otra carpeta con find y confirmalo con grep.
+  3. Guardá en ~/evidencia/evidencia.txt los comandos que usaste, su
+     salida, el archivo culpable y la causa en una línea.

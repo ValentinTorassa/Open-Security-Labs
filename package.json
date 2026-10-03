@@ -16,6 +16,7 @@
   },
   "scripts": {
     "lab:check": "node scripts/lab-checks.mjs",
+    "lab:env": "node scripts/lab-env.mjs",
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",

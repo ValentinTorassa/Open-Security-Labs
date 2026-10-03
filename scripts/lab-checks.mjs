@@ -1,6 +1,16 @@
 #!/usr/bin/env node
-/** Account-free, loopback-only checks for three selected lessons. */
+/**
+ * Account-free, loopback-only checks for three selected lessons, plus the
+ * Podman environments:
+ *
+ *   npm run lab:check                 todo lo local + la convención de entornos
+ *   npm run lab:check -- http         un check puntual
+ *   npm run lab:check -- <id-de-lab>  corre lab-check en el entorno abierto
+ *                                     (ej. linux-real/permisos-en-octal)
+ */
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import {
   chmod,
@@ -12,6 +22,8 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { detectEngine, labsWithEnvironment, ROOT } from "./lab-env-node.mjs";
+import { envNames, EVIDENCE_DIR, LAB_USER } from "./lab-env-lib.mjs";
 
 async function withServer(handler, check) {
   const server = createServer(handler);
@@ -166,15 +178,143 @@ async function permissions() {
   }
 }
 
+const ENV_FILES = ["Containerfile", "README.md", "check.sh", "solucion.sh"];
+
+/**
+ * Convención de entornos (sin motor de contenedores, corre en CI): cada lab
+ * con `environment` tiene su carpeta completa, cada carpeta tiene su lab, y
+ * los Containerfile usan imágenes con registro explícito, el lab-check común
+ * y un usuario sin privilegios.
+ */
+async function environments() {
+  const labs = labsWithEnvironment();
+  const declared = new Set(labs.map((l) => l.id));
+  const problems = [];
+  const base = join(ROOT, "entornos");
+  const dirs = readdirSync(base, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && !d.name.startsWith("_"))
+    .flatMap((d) =>
+      readdirSync(join(base, d.name), { withFileTypes: true })
+        .filter((s) => s.isDirectory())
+        .map((s) => `${d.name}/${s.name}`),
+    );
+  for (const dir of dirs) {
+    if (!declared.has(dir)) {
+      problems.push(`entornos/${dir} no tiene un lab con environment`);
+    }
+  }
+  for (const { id, env } of labs) {
+    const dir = join(base, id);
+    for (const file of ENV_FILES) {
+      if (!existsSync(join(dir, file))) {
+        problems.push(`${id}: falta entornos/${id}/${file}`);
+      }
+    }
+    if (!existsSync(join(dir, "Containerfile"))) continue;
+    const containerfile = readFileSync(join(dir, "Containerfile"), "utf8");
+    const stages = new Set();
+    for (const [, ref, alias] of containerfile.matchAll(
+      /^FROM\s+(?:--\S+\s+)*(\S+)(?:\s+AS\s+(\S+))?/gim,
+    )) {
+      if (!stages.has(ref) && !/^[\w.-]+\.[\w.-]+(:\d+)?\//.test(ref)) {
+        problems.push(
+          `${id}: FROM ${ref} necesita el registro (docker.io/..., quay.io/...)`,
+        );
+      }
+      if (alias) stages.add(alias);
+    }
+    for (const needed of [
+      "_lib/lab-check ",
+      "_lib/lab-check.sh",
+      `${id}/check.sh`,
+    ]) {
+      if (!containerfile.includes(needed)) {
+        problems.push(`${id}: el Containerfile no copia ${needed.trim()}`);
+      }
+    }
+    const runsAsUser = new RegExp(`^USER\\s+${LAB_USER}\\b`, "m").test(
+      containerfile,
+    );
+    const rootReason = /^# arranca como root: \S/m.test(containerfile);
+    if (!runsAsUser && !rootReason && env.mode !== "systemd") {
+      problems.push(
+        `${id}: el Containerfile termina sin USER ${LAB_USER} y sin "# arranca como root: <motivo>"`,
+      );
+    }
+    if (/--privileged|docker\.sock/.test(containerfile)) {
+      problems.push(
+        `${id}: el Containerfile menciona --privileged o docker.sock`,
+      );
+    }
+  }
+  if (problems.length > 0) {
+    console.error(
+      `Entornos: ${problems.length} problema(s)\n  - ${problems.join("\n  - ")}`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+  console.log(
+    `Entornos: ${labs.length} labs con Containerfile, README, check y solución de referencia; bases con registro explícito y usuario sin privilegios`,
+  );
+}
+
+/** Corre lab-check en el contenedor abierto del lab y copia la evidencia. */
+function labEnvironment(id) {
+  const lab = labsWithEnvironment().find((l) => l.id === id);
+  if (!lab) {
+    console.error(`"${id}" no tiene entorno. Probá: npm run lab:env -- list`);
+    process.exit(2);
+  }
+  const engine = detectEngine();
+  if (!engine) {
+    console.error("No encontré podman ni docker (o definí OSL_ENGINE).");
+    process.exit(1);
+  }
+  const { container, slug } = envNames(id);
+  const state = spawnSync(
+    engine,
+    ["container", "inspect", "-f", "{{.State.Running}}", container],
+    { encoding: "utf8" },
+  );
+  if (state.status !== 0 || state.stdout.trim() !== "true") {
+    console.error(
+      `El contenedor ${container} no está corriendo. Abrilo con:\n  npm run lab:env -- run ${id}\n` +
+        "o con los comandos de la página del lab, y volvé a correr este check.",
+    );
+    process.exit(1);
+  }
+  const check = spawnSync(
+    engine,
+    ["exec", "--user", LAB_USER, container, "lab-check"],
+    { stdio: "inherit" },
+  );
+  const target = join(ROOT, "evidencia", slug);
+  mkdirSync(target, { recursive: true });
+  const copy = spawnSync(
+    engine,
+    ["cp", `${container}:${EVIDENCE_DIR}/.`, target],
+    { encoding: "utf8" },
+  );
+  if (copy.status === 0) {
+    console.log(`Evidencia copiada a evidencia/${slug}/`);
+  } else {
+    console.error(`No pude copiar la evidencia: ${copy.stderr.trim()}`);
+  }
+  process.exit(check.status ?? 1);
+}
+
 const checks = {
   http: httpStatus,
   idempotencia: idempotency,
   permisos: permissions,
+  entornos: environments,
 };
 const selected = process.argv[2] || "all";
+if (selected.includes("/")) labEnvironment(selected);
 if (selected !== "all" && !checks[selected]) {
   console.error(
-    `Uso: node scripts/lab-checks.mjs [${Object.keys(checks).join("|")}|all]`,
+    `Uso: node scripts/lab-checks.mjs [${Object.keys(checks).join("|")}|all|<id-de-lab>]`,
   );
   process.exit(2);
 }

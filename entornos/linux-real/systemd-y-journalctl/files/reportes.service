@@ -1,0 +1,8 @@
+[Unit]
+Description=reportes (servicio de juguete de Open Security Labs)
+
+[Service]
+ExecStart=/usr/local/bin/reportes
+
+[Install]
+WantedBy=multi-user.target

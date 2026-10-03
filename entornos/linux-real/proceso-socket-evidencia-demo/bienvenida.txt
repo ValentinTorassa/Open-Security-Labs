@@ -1,0 +1,13 @@
+Del proceso al socket · entorno de Open Security Labs
+
+Corren tres procesos de juguete, todos tuyos (usuario vt): web-server,
+database y browser. Los sockets son reales pero viven en la red aislada
+del contenedor: no estás mirando tu equipo.
+
+  ss -tanp              sockets TCP con su proceso
+  ps -o pid,user,comm   procesos
+  ls -l /proc/<PID>/fd  los file descriptors de un proceso (socket:[inodo])
+
+Para lab-check, armá ~/evidencia/tabla.md con una fila por conexión:
+proceso, PID, extremo local, extremo remoto, estado e interpretación.
+Sumá dos hipótesis y dos límites de lo que observaste.

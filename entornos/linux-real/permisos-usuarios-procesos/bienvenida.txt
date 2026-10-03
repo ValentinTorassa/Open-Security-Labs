@@ -1,0 +1,14 @@
+Permisos, usuarios y procesos · entorno de Open Security Labs
+
+Sos vt (UID 1000). Hay otra usuaria, ana, y dos procesos que no son tuyos:
+un servidor web de juguete y un "respaldo-nocturno". Tenés sudo sin
+contraseña para ver el dueño de cada puerto (sudo ss -tulpn): es un
+contenedor descartable. Arrancó con --cap-add=SYS_PTRACE: sin esa
+capability, ni root ve los sockets de procesos de otro usuario.
+
+Para lab-check:
+  1. Creá ~/notas.txt y dejalo en 600.
+  2. Guardá en ~/evidencia/permisos.txt el ls -l de notas.txt antes y
+     después del chmod.
+  3. Guardá en ~/evidencia/procesos.txt qué usuario corre el proceso que
+     escucha en el puerto 8080, y cómo lo averiguaste.

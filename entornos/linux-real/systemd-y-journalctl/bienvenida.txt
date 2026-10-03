@@ -1,0 +1,14 @@
+systemd y journalctl · entorno de Open Security Labs
+
+systemd es el PID 1 de este contenedor. Al arrancar intentó levantar dos
+servicios de juguete y los dos fallaron, cada uno por un motivo distinto:
+notas-api y reportes. Hay un tercero, metricas, deshabilitado.
+
+Tenés sudo sin contraseña (es un contenedor descartable) y podés leer el
+journal sin sudo.
+
+Para lab-check:
+  1. Encontrá la causa de cada falla con systemctl status y journalctl -u.
+  2. Arreglá el origen (path, config) y verificá con status que corren.
+  3. Guardá en ~/evidencia/diagnostico.txt la salida de status que mostraba
+     la falla, el journalctl que usaste y la causa de cada uno en una línea.

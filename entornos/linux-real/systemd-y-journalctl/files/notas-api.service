@@ -1,0 +1,8 @@
+[Unit]
+Description=notas-api (servicio de juguete de Open Security Labs)
+
+[Service]
+ExecStart=/usr/local/bin/notas-api-v2
+
+[Install]
+WantedBy=multi-user.target

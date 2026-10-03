@@ -1,0 +1,34 @@
+# Entorno: linux-real/filesystem-real
+# Construilo desde la raíz del repo (el contexto es entornos/):
+#   podman build -t osl/filesystem-real -f entornos/linux-real/filesystem-real/Containerfile entornos
+FROM docker.io/library/debian:trixie-slim
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends less procps \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --create-home --uid 1000 --shell /bin/bash vt
+
+COPY _lib/lab-check /usr/local/bin/lab-check
+COPY _lib/lab-check.sh /usr/local/lib/osl/lab-check.sh
+COPY _lib/bienvenida.sh /etc/profile.d/osl.sh
+COPY linux-real/filesystem-real/check.sh /usr/local/lib/osl/check.sh
+COPY linux-real/filesystem-real/bienvenida.txt /usr/local/lib/osl/bienvenida.txt
+COPY linux-real/filesystem-real/files/notas-api /usr/local/bin/notas-api
+COPY linux-real/filesystem-real/files/config.ini /etc/notas-api/config.ini
+COPY linux-real/filesystem-real/files/app.log /var/log/notas-api/app.log
+COPY linux-real/filesystem-real/files/arranque.sh /usr/local/lib/osl/arranque.sh
+
+# Un servicio de juguete con su binario, su config y su log, para recorrer
+# sin tocar nada. La huella de la config permite comprobar que el recorrido
+# fue de solo lectura.
+RUN chmod 0755 /usr/local/bin/lab-check /usr/local/bin/notas-api /usr/local/lib/osl/arranque.sh \
+ && chmod 0644 /etc/notas-api/config.ini \
+ && chown -R vt:vt /var/log/notas-api \
+ && sha256sum /etc/notas-api/config.ini > /usr/local/lib/osl/config.sha256
+
+ENV OSL_LAB=linux-real/filesystem-real
+USER vt
+WORKDIR /home/vt
+ENTRYPOINT ["/usr/local/lib/osl/arranque.sh"]
+CMD ["bash", "-l"]

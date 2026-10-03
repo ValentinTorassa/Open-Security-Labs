@@ -1,0 +1,7 @@
+#!/bin/bash
+# notas-api: servicio de juguete. Escribe en stdout, que systemd manda al journal.
+echo "notas-api arrancó con PID $$"
+while true; do
+  echo "notas-api: latido"
+  sleep 30
+done

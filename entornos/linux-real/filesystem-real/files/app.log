@@ -1,0 +1,5 @@
+2026-10-01T09:12:03Z INFO notas-api arrancó pid=812 puerto=8080
+2026-10-01T09:12:04Z INFO conexión a la base: ok
+2026-10-01T11:40:17Z WARN la base tardó 1840 ms en responder
+2026-10-01T11:40:19Z ERROR timeout al guardar la nota 4412
+2026-10-01T11:41:02Z INFO reintento de la nota 4412: ok

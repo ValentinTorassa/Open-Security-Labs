@@ -1,0 +1,10 @@
+#!/bin/bash
+# notas-api: servicio de juguete del lab. No escucha en la red: solo escribe
+# una línea de log cada 20 segundos para que tengas algo vivo que mirar.
+CONFIG=/etc/notas-api/config.ini
+LOG=/var/log/notas-api/app.log
+puerto=$(sed -n 's/^puerto *= *//p' "$CONFIG")
+while true; do
+  printf '%s INFO notas-api latido pid=%s puerto=%s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$$" "$puerto" >> "$LOG"
+  sleep 20
+done

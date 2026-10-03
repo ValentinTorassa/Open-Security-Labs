@@ -46,7 +46,7 @@ const labs = defineCollection({
           .object({
             type: z.enum(["video", "doc", "repo", "guide"]),
             title: z.string().min(1),
-            url: z.string().url(),
+            url: z.url(),
             // Una línea: qué parte del lab cubre.
             note: z.string().min(1).optional(),
           })
@@ -61,6 +61,42 @@ const labs = defineCollection({
           ),
       )
       .default([]),
+    // Entorno listo para correr con Podman. Si está, existe
+    // entornos/<id-del-lab>/ con Containerfile, README.md, check.sh y
+    // solucion.sh (lo valida el build y `npm run lab:check`).
+    environment: z
+      .object({
+        // Qué trae el entorno, en una línea.
+        summary: z.string().min(1),
+        // "shell" abre una terminal interactiva; "systemd" arranca systemd
+        // como PID 1 y entrás con exec (eso necesita Podman).
+        mode: z.enum(["shell", "systemd"]).default("shell"),
+        // Puertos publicados, siempre en loopback.
+        ports: z
+          .array(
+            z
+              .string()
+              .regex(/^127\.0\.0\.1:\d+:\d+$/, "publicá solo en 127.0.0.1"),
+          )
+          .default([]),
+        // Flags extra de `podman run`, si el lab los necesita.
+        flags: z
+          .array(z.string().min(1))
+          .default([])
+          .refine(
+            (fs) =>
+              !fs.some((f) =>
+                /--privileged|docker\.sock|podman\.sock|--cap-add=?(ALL|SYS_ADMIN)|--pid=?host|--network=?host|seccomp=unconfined/i.test(
+                  f,
+                ),
+              ),
+            {
+              message:
+                "un entorno no usa --privileged, sockets del runtime, --cap-add=ALL/SYS_ADMIN, --pid=host, --network=host ni seccomp=unconfined",
+            },
+          ),
+      })
+      .optional(),
   }),
 });
 

@@ -1,0 +1,28 @@
+# Entorno: linux-real/encontrar-archivos-y-texto
+# Construilo desde la raíz del repo (el contexto es entornos/):
+#   podman build -t osl/encontrar-archivos-y-texto -f entornos/linux-real/encontrar-archivos-y-texto/Containerfile entornos
+FROM docker.io/library/debian:trixie-slim
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends less \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --create-home --uid 1000 --shell /bin/bash vt
+
+COPY _lib/lab-check /usr/local/bin/lab-check
+COPY _lib/lab-check.sh /usr/local/lib/osl/lab-check.sh
+COPY _lib/bienvenida.sh /etc/profile.d/osl.sh
+COPY linux-real/encontrar-archivos-y-texto/check.sh /usr/local/lib/osl/check.sh
+COPY linux-real/encontrar-archivos-y-texto/bienvenida.txt /usr/local/lib/osl/bienvenida.txt
+COPY linux-real/encontrar-archivos-y-texto/armar-servidor.sh /usr/local/lib/osl/armar-servidor.sh
+
+# ~/servidor: una copia de juguete de un servidor con cientos de líneas de
+# log repartidas en carpetas. Una sola línea explica la caída.
+RUN chmod 0755 /usr/local/bin/lab-check \
+ && bash /usr/local/lib/osl/armar-servidor.sh /home/vt/servidor \
+ && chown -R vt:vt /home/vt/servidor
+
+ENV OSL_LAB=linux-real/encontrar-archivos-y-texto
+USER vt
+WORKDIR /home/vt
+CMD ["bash", "-l"]

@@ -1,0 +1,64 @@
+---
+import { Code } from "astro:components";
+import type { CollectionEntry } from "astro:content";
+import {
+  envNames,
+  envScript,
+  EVIDENCE_DIR,
+  REPO_TREE,
+} from "../../scripts/lab-env-lib.mjs";
+
+interface Props {
+  labId: string;
+  env: NonNullable<CollectionEntry<"labs">["data"]["environment"]>;
+}
+const { labId, env } = Astro.props;
+const { dir, slug } = envNames(labId);
+const script = envScript(labId, env);
+---
+
+<section
+  class="border-term-green/30 bg-term-green/5 my-8 rounded-xl border p-5"
+  aria-label="Entorno listo para correr"
+>
+  <h3
+    class="text-term-green flex items-center gap-2 font-mono text-sm font-semibold"
+  >
+    <span aria-hidden="true">$_</span> Entorno listo con Podman
+  </h3>
+  <p class="text-base-200 mt-2 text-sm leading-relaxed">{env.summary}</p>
+
+  <div class="lab-prose mt-4 max-w-none">
+    <Code
+      code={script}
+      lang="bash"
+      themes={{ light: "github-light-default", dark: "github-dark-default" }}
+    />
+  </div>
+
+  <ul class="text-base-300 mt-4 space-y-1.5 text-xs leading-relaxed">
+    <li>
+      <code class="text-base-100">lab-check</code> revisa lo que hiciste y guarda
+      el resultado en <code class="text-base-100">{EVIDENCE_DIR}</code>. Desde
+      otra terminal, en la carpeta del repo,{" "}
+      <code class="text-base-100">npm run lab:check -- {labId}</code>{" "}
+      corre el mismo chequeo y copia tu evidencia a{" "}
+      <code class="text-base-100">evidencia/{slug}/</code>.
+    </li>
+    <li>
+      {
+        env.mode === "systemd"
+          ? "Este entorno necesita Podman: arranca systemd como PID 1, y Docker no lo hace sin privilegios extra."
+          : "¿Usás Docker? Cambiá podman por docker en los comandos y funciona igual."
+      }
+    </li>
+    <li>
+      Qué trae, qué revisa y sus límites:{" "}
+      <a
+        href={`${REPO_TREE}/${dir}`}
+        class="text-term-green hover:underline"
+        rel="noopener">{dir}/README.md</a
+      >.
+    </li>
+  </ul>
+</section>

@@ -1,0 +1,10 @@
+Permisos en octal · entorno de Open Security Labs
+
+En ~/archivos hay ocho archivos y carpetas con permisos distintos.
+
+  1. Mirá solo la columna de permisos: ls -l ~/archivos
+  2. Antes de usar stat, escribí tu predicción en ~/evidencia/prediccion.txt,
+     una línea por archivo con el formato:  644 notas.txt
+  3. Verificá con: stat -c '%a %n' ~/archivos/*
+
+lab-check compara tu predicción con los modos reales.

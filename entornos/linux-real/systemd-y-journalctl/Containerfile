@@ -1,0 +1,38 @@
+# Entorno: linux-real/systemd-y-journalctl
+# Construilo desde la raíz del repo (el contexto es entornos/):
+#   podman build -t osl/systemd-y-journalctl -f entornos/linux-real/systemd-y-journalctl/Containerfile entornos
+#
+# Corre systemd como PID 1. Podman lo detecta solo (el comando es /sbin/init)
+# y le arma /run, /tmp y los cgroups sin privilegios extra. Docker no lo hace.
+FROM docker.io/library/debian:trixie-slim
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends systemd systemd-sysv dbus sudo nano less procps \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --create-home --uid 1000 --shell /bin/bash --groups systemd-journal vt \
+ && echo 'vt ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/vt \
+ && chmod 0440 /etc/sudoers.d/vt \
+ && systemctl mask getty.target console-getty.service systemd-logind.service \
+      systemd-firstboot.service systemd-remount-fs.service
+
+COPY _lib/lab-check /usr/local/bin/lab-check
+COPY _lib/lab-check.sh /usr/local/lib/osl/lab-check.sh
+COPY _lib/bienvenida.sh /etc/profile.d/osl.sh
+COPY linux-real/systemd-y-journalctl/check.sh /usr/local/lib/osl/check.sh
+COPY linux-real/systemd-y-journalctl/bienvenida.txt /usr/local/lib/osl/bienvenida.txt
+COPY linux-real/systemd-y-journalctl/files/notas-api /usr/local/bin/notas-api
+COPY linux-real/systemd-y-journalctl/files/reportes /usr/local/bin/reportes
+COPY linux-real/systemd-y-journalctl/files/reportes.conf /etc/reportes.conf
+COPY linux-real/systemd-y-journalctl/files/notas-api.service /etc/systemd/system/notas-api.service
+COPY linux-real/systemd-y-journalctl/files/reportes.service /etc/systemd/system/reportes.service
+COPY linux-real/systemd-y-journalctl/files/metricas.service /etc/systemd/system/metricas.service
+
+# Dos servicios que fallan al arrancar, cada uno por un motivo distinto, y uno
+# deshabilitado que nunca se inició.
+RUN chmod 0755 /usr/local/bin/lab-check /usr/local/bin/notas-api /usr/local/bin/reportes \
+ && systemctl enable notas-api.service reportes.service
+
+ENV OSL_LAB=linux-real/systemd-y-journalctl
+STOPSIGNAL SIGRTMIN+3
+CMD ["/sbin/init"]

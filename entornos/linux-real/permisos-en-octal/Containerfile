@@ -1,0 +1,32 @@
+# Entorno: linux-real/permisos-en-octal
+# Construilo desde la raíz del repo (el contexto es entornos/):
+#   podman build -t osl/permisos-en-octal -f entornos/linux-real/permisos-en-octal/Containerfile entornos
+FROM docker.io/library/debian:trixie-slim
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN useradd --create-home --uid 1000 --shell /bin/bash vt
+
+COPY _lib/lab-check /usr/local/bin/lab-check
+COPY _lib/lab-check.sh /usr/local/lib/osl/lab-check.sh
+COPY _lib/bienvenida.sh /etc/profile.d/osl.sh
+COPY linux-real/permisos-en-octal/check.sh /usr/local/lib/osl/check.sh
+COPY linux-real/permisos-en-octal/bienvenida.txt /usr/local/lib/osl/bienvenida.txt
+
+# Ocho archivos con modos distintos para predecir antes de mirar.
+RUN chmod 0755 /usr/local/bin/lab-check \
+ && install -d -o vt -g vt /home/vt/archivos \
+ && cd /home/vt/archivos \
+ && echo 'notas' > notas.txt && chmod 644 notas.txt \
+ && echo 'CLAVE_FALSA=no-es-real' > clave.env && chmod 600 clave.env \
+ && printf '#!/bin/sh\necho deploy de juguete\n' > deploy.sh && chmod 755 deploy.sh \
+ && mkdir privado && chmod 700 privado \
+ && echo 'puerto=8080' > config.ini && chmod 640 config.ini \
+ && echo 'no tocar' > solo-lectura.txt && chmod 444 solo-lectura.txt \
+ && printf '#!/bin/sh\necho backup\n' > backup.sh && chmod 750 backup.sh \
+ && echo 'compartido' > compartido.txt && chmod 664 compartido.txt \
+ && chown -R vt:vt /home/vt/archivos
+
+ENV OSL_LAB=linux-real/permisos-en-octal
+USER vt
+WORKDIR /home/vt
+CMD ["bash", "-l"]

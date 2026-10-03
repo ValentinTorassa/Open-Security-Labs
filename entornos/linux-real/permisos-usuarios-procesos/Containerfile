@@ -1,0 +1,39 @@
+# Entorno: linux-real/permisos-usuarios-procesos
+# Construilo desde la raíz del repo (el contexto es entornos/):
+#   podman build -t osl/permisos-usuarios-procesos -f entornos/linux-real/permisos-usuarios-procesos/Containerfile entornos
+FROM docker.io/library/debian:trixie-slim
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends busybox iproute2 less procps sudo \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --create-home --uid 1000 --shell /bin/bash vt \
+ && groupadd devs \
+ && useradd --create-home --uid 1001 --shell /bin/bash --groups devs ana \
+ && usermod -aG devs vt \
+ && echo 'vt ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/vt \
+ && chmod 0440 /etc/sudoers.d/vt \
+ && mkdir -p /srv/web \
+ && echo '<p>servidor de juguete</p>' > /srv/web/index.html
+
+COPY _lib/lab-check /usr/local/bin/lab-check
+COPY _lib/lab-check.sh /usr/local/lib/osl/lab-check.sh
+COPY _lib/bienvenida.sh /etc/profile.d/osl.sh
+COPY linux-real/permisos-usuarios-procesos/check.sh /usr/local/lib/osl/check.sh
+COPY linux-real/permisos-usuarios-procesos/bienvenida.txt /usr/local/lib/osl/bienvenida.txt
+COPY linux-real/permisos-usuarios-procesos/arranque.sh /usr/local/lib/osl/arranque.sh
+
+# Archivos de otros usuarios para leer permisos que no son tuyos.
+RUN chmod 0755 /usr/local/bin/lab-check /usr/local/lib/osl/arranque.sh \
+ && install -d -o ana -g devs -m 0750 /srv/proyecto \
+ && echo 'plan del equipo' > /srv/proyecto/plan.txt \
+ && chown ana:devs /srv/proyecto/plan.txt && chmod 0640 /srv/proyecto/plan.txt \
+ && echo 'TOKEN_FALSO=no-es-un-secreto-real' > /home/ana/.token \
+ && chown ana:ana /home/ana/.token && chmod 0600 /home/ana/.token
+
+ENV OSL_LAB=linux-real/permisos-usuarios-procesos
+WORKDIR /home/vt
+# arranca como root: levanta un servidor de juguete como www-data y un
+# proceso como root, y después baja a vt para que trabajes sin privilegios.
+ENTRYPOINT ["/usr/local/lib/osl/arranque.sh"]
+CMD ["bash", "-l"]

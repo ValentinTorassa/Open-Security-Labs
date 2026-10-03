@@ -29,6 +29,9 @@ pnpm-debug.log*
 # herramientas locales de agentes (no se versionan)
 .claude/
 
+# evidencia que copia `npm run lab:check -- <id>` desde un entorno
+evidencia/
+
 # lockfiles de otros gestores (usamos npm)
 yarn.lock
 pnpm-lock.yaml
