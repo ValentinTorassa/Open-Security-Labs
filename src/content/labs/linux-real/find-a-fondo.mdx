@@ -2,7 +2,7 @@
 title: "find a fondo: tamaño, fecha, lógica y acciones"
 description: "El disco se llenó o algo cambió ayer y no sabés qué. Filtrá con find por tamaño, fecha, tipo y profundidad, combiná y negá condiciones, y ejecutá comandos sobre lo que encontrás."
 path: "linux-real"
-order: 6
+order: 7
 level: "intermediate"
 estimatedMinutes: 30
 prerequisites:
@@ -316,7 +316,7 @@ El `;` va con `\` por la misma razón que los paréntesis: para el shell, `;` se
       ],
       answer: 1,
       explain:
-        "-mtime -3 = hace menos de 3 días. +3 sería hace más de 3 días, y -size filtra por tamaño, no por fecha.",
+        "-mtime -3 = hace menos de 3 días. +3 sería 4 días o más, y -size filtra por tamaño, no por fecha.",
     },
     {
       q: "¿Cómo listás solo los enlaces simbólicos?",
