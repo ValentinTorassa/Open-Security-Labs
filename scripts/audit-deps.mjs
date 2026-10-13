@@ -1,11 +1,9 @@
 #!/usr/bin/env node
-// Astro uses http-cache-semantics at build time in this static site. The
-// cross-user shared-cache issue below has no server-side path here. There is
-// no patched version as of 2026-10-03; keep every other high finding fatal.
-// https://github.com/advisories/GHSA-ch52-4w7c-c8xp
+// Fails on any high or critical npm audit finding. No advisory is accepted
+// right now: the http-cache-semantics exception (GHSA-ch52-4w7c-c8xp) was
+// dropped on 2026-10-13, once the lockfile moved to the patched 4.3.0.
 import { spawnSync } from "node:child_process";
 
-const allowedUrl = "https://github.com/advisories/GHSA-ch52-4w7c-c8xp";
 const result = spawnSync("npm", ["audit", "--audit-level=high", "--json"], {
   encoding: "utf8",
   maxBuffer: 8 * 1024 * 1024,
@@ -33,39 +31,13 @@ if (
 const vulnerabilities = report.vulnerabilities;
 const severity = { info: 0, low: 1, moderate: 2, high: 3, critical: 4 };
 
-function onlyAcceptedFinding(name, seen = new Set()) {
-  const vulnerability = vulnerabilities[name];
-  if (
-    !vulnerability ||
-    seen.has(name) ||
-    !Array.isArray(vulnerability.via) ||
-    !vulnerability.via.length
-  )
-    return false;
-  if ((severity[vulnerability.severity] ?? 5) < severity.high) return true;
-  const next = new Set(seen).add(name);
-  return vulnerability.via.every((cause) =>
-    typeof cause === "string"
-      ? onlyAcceptedFinding(cause, next)
-      : (severity[cause.severity] ?? 5) < severity.high ||
-        (cause.name === "http-cache-semantics" && cause.url === allowedUrl),
-  );
-}
-
 const high = Object.entries(vulnerabilities)
   .filter(([, finding]) => (severity[finding.severity] ?? 5) >= severity.high)
   .map(([name]) => name);
-const unexpected = high.filter((name) => !onlyAcceptedFinding(name));
-if (unexpected.length) {
+if (high.length) {
   console.error(
-    `Unexpected high-severity npm audit findings: ${unexpected.join(", ")}`,
+    `Unexpected high-severity npm audit findings: ${high.join(", ")}`,
   );
   process.exit(1);
 }
-if (high.length) {
-  console.log(
-    `Known unpatched static-build advisory ${allowedUrl} affects ${high.join(", ")}; no other high findings.`,
-  );
-} else {
-  console.log("npm audit: no high-severity findings.");
-}
+console.log("npm audit: no high-severity findings.");
