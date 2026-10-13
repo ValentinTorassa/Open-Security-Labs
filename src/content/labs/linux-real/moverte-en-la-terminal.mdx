@@ -133,9 +133,20 @@ pwd
 
 </TerminalBlock>
 
+Los tres `pwd` muestran:
+
+```text
+/var/log
+/var
+/var/log
+```
+
+Y estas son las rutas que le pasaste a `cd`:
+
 ```text
 /var/log    absoluta: el camino completo desde la raíz.
 log         relativa: el camino desde donde estás parado.
+..          relativa también: la carpeta de arriba de donde estás parado.
 ```
 
 `cd log` funcionó porque estabas en `/var`, y `log` está adentro de `/var`. Si lo corrés desde tu home, falla: ahí no hay ninguna carpeta `log`.
@@ -155,6 +166,8 @@ log         relativa: el camino desde donde estás parado.
 
 ## Volver a donde estabas: cd -
 
+Venís del bloque de rutas: estás en `/var/log` y antes estabas en `/var`.
+
 <TerminalBlock title="vt@labs:/var/log">
 
 ```bash
@@ -170,6 +183,8 @@ cd -
 ```
 
 `cd -` te lleva a la carpeta en la que estabas antes, y te imprime cuál es. Si lo repetís, saltás de una a otra. Es útil cuando vas y venís entre dos lugares.
+
+Si en el medio probaste otro `cd`, por ejemplo el de Tab, vas a ver otras rutas: `cd -` siempre vuelve a la última carpeta en la que estuviste, sea cual sea.
 
 <Callout type="evidencia">
   Hacé el reto guardando dónde estás en cada momento: corré `pwd >>
@@ -188,3 +203,15 @@ cat ~/evidencia-cd.txt
 ```
 
 </TerminalBlock>
+
+Si hiciste el reto tal cual, `cat` muestra estas cinco rutas, con tu usuario en lugar de `tu-usuario`:
+
+```text
+/home/tu-usuario
+/var/log
+/var
+/var/log
+/home/tu-usuario
+```
+
+La última línea es la del final: después del último `cd` ya terminaste, así que no hace falta otro `pwd`. Si repetís el reto, las rutas nuevas se agregan debajo de las anteriores, porque `>>` nunca borra.
