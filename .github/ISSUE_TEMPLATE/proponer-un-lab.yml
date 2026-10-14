@@ -1,0 +1,78 @@
+name: Proponer un lab
+description: Un lab nuevo que te gustaría ver o escribir.
+title: "Lab: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Antes de escribir, mirá si ya hay un lab o un issue sobre el tema en
+        [/labs](https://securitylabs.valentorassa.com/labs/) y en los issues
+        abiertos. Arrancá de un problema real, no del nombre de una
+        herramienta.
+  - type: dropdown
+    id: ruta
+    attributes:
+      label: Ruta
+      options:
+        - Linux Real
+        - Redes e Internet
+        - Backend y Arquitectura
+        - Cloud y Producción
+        - Ciberseguridad Práctica
+        - DevSecOps y Agentes
+        - No sé
+    validations:
+      required: true
+  - type: textarea
+    id: problema
+    attributes:
+      label: El problema
+      description: Qué situación real resuelve o explica. Una o dos frases.
+      placeholder: "Un servicio no arranca después de un reboot y no sé dónde mirar."
+    validations:
+      required: true
+  - type: textarea
+    id: objetivos
+    attributes:
+      label: Qué aprende quien lo hace
+      description: Dos a cuatro cosas concretas, como los `objectives` de un lab.
+    validations:
+      required: true
+  - type: textarea
+    id: evidencia
+    attributes:
+      label: Evidencia
+      description: Qué artefacto deja el lab al terminar (salida de un comando, writeup, diagrama).
+    validations:
+      required: true
+  - type: dropdown
+    id: entorno
+    attributes:
+      label: Entorno
+      description: Si el escenario necesita archivos, usuarios o servicios armados, va con un entorno de Podman (ver entornos/README.md).
+      options:
+        - Alcanza con una terminal Linux o WSL
+        - Necesita un entorno con Podman
+        - No sé
+    validations:
+      required: true
+  - type: dropdown
+    id: autor
+    attributes:
+      label: ¿Lo escribís vos?
+      options:
+        - Sí, quiero escribirlo
+        - Sí, con ayuda
+        - No, es una idea para quien quiera tomarla
+    validations:
+      required: true
+  - type: checkboxes
+    id: reglas
+    attributes:
+      label: Reglas del repo
+      options:
+        - label: Usa datos de juguete y credenciales ficticias, nada real ni de terceros.
+          required: true
+        - label: Si toca algo ofensivo, lo enmarca desde la defensa y corre en local.
+          required: true

@@ -44,7 +44,10 @@ npm run dev
 
 4. Asegurate de que el lab **termine con evidencia** (campo `evidence`) y tenga
    un **reto** (campo `challenge`).
-5. Corré `npm run check` y revisá en `npm run dev`.
+5. Ubicalo en la ruta: elegí un `order` que no use otro lab de esa ruta y sumá
+   el id de tu lab (`<ruta>/<slug>`) a los `nextLabs` del lab que va antes.
+   Si nadie lo enlaza, solo se llega desde el listado.
+6. Corré `npm run lab:check` y `npm run check`, y revisá en `npm run dev`.
 
 ### Componentes disponibles
 
@@ -83,6 +86,32 @@ carpeta de su ruta, aparece automáticamente en `/labs` y en la página de la ru
 - `npm run check` y `npm run build` tienen que pasar.
 - Mantené el código simple: sin dependencias innecesarias ni estado de más.
 
+## Antes de abrir el PR: los checks
+
+CI corre estos pasos en cada PR, en este orden. Corrélos en local antes:
+
+| Comando             | Qué revisa                                                                                                                                                                                                                                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run audit`     | Que ninguna dependencia de npm tenga un advisory high o critical.                                                                                                                                                                                                                                      |
+| `npm run lab:check` | Sin cuentas y en loopback: los checks de los labs de HTTP, idempotencia y permisos, la convención de entornos (`entornos/README.md`) y las **rutas**: que no haya dos labs con el mismo `order` en una ruta, que cada id de `nextLabs` sea un lab publicado y que a todo lab se llegue por `nextLabs`. |
+| `npm run lint`      | Prettier y `astro check`. `npm run format` arregla el formato.                                                                                                                                                                                                                                         |
+| `npm run build`     | Que el sitio compile. CI compila dos veces y compara el HTML: tiene que salir idéntico.                                                                                                                                                                                                                |
+
+Para correr uno solo: `npm run lab:check -- rutas` (o `http`, `idempotencia`,
+`permisos`, `entornos`). Si tu lab trae entorno, `npm run lab:env -- smoke
+<ruta>/<slug>` lo construye y comprueba que `lab-check` falle recién creado y
+pase con la solución (necesita Podman o Docker; CI no lo corre).
+
+Si `npm run audit` falla por un advisory nuevo en algo que tu PR no tocó, no es
+tuyo: avisalo en el PR y lo resuelve quien mantiene el repo en otro PR.
+
+### El check de Vercel en PRs desde un fork
+
+En un PR desde un fork vas a ver el check **Vercel** en rojo, con
+`Authorization required to deploy`. No es un error de tu PR: Vercel no arma la
+preview de un fork hasta que alguien del equipo la autoriza. Los checks que
+cuentan para mergear son **lint · check · build** y **secret scan**.
+
 ## Pull Requests
 
 1. Hacé un fork y una branch descriptiva (`lab/linux-systemd`, `fix/typo-dns`).
@@ -91,7 +120,10 @@ carpeta de su ruta, aparece automáticamente en `/labs` y en la página de la ru
 4. Confirmá el checklist de [`AGENTS.md`](./AGENTS.md): sin secretos, ejemplos
    de juguete, defensivo, con evidencia, build OK.
 
-## Reportar problemas
+## Reportar problemas y proponer labs
 
 Abrí un issue describiendo el problema, en qué lab/página aparece y, si podés,
-cómo reproducirlo. Para temas de seguridad, mirá [`SECURITY.md`](./SECURITY.md).
+cómo reproducirlo. Para proponer un lab hay una plantilla, **Proponer un lab**;
+los issues con la etiqueta `good first issue` son labs acotados, con ruta,
+`order` y lab anterior ya decididos, pensados para un primer aporte. Para temas
+de seguridad, mirá [`SECURITY.md`](./SECURITY.md).
