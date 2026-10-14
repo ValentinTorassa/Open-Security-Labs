@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 /**
  * Account-free, loopback-only checks for three selected lessons, plus the
- * Podman environments:
+ * Podman environments and the routes:
  *
  *   npm run lab:check                 todo lo local + la convención de entornos
- *   npm run lab:check -- http         un check puntual
+ *                                     + las rutas (order y nextLabs)
+ *   npm run lab:check -- http         un check puntual (http, idempotencia,
+ *                                     permisos, entornos, rutas)
  *   npm run lab:check -- <id-de-lab>  corre lab-check en el entorno abierto
  *                                     (ej. linux-real/permisos-en-octal)
  */
@@ -22,7 +24,12 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { detectEngine, labsWithEnvironment, ROOT } from "./lab-env-node.mjs";
+import {
+  detectEngine,
+  labsForRoutes,
+  labsWithEnvironment,
+  ROOT,
+} from "./lab-env-node.mjs";
 import { envNames, EVIDENCE_DIR, LAB_USER } from "./lab-env-lib.mjs";
 
 async function withServer(handler, check) {
@@ -259,6 +266,75 @@ async function environments() {
   );
 }
 
+/**
+ * Rutas (sin Podman, corre en CI): dentro de cada ruta no hay dos labs con el
+ * mismo `order`, cada id de `nextLabs` es un lab publicado, y todo lab se
+ * alcanza siguiendo `nextLabs` desde el primero de alguna ruta (el de menor
+ * `order`). Los borradores (`draft: true`) no se publican: no cuentan.
+ */
+function routes() {
+  const labs = labsForRoutes().filter((lab) => !lab.draft);
+  const byId = new Map(labs.map((lab) => [lab.id, lab]));
+  const problems = [];
+  const routeLabs = new Map();
+  for (const lab of labs) {
+    if (!routeLabs.has(lab.path)) routeLabs.set(lab.path, []);
+    routeLabs.get(lab.path).push(lab);
+  }
+  for (const [route, list] of routeLabs) {
+    const byOrder = new Map();
+    for (const lab of list) {
+      byOrder.set(lab.order, [...(byOrder.get(lab.order) ?? []), lab.id]);
+    }
+    for (const [order, ids] of byOrder) {
+      if (ids.length > 1) {
+        problems.push(
+          `${route}: order ${order} repetido en ${ids.join(", ")}; cada lab de una ruta necesita su propio order`,
+        );
+      }
+    }
+  }
+  for (const lab of labs) {
+    for (const next of lab.nextLabs) {
+      if (!byId.has(next)) {
+        problems.push(
+          `${lab.id}: nextLabs apunta a "${next}", que no es un lab publicado`,
+        );
+      }
+    }
+  }
+  const firsts = [...routeLabs.values()].map(
+    (list) => list.reduce((a, b) => (b.order < a.order ? b : a)).id,
+  );
+  const reached = new Set(firsts);
+  const queue = [...firsts];
+  while (queue.length > 0) {
+    for (const next of byId.get(queue.shift())?.nextLabs ?? []) {
+      if (byId.has(next) && !reached.has(next)) {
+        reached.add(next);
+        queue.push(next);
+      }
+    }
+  }
+  for (const lab of labs) {
+    if (!reached.has(lab.id)) {
+      problems.push(
+        `${lab.id}: ningún camino de nextLabs llega acá desde el primer lab de una ruta; sumalo a los nextLabs del lab que va antes`,
+      );
+    }
+  }
+  if (problems.length > 0) {
+    console.error(
+      `Rutas: ${problems.length} problema(s)\n  - ${problems.join("\n  - ")}`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+  console.log(
+    `Rutas: ${labs.length} labs en ${routeLabs.size} rutas; order único por ruta, nextLabs válidos y todos alcanzables desde el primer lab de su ruta o de otra`,
+  );
+}
+
 /** Corre lab-check en el contenedor abierto del lab y copia la evidencia. */
 function labEnvironment(id) {
   const lab = labsWithEnvironment().find((l) => l.id === id);
@@ -309,6 +385,7 @@ const checks = {
   idempotencia: idempotency,
   permisos: permissions,
   entornos: environments,
+  rutas: routes,
 };
 const selected = process.argv[2] || "all";
 if (selected.includes("/")) labEnvironment(selected);
