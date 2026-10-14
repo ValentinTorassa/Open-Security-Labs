@@ -2,7 +2,7 @@
 title: "Editar archivos en la terminal sin romperlos"
 description: "Tenés que cambiar una línea de configuración y no hay mouse ni ventanas. Aprendé a editar con nano, a salir de vim sin pánico y a comprobar con diff qué cambiaste."
 path: "linux-real"
-order: 7
+order: 2
 level: "beginner"
 estimatedMinutes: 20
 prerequisites:
@@ -102,7 +102,7 @@ nano app.conf
 
 </TerminalBlock>
 
-En la línea 3 del archivo vas a ver el texto `modo=desarrollo`: es una opción de la app de juguete. Bajá con las flechas hasta esa línea y llevá el cursor al final con la tecla **Fin** (End). Borrá `desarrollo` con Backspace y escribí `produccion`, para que quede `modo=produccion`. Ojo: si apretás Backspace con el cursor al principio de la línea, la unís con la de arriba. Después andá al final de la última línea, apretá Enter y escribí `timeout=30`.
+En la línea 3 del archivo vas a ver el texto `modo=desarrollo`: es una opción de la app de juguete. Bajá con las flechas hasta esa línea y llevá el cursor al final con la tecla **Fin** (End). Borrá `desarrollo` con Backspace y escribí `produccion`, para que quede `modo=produccion`. Ojo: si apretás Backspace con el cursor al principio de la línea, la unís con la de arriba. Después bajá a `log=/tmp/app.log`, andá al final con Fin, apretá Enter y escribí `timeout=30`.
 
 Para guardar y salir:
 
