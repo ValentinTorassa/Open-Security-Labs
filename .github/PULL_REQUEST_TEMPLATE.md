@@ -11,6 +11,7 @@
 
 ## Checklist
 
+- [ ] `npm run lab:check` pasa (si es un lab: `order` libre en su ruta y enlazado desde los `nextLabs` de otro)
 - [ ] `npm run lint` pasa (prettier + astro check)
 - [ ] `npm run build` pasa
 - [ ] Si es un lab: datos ficticios, defensivo y reproducible (ver `/contribuir`)

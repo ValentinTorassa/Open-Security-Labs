@@ -1,0 +1,16 @@
+Tu root no es root · entorno de Open Security Labs
+
+Tenés capsh, getcap, setcap, unshare, python3 y sudo sin contraseña.
+El root de este contenedor no tiene todas las capabilities: mirá cuáles.
+
+Para lab-check, guardá en ~/evidencia:
+  caps.txt              grep Cap de tu shell y de sudo, y la máscara de
+                        root decodificada con capsh --decode
+  sin-dac-override.txt  sudo capsh --drop=cap_dac_override,cap_dac_read_search
+                        intentando leer /tmp/nota-vt (tuya, en 600)
+  python-80.txt         getcap ~/python-80 y el 200 de tu servidor en el 80
+  userns.txt            capabilities, uid_map y lo que no pudo el root de
+                        unshare -r
+  writeup.md            tres líneas: qué es root para el kernel
+
+lab-check también mira que ~/python-80 tenga cap_net_bind_service y ninguna otra.

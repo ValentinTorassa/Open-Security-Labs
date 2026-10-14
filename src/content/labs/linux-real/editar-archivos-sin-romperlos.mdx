@@ -1,0 +1,226 @@
+---
+title: "Editar archivos en la terminal sin romperlos"
+description: "Tenés que cambiar una línea de configuración y no hay mouse ni ventanas. Aprendé a editar con nano, a salir de vim sin pánico y a comprobar con diff qué cambiaste."
+path: "linux-real"
+order: 2
+level: "beginner"
+estimatedMinutes: 20
+prerequisites:
+  - "Una terminal Linux o WSL"
+  - "Haber hecho el lab Moverte en la terminal"
+  - "nano y vi instalados (vienen por defecto en Ubuntu y WSL)"
+objectives:
+  - "Hacer una copia de respaldo antes de editar"
+  - "Editar, guardar y salir con nano"
+  - "Entrar, editar y salir de vim con lo mínimo"
+  - "Comprobar con diff qué cambió y volver atrás si algo salió mal"
+evidence:
+  - "Archivo ~/evidencia-editar.txt con la salida de diff entre la copia y el archivo editado"
+  - "Writeup corto: qué cambiaste, con qué editor y cómo lo comprobaste"
+commands:
+  - "cp app.conf app.conf.bak"
+  - "nano app.conf"
+  - "vi app.conf"
+  - "diff app.conf.bak app.conf"
+challenge: "En ~/lab-editar, restaurá la copia con cp app.conf.bak app.conf para empezar limpio. Después abrí app.conf con vi y cambiá log=/tmp/app.log por log=/tmp/app2.log: poné el cursor sobre el punto de app.log, apretá i, escribí 2, Esc, :wq y Enter. Por último, guardá la salida de diff app.conf.bak app.conf en ~/evidencia-editar.txt."
+nextLabs:
+  - "linux-real/encontrar-archivos-y-texto"
+  - "linux-real/permisos-usuarios-procesos"
+tags:
+  - "linux"
+  - "shell"
+  - "nano"
+  - "vim"
+contributor: "knighthw"
+published: 2026-10-05
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+
+Tenés que cambiar una línea en un archivo de configuración. No hay mouse, no hay ventanas, solo la terminal. Y si te equivocás, el servicio que lee ese archivo puede no arrancar. Antes de editar nada, necesitás tres cosas: una copia de respaldo, un editor que sepas usar y una forma de ver qué cambiaste.
+
+<Callout type="concepto">
+  Editar en la terminal es igual que en cualquier editor: abrís, cambiás,
+  guardás y cerrás. Lo que cambia es que todo se hace con el teclado. La regla
+  de oro es la misma de siempre: antes de tocar algo importante, hacé una copia.
+</Callout>
+
+## Armá el archivo de práctica
+
+Vas a trabajar sobre un archivo de juguete, no sobre uno real del sistema.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+mkdir -p ~/lab-editar
+cd ~/lab-editar
+echo "# Configuración de una app de juguete" > app.conf
+echo "puerto=8080" >> app.conf
+echo "modo=desarrollo" >> app.conf
+echo "log=/tmp/app.log" >> app.conf
+cat app.conf
+```
+
+</TerminalBlock>
+
+```text
+# Configuración de una app de juguete
+puerto=8080
+modo=desarrollo
+log=/tmp/app.log
+```
+
+`mkdir -p` crea la carpeta (y no falla si ya existe), `echo ... >` crea el archivo con la primera línea, `echo ... >>` agrega las siguientes y `cat` muestra el contenido.
+
+## Primero, la copia de respaldo
+
+<TerminalBlock title="vt@labs:~/lab-editar">
+
+```bash
+cp app.conf app.conf.bak
+ls
+```
+
+</TerminalBlock>
+
+```text
+app.conf  app.conf.bak
+```
+
+`cp` copia el archivo. `app.conf.bak` es tu red de seguridad: si algo sale mal, volvés a la versión original.
+
+## Editar con nano
+
+`nano` es el editor más simple: los atajos están escritos abajo de la pantalla.
+
+<TerminalBlock title="vt@labs:~/lab-editar">
+
+```bash
+nano app.conf
+```
+
+</TerminalBlock>
+
+En la línea 3 del archivo vas a ver el texto `modo=desarrollo`: es una opción de la app de juguete. Bajá con las flechas hasta esa línea y llevá el cursor al final con la tecla **Fin** (End). Borrá `desarrollo` con Backspace y escribí `produccion`, para que quede `modo=produccion`. Ojo: si apretás Backspace con el cursor al principio de la línea, la unís con la de arriba. Después bajá a `log=/tmp/app.log`, andá al final con Fin, apretá Enter y escribí `timeout=30`.
+
+Para guardar y salir:
+
+```text
+Ctrl+O   guardar (te pide confirmar el nombre: apretá Enter)
+Ctrl+X   salir
+Ctrl+W   buscar texto (en nano 8 o más nuevo, también Ctrl+F)
+Ctrl+K   cortar la línea entera
+```
+
+Abajo de la pantalla, `^` significa Ctrl: `^O` es Ctrl+O. Si salís con Ctrl+X y hay cambios sin guardar, nano te pregunta: `Y` los guarda, `N` los descarta y sale, y `Ctrl+C` cancela la salida y te deja en el archivo.
+
+## Comprobá qué cambiaste con diff
+
+<TerminalBlock title="vt@labs:~/lab-editar">
+
+```bash
+diff app.conf.bak app.conf
+```
+
+</TerminalBlock>
+
+```text
+3c3
+< modo=desarrollo
+---
+> modo=produccion
+4a5
+> timeout=30
+```
+
+`diff` compara los dos archivos línea por línea:
+
+```text
+<      la línea como estaba en la copia (app.conf.bak)
+>      la línea como está ahora (app.conf)
+3c3    la línea 3 cambió (c = change)
+4a5    se agregó algo después de la línea 4 (a = add)
+2d1    se borró la línea 2 (d = delete)
+```
+
+Si `diff` no muestra nada, los archivos son idénticos.
+
+<Callout type="error">
+  Si te equivocaste y no sabés qué tocaste, no intentes arreglarlo a mano:
+  volvé a la copia con `cp app.conf.bak app.conf`. Después corré `diff` de
+  nuevo: si no muestra nada, quedaste exactamente como al principio.
+</Callout>
+
+## Sobrevivir a vim
+
+`vi` está en casi cualquier Linux, así que tarde o temprano te lo vas a cruzar. Si nunca lo usaste, lo primero que pasa es que no sabés cómo salir. No necesitás aprender todo vim: con esto alcanza.
+
+<TerminalBlock title="vt@labs:~/lab-editar">
+
+```bash
+vi app.conf
+```
+
+</TerminalBlock>
+
+vim tiene **modos**. Al abrir estás en modo normal, donde las teclas son comandos, no texto. Por eso, si empezás a escribir, pasan cosas raras.
+
+```text
+x        borrar el carácter que está bajo el cursor (en modo normal)
+i        entrar en modo inserción: escribís antes del cursor
+a        entrar en modo inserción: escribís después del cursor
+Esc      volver al modo normal
+:wq      guardar y salir (desde el modo normal, y Enter)
+:q!      salir sin guardar (desde el modo normal, y Enter)
+```
+
+Para cambiar `puerto=8080` por `puerto=9090`:
+
+```text
+1. Con las flechas, poné el cursor sobre el primer 8.
+2. Apretá x cuatro veces: borra 8080 y queda puerto=
+   (el cursor queda sobre el =).
+3. Apretá a: entrás al modo inserción, después del =.
+4. Escribí 9090.
+5. Apretá Esc: volvés al modo normal.
+6. Escribí :wq y apretá Enter: con eso guardás y salís del archivo.
+```
+
+Usá `a` y no `i`: `i` escribe antes del cursor, y te quedaría `puerto9090=`.
+
+<Callout type="nota">
+  En algunos sistemas, `vi` es una versión mínima de vim que se porta
+  distinto. Si te pasa algo de esto, no rompiste nada:
+</Callout>
+
+```text
+No aparece -- INSERT --       Igual entraste. Para verlo: :set showmode y Enter.
+Backspace no borra            Borrá con x en modo normal.
+Las flechas escriben letras   Apretá Esc antes de moverte.
+Esc ejecuta un : a medias     Para cancelarlo, usá Ctrl+C.
+```
+
+## Archivos que no son tuyos
+
+Los archivos de configuración del sistema, como los de `/etc`, son de root. Como usuario normal podés leer la mayoría, pero no guardarlos: nano avisa `Permission denied` al guardar, y vim abre el archivo marcado `[readonly]` y al guardar muestra `E45: 'readonly' option is set`. Algunos ni siquiera se pueden leer, como `/etc/shadow`.
+
+<Callout type="nota">
+  Para editar un archivo del sistema hace falta `sudo`, y ahí un error sí puede
+  romper algo. Este lab no toca ninguno a propósito. Cuando te toque hacerlo,
+  aplicá lo mismo que acá: copia de respaldo primero, `diff` después.
+</Callout>
+
+<Callout type="evidencia">
+  Después del reto, guardá la comparación en un archivo fuera de
+  `~/lab-editar` y revisala.
+</Callout>
+
+<TerminalBlock title="vt@labs:~/lab-editar">
+
+```bash
+diff app.conf.bak app.conf > ~/evidencia-editar.txt
+cat ~/evidencia-editar.txt
+```
+
+</TerminalBlock>

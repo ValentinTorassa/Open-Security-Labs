@@ -25,6 +25,7 @@ commands:
   - "grep -E '^(Uid|Gid)' /proc/$$/status"
 challenge: "Elegí un comando que uses todos los días (cat, grep, curl). Corré strace -c y strace -e trace=openat sobre él. Explicá en tres líneas qué archivos abrió que no esperabas y qué syscalls dominan."
 nextLabs:
+  - "linux-real/tu-root-no-es-root"
   - "ciberseguridad/seccomp-observar-antes-de-bloquear"
   - "linux-real/proceso-socket-evidencia-demo"
 tags:
@@ -190,7 +191,7 @@ grep -E '^(Uid|Gid)' /proc/$$/status
 
 </TerminalBlock>
 
-El que el kernel mira para decidir es el **efectivo**. Root es el UID `0` y nada más: el kernel tiene condiciones del tipo "si el UID efectivo es 0, saltá este chequeo". `sudo` es un binario setuid: al ejecutarlo, su UID efectivo pasa a ser 0, revisa `/etc/sudoers` y deja un registro por comando. Trabajar siempre como root no deja ese registro y hace que cada typo corra con todos los privilegios.
+El que el kernel mira para decidir es el **efectivo**. Root es el UID `0`, y durante años eso alcanzó: el kernel tenía condiciones del tipo "si el UID efectivo es 0, saltá este chequeo". Desde Linux 2.2 revisa capabilities, y el UID 0 es la forma de recibirlas todas: lo ves en el lab Tu root no es root. `sudo` es un binario setuid: al ejecutarlo, su UID efectivo pasa a ser 0, revisa `/etc/sudoers` y deja un registro por comando. Trabajar siempre como root no deja ese registro y hace que cada typo corra con todos los privilegios.
 
 ## Quiz
 
