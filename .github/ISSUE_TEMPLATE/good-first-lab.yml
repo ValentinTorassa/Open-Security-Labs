@@ -1,0 +1,77 @@
+name: Good first lab
+description: Un lab acotado y bien definido, pensado para un primer aporte. Lo abre quien mantiene el repo.
+title: "Good first lab: "
+labels: ["good first issue"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Un good first lab enseña un solo concepto, se hace en 10 a 20 minutos
+        y deja todo decidido de antemano: ruta, lugar en la ruta, de qué lab
+        viene y qué evidencia produce. Quien lo toma escribe y verifica; no
+        tiene que adivinar.
+  - type: dropdown
+    id: ruta
+    attributes:
+      label: Ruta
+      options:
+        - Linux Real
+        - Redes e Internet
+        - Backend y Arquitectura
+        - Cloud y Producción
+        - Ciberseguridad Práctica
+        - DevSecOps y Agentes
+    validations:
+      required: true
+  - type: input
+    id: archivo
+    attributes:
+      label: Archivo del lab
+      placeholder: "src/content/labs/linux-real/<slug>.mdx"
+    validations:
+      required: true
+  - type: input
+    id: order
+    attributes:
+      label: order
+      description: Un número libre en esa ruta (`npm run lab:check -- rutas` avisa si se repite).
+    validations:
+      required: true
+  - type: input
+    id: anterior
+    attributes:
+      label: Lab anterior
+      description: El lab a cuyos `nextLabs` se suma este, para que se llegue a él.
+      placeholder: "linux-real/filesystem-real"
+    validations:
+      required: true
+  - type: textarea
+    id: concepto
+    attributes:
+      label: Qué tiene que enseñar
+      description: El problema real del que arranca y el único concepto que deja.
+    validations:
+      required: true
+  - type: textarea
+    id: comandos
+    attributes:
+      label: Comandos clave
+      description: Los que van en `commands`. Todos tienen que correr tal cual en un Linux actual.
+    validations:
+      required: true
+  - type: textarea
+    id: evidencia
+    attributes:
+      label: Evidencia esperada
+    validations:
+      required: true
+  - type: textarea
+    id: verificar
+    attributes:
+      label: Cómo se verifica
+      value: |
+        - [ ] Cada comando corrido de verdad, con la salida que muestra el lab
+        - [ ] `npm run lab:check` pasa (incluye rutas: order único y el lab alcanzable)
+        - [ ] `npm run lint` y `npm run build` pasan
+    validations:
+      required: true

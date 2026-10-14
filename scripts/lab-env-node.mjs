@@ -55,17 +55,63 @@ export function parseEnvironment(text) {
   return env;
 }
 
+function labId(file) {
+  return relative(LABS_DIR, file)
+    .split(sep)
+    .join("/")
+    .replace(/\.mdx$/, "");
+}
+
 /** Labs que declaran `environment`, ordenados por id. */
 export function labsWithEnvironment() {
   return walk(LABS_DIR)
     .map((file) => ({
-      id: relative(LABS_DIR, file)
-        .split(sep)
-        .join("/")
-        .replace(/\.mdx$/, ""),
+      id: labId(file),
       env: parseEnvironment(readFileSync(file, "utf8")),
     }))
     .filter((lab) => lab.env)
+    .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/**
+ * Lo que necesita el check de rutas: `path`, `order`, `draft` y `nextLabs`
+ * de nivel superior. Mismo subconjunto de YAML que parseEnvironment; los
+ * defaults son los del schema (order 100, draft false).
+ * @param {string} text contenido del .mdx
+ */
+export function parseRouteFields(text) {
+  const fm = text.match(/^---\n([\s\S]*?)\n---\n/)?.[1] ?? "";
+  const lines = fm.split("\n");
+  const value = (key) =>
+    lines
+      .map((l) => l.match(new RegExp(`^${key}:\\s*(\\S.*)$`)))
+      .find(Boolean)?.[1];
+  const start = lines.findIndex((l) => /^nextLabs:\s*$/.test(l));
+  const inline = value("nextLabs");
+  const nextLabs = inline ? scalar(inline) : [];
+  if (start !== -1) {
+    for (const line of lines.slice(start + 1)) {
+      const item = line.match(/^ {2}- (.*)$/);
+      if (!item) break;
+      nextLabs.push(scalar(item[1]));
+    }
+  }
+  const order = value("order");
+  return {
+    path: value("path") ? scalar(value("path")) : null,
+    order: order === undefined ? 100 : Number(order),
+    draft: value("draft") === "true",
+    nextLabs,
+  };
+}
+
+/** Todos los labs con los campos de parseRouteFields, ordenados por id. */
+export function labsForRoutes() {
+  return walk(LABS_DIR)
+    .map((file) => ({
+      id: labId(file),
+      ...parseRouteFields(readFileSync(file, "utf8")),
+    }))
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
