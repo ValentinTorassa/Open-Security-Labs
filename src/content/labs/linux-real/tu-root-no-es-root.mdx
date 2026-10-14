@@ -28,6 +28,7 @@ commands:
   - "unshare -r cat /proc/self/uid_map"
 challenge: "Dejá a vt sirviendo su home por HTTP en 127.0.0.1:443 con un binario que tenga una sola capability y sin correr el servidor con sudo. Guardá en ~/evidencia/reto.txt el getcap del binario y la línea CapEff del servidor decodificada con capsh. Después sacale la capability con sudo setcap -r y mostrá que vuelve el Permission denied."
 nextLabs:
+  - "linux-real/contenedores-sin-magia"
   - "ciberseguridad/docker-socket-to-host"
   - "devsecops-agentes/docker-image-hardening"
 tags:
