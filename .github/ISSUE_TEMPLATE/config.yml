@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Reportar un problema de seguridad
+    url: https://github.com/ValentinTorassa/Open-Security-Labs/blob/main/SECURITY.md
+    about: Secretos filtrados o contenido inseguro van por SECURITY.md, no en un issue público.
