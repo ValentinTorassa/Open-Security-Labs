@@ -1,0 +1,16 @@
+Anatomía de un .deb · entorno de Open Security Labs
+
+En ~/ragnaros_0.1.0-1_all.deb tenés el paquete de VT-Ragnaros v0.1.0,
+verificado por SHA-256 al construir la imagen. Sus dependencias ya están
+instaladas, ar viene con binutils y sudo no pide contraseña.
+
+Para lab-check, guardá en ~/evidencia:
+  ar.txt         ar t del paquete
+  control.txt    dpkg-deb -I del paquete
+  udev.txt       la regla de udev y la línea de modprobe.d, sacadas del .deb
+                 sin instalar (dpkg-deb --fsys-tarfile ... | tar -xO ...)
+  postinst.txt   el postinst (dpkg-deb -e)
+  verify.txt     dpkg --verify ragnaros con la regla de udev modificada
+  writeup.md     tres líneas: qué mirarías antes de instalar un .deb ajeno
+
+Al final, ragnaros tiene que quedar instalado y sin archivos cambiados.

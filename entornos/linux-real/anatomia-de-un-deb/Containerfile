@@ -1,0 +1,36 @@
+# Entorno: linux-real/anatomia-de-un-deb
+# Construilo desde la raíz del repo (el contexto es entornos/):
+#   podman build -t osl/anatomia-de-un-deb -f entornos/linux-real/anatomia-de-un-deb/Containerfile entornos
+#
+# El .deb es el de la release v0.1.0 de VT-Ragnaros, verificado por SHA-256
+# al construir. Sus dependencias ya vienen instaladas, así que dpkg -i
+# funciona sin red. sudo sin contraseña es parte del lab: instalar un paquete
+# corre sus scripts como root, y eso es lo que se mira.
+FROM docker.io/library/debian:trixie-slim
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends binutils fonts-dejavu-core less libusb-1.0-0 \
+      python3 python3-pil python3-yaml sudo \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --create-home --uid 1000 --shell /bin/bash vt \
+ && echo 'vt ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/vt \
+ && chmod 0440 /etc/sudoers.d/vt
+
+ADD --checksum=sha256:b02f9a7ace507cf50db51c6a853fab59c4638be7002c5d1f5986da66212d5ab2 \
+    --chmod=0644 \
+    https://github.com/ValentinTorassa/VT-Ragnaros/releases/download/v0.1.0/ragnaros_0.1.0-1_all.deb \
+    /home/vt/ragnaros_0.1.0-1_all.deb
+
+COPY _lib/lab-check /usr/local/bin/lab-check
+COPY _lib/lab-check.sh /usr/local/lib/osl/lab-check.sh
+COPY _lib/bienvenida.sh /etc/profile.d/osl.sh
+COPY linux-real/anatomia-de-un-deb/check.sh /usr/local/lib/osl/check.sh
+COPY linux-real/anatomia-de-un-deb/bienvenida.txt /usr/local/lib/osl/bienvenida.txt
+
+RUN chmod 0755 /usr/local/bin/lab-check
+
+ENV OSL_LAB=linux-real/anatomia-de-un-deb
+USER vt
+WORKDIR /home/vt
+CMD ["bash", "-l"]
