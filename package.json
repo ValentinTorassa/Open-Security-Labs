@@ -44,6 +44,6 @@
     "prettier": "^3.9.5",
     "prettier-plugin-astro": "^0.14.1",
     "prettier-plugin-tailwindcss": "^0.6.14",
-    "typescript": "^5.9.2"
+    "typescript": "^7.0.2"
   }
 }
