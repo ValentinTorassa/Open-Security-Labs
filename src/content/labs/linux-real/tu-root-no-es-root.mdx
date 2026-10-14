@@ -1,0 +1,333 @@
+---
+title: "Tu root no es root: capabilities"
+description: "Sos uid=0 y el kernel igual te dice Operation not permitted. Root no es un if (uid == 0): es un paquete de capabilities que se puede recortar. Leelas en /proc, dale a un binario solo la que necesita y mirá por qué el root de un contenedor no es el de tu máquina."
+path: "linux-real"
+order: 10
+level: "intermediate"
+estimatedMinutes: 30
+prerequisites:
+  - "Haber hecho el lab Del comando al kernel"
+  - "El entorno con Podman de este lab, o un Linux con sudo, capsh y setcap (paquete libcap2-bin) y unshare"
+objectives:
+  - "Leer las capabilities de un proceso en /proc y decodificarlas con capsh"
+  - "Ver que root sin una capability deja de poder lo que esa capability habilita"
+  - "Darle a un binario una sola capability con setcap en vez de correrlo como root"
+  - "Explicar por qué el root de un user namespace, y el de un contenedor rootless, no es root en el host"
+evidence:
+  - "Las líneas Cap de tu shell y de sudo, con la máscara de root decodificada"
+  - "Root sin cap_dac_override intentando leer un archivo 600 de vt"
+  - "getcap de tu copia de python con cap_net_bind_service y la respuesta 200 del puerto 80"
+  - "Las capabilities y el uid_map de un user namespace, y lo que su root no pudo hacer"
+  - "Writeup de tres líneas: qué es root para el kernel y qué le darías a un servicio que escucha en el 443"
+commands:
+  - "grep Cap /proc/$$/status"
+  - "capsh --decode=00000000800405fb"
+  - "sudo capsh --drop=cap_dac_override,cap_dac_read_search -- -c 'cat /tmp/nota-vt'"
+  - "sudo setcap cap_net_bind_service=+ep ~/python-80"
+  - "getcap -r / 2>/dev/null"
+  - "unshare -r cat /proc/self/uid_map"
+challenge: "Dejá a vt sirviendo su home por HTTP en 127.0.0.1:443 con un binario que tenga una sola capability y sin correr el servidor con sudo. Guardá en ~/evidencia/reto.txt el getcap del binario y la línea CapEff del servidor decodificada con capsh. Después sacale la capability con sudo setcap -r y mostrá que vuelve el Permission denied."
+nextLabs:
+  - "linux-real/contenedores-sin-magia"
+  - "ciberseguridad/docker-socket-to-host"
+  - "devsecops-agentes/docker-image-hardening"
+tags:
+  - "linux"
+  - "capabilities"
+  - "root"
+  - "contenedores"
+  - "hardening"
+published: 2026-10-14
+environment:
+  summary: "Debian con libcap2-bin, python3 y sudo descartable: el root de este contenedor tiene 11 capabilities, no 41. lab-check revisa tus máscaras decodificadas, el root sin cap_dac_override, tu copia de python con una sola capability y el user namespace."
+  flags:
+    - "--sysctl=net.ipv4.ip_unprivileged_port_start=1024"
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import Quiz from "../../../components/Quiz.astro";
+
+Entrás al entorno de este lab, corrés `sudo date -s 2030-01-01` y sos `uid=0(root)`. El kernel te contesta `Operation not permitted`. No es un bug del contenedor: desde Linux 2.2 el kernel casi nunca pregunta "¿sos UID 0?". Pregunta "¿tenés esta capability?", y root es un paquete de ellas que se puede recortar.
+
+<Callout type="concepto">
+  Una capability es un privilegio de root con nombre propio:
+  `CAP_NET_BIND_SERVICE` para escuchar en puertos menores a 1024, `CAP_SYS_TIME`
+  para cambiar el reloj, `CAP_DAC_OVERRIDE` para saltear los permisos rwx de los
+  archivos. El UID 0 sigue importando por una razón: cuando un proceso ejecuta
+  un programa como UID 0, el kernel le carga todas las que permite su techo.
+</Callout>
+
+## Las capabilities de un proceso están en /proc
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+grep Cap /proc/$$/status
+```
+
+</TerminalBlock>
+
+```text
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000
+CapBnd:	00000000800405fb
+CapAmb:	0000000000000000
+```
+
+Son cinco máscaras de bits, una por conjunto. Cada bit es una capability:
+
+```text
+CapEff   efectivas: las que el kernel mira cuando el proceso pide algo
+CapPrm   permitidas: las que el proceso puede activar
+CapBnd   bounding set: el techo, ninguna puede pasar de acá
+CapInh   heredables y
+CapAmb   ambient: las que pasan a un programa nuevo (en este lab no las usás)
+```
+
+Como `vt` tenés cero efectivas. Ahora lo mismo como root:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+sudo grep CapEff /proc/self/status
+capsh --decode=00000000800405fb
+cat /proc/sys/kernel/cap_last_cap
+```
+
+</TerminalBlock>
+
+```text
+CapEff:	00000000800405fb
+0x00000000800405fb=cap_chown,cap_dac_override,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_net_bind_service,cap_sys_chroot,cap_setfcap
+40
+```
+
+El kernel numera las capabilities de 0 a 40: hay 41. El root de este contenedor tiene 11, las que Podman deja por defecto. Con Docker son 14: suma `cap_mknod`, `cap_net_raw` y `cap_audit_write`. En tu máquina, con un kernel actual, `sudo grep CapEff /proc/self/status` da `000001ffffffffff`: las 41.
+
+Por eso falla el reloj. `CAP_SYS_TIME` no está en la lista:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+sudo date -s 2030-01-01
+```
+
+</TerminalBlock>
+
+```text
+date: cannot set date: Operation not permitted
+Tue Jan  1 00:00:00 UTC 2030
+```
+
+La segunda línea es la fecha que `date` intentó poner, no la que quedó. Corré `date` y vas a ver la de hoy.
+
+## Root sin una capability
+
+Un archivo tuyo que solo vos podés leer:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+echo "nota de vt" > /tmp/nota-vt
+chmod 600 /tmp/nota-vt
+sudo cat /tmp/nota-vt
+sudo capsh --drop=cap_dac_override,cap_dac_read_search -- -c 'id -u; cat /tmp/nota-vt'
+```
+
+</TerminalBlock>
+
+```text
+nota de vt
+0
+cat: /tmp/nota-vt: Permission denied
+```
+
+`capsh --drop` saca esas capabilities del bounding set y después lanza `bash`. Sigue siendo UID 0, pero sin `cap_dac_override` (y sin `cap_dac_read_search`, que en tu máquina también lee cualquier archivo) el kernel le aplica los bits rwx como a cualquiera: el archivo es de `vt` con `600` y "otros" no tiene nada.
+
+<Callout type="nota">
+  No lo pruebes con `/etc/shadow`. Su dueño es root, así que root lo lee por los
+  bits de dueño, sin ninguna capability.
+</Callout>
+
+## Una capability para un binario, no root para todo
+
+Querés un servidor de juguete en el puerto 80. Como `vt`, el kernel no te deja:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+python3 -m http.server 80 --bind 127.0.0.1
+```
+
+</TerminalBlock>
+
+```text
+PermissionError: [Errno 13] Permission denied
+```
+
+Correrlo con `sudo` le da las 11 capabilities (o las 41 en tu máquina) a un servidor que necesita una. La alternativa es darle esa sola a un binario dedicado:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+cp "$(readlink -f "$(command -v python3)")" ~/python-80
+sudo setcap cap_net_bind_service=+ep ~/python-80
+getcap ~/python-80
+~/python-80 -m http.server 80 --bind 127.0.0.1 >/dev/null 2>&1 &
+sleep 1
+grep CapEff /proc/$!/status
+capsh --decode=0000000000000400
+python3 -c 'import urllib.request; print(urllib.request.urlopen("http://127.0.0.1/").status)'
+kill $!
+```
+
+</TerminalBlock>
+
+```text
+/home/vt/python-80 cap_net_bind_service=ep
+CapEff:	0000000000000400
+0x0000000000000400=cap_net_bind_service
+200
+```
+
+`+ep` pone la capability en los conjuntos permitido (`p`) y efectivo (`e`) de cualquier proceso que ejecute ese archivo. Vive en el archivo, en un atributo extendido (`security.capability`), así que `ls -l` no la muestra: solo `getcap`. Por eso la copia: ponerla en `/usr/bin/python3.13` se la daría a cualquier script de Python de la máquina.
+
+Ese atributo es lo que tenés que auditar, como los binarios SUID:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+getcap -r / 2>/dev/null
+```
+
+</TerminalBlock>
+
+```text
+/home/vt/python-80 cap_net_bind_service=ep
+```
+
+En tu máquina puede aparecer alguno más. Cada línea es un binario que cualquiera que pueda ejecutarlo usa con ese privilegio.
+
+<Callout type="error">
+  Hay capabilities que equivalen a root entero: `cap_sys_admin` (mount,
+  namespaces y muchísimo más), `cap_dac_override` (leer y escribir cualquier
+  archivo), `cap_setuid` (pasar a UID 0) y `cap_sys_module` (cargar código en el
+  kernel). Ponerle una de esas a un binario es darle root a quien lo ejecute.
+</Callout>
+
+Para un servicio de systemd no hace falta `setcap`: `User=www-data` con `AmbientCapabilities=CAP_NET_BIND_SERVICE` en la unidad hace lo mismo sin tocar el binario.
+
+## El root de un user namespace
+
+`unshare -r` crea un user namespace y te mapea como root adentro. No pide `sudo`:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+unshare -r grep CapEff /proc/self/status
+unshare -r cat /proc/self/uid_map
+unshare -r bash -c 'id; cat /etc/shadow; ls -ln /etc/shadow; date -s 2030-01-01'
+```
+
+</TerminalBlock>
+
+```text
+CapEff:	000001ffffffffff
+         0       1000          1
+uid=0(root) gid=0(root) groups=0(root)
+cat: /etc/shadow: Permission denied
+-rw-r----- 1 65534 65534 498 Oct 14 17:21 /etc/shadow
+date: cannot set date: Operation not permitted
+Tue Jan  1 00:00:00 UTC 2030
+```
+
+Las 41 capabilities y no puede leer `/etc/shadow` ni tocar el reloj. El `uid_map` dice por qué: el UID 0 de adentro es el 1000 de afuera, y es uno solo. Las capabilities de un user namespace valen sobre lo que ese namespace posee. `/etc/shadow` es del root real, que adentro no existe (por eso aparece como `65534`, nadie), y el reloj es de la máquina.
+
+Lo que sí posee es lo que crea. Con `-n` también crea su propia red, y ahí el puerto 80 es suyo:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+unshare -rn python3 -c 'import socket; s = socket.socket(); s.bind(("127.0.0.1", 80)); print("bind 80 ok")'
+```
+
+</TerminalBlock>
+
+```text
+bind 80 ok
+```
+
+Así funciona Podman rootless, el que corre este entorno. Desde otra terminal en tu máquina:
+
+<TerminalBlock title="tu máquina">
+
+```bash
+podman unshare cat /proc/self/uid_map
+```
+
+</TerminalBlock>
+
+```text
+         0       1000          1
+         1     100000      65536
+```
+
+El root del contenedor es tu usuario en el host (`1000` en este ejemplo), y los demás UIDs del contenedor caen en un rango reservado para tu usuario en `/etc/subuid`, que no es ninguna cuenta de tu máquina. Si alguien se escapa del contenedor como root, cae en tu usuario, no en el root de tu máquina.
+
+<Callout type="nota">
+  En Ubuntu 24.04 o más nuevo, AppArmor restringe los user namespaces sin
+  privilegios y `unshare -r` puede fallar al escribir `/proc/self/uid_map`. En
+  el entorno de este lab funciona. Con Docker en vez de Podman, si `unshare -r`
+  da `Operation not permitted`, es el perfil de seguridad de tu instalación:
+  hacé esa sección con Podman.
+</Callout>
+
+## Quiz
+
+<Quiz
+  questions={[
+    {
+      q: "Un proceso corre como uid=0 y igual recibe Operation not permitted al cambiar el reloj. ¿Por qué?",
+      options: [
+        "Porque sudo no funciona adentro de un contenedor",
+        "Porque le falta CAP_SYS_TIME: el kernel revisa la capability, no el UID",
+        "Porque el reloj solo lo puede cambiar systemd",
+      ],
+      answer: 1,
+      explain:
+        "Desde Linux 2.2 cada operación privilegiada pide su capability. UID 0 solo significa que, al ejecutar un programa, el proceso recibe todas las que permite su bounding set.",
+    },
+    {
+      q: "Querés que un servidor escuche en el puerto 443 sin correrlo como root. ¿Qué le das?",
+      options: [
+        "cap_sys_admin, que incluye todo lo de red",
+        "cap_net_bind_service, sobre un binario dedicado o con AmbientCapabilities en systemd",
+        "Permisos 4755 (SUID) al binario",
+      ],
+      answer: 1,
+      explain:
+        "cap_net_bind_service habilita puertos menores a 1024 y nada más. cap_sys_admin y SUID root le dan mucho más de lo que necesita.",
+    },
+    {
+      q: "Adentro de unshare -r tenés CapEff 000001ffffffffff. ¿Podés leer /etc/shadow del host?",
+      options: [
+        "Sí, tenés todas las capabilities",
+        "No: esas capabilities valen sobre lo que posee el user namespace, y /etc/shadow es del root real",
+        "Solo si además usás sudo adentro",
+      ],
+      answer: 1,
+      explain:
+        "El uid_map mapea tu UID 0 al 1000 de afuera. El dueño de /etc/shadow no está mapeado (aparece como 65534), así que cap_dac_override no aplica sobre ese archivo.",
+    },
+  ]}
+/>
+
+<Callout type="evidencia">
+  Guardá en `~/evidencia` las líneas Cap de tu shell y de `sudo` con la máscara
+  decodificada, el `Permission denied` de root sin `cap_dac_override`, el
+  `getcap` de tu `python-80` con el `200` del puerto 80 y lo que hizo y no pudo
+  hacer el root de `unshare -r`. Cerrá con tres líneas propias: qué es root
+  para el kernel y qué le darías a un servicio que escucha en el 443.
+</Callout>

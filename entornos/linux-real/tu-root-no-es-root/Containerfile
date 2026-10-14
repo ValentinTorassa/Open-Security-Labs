@@ -1,0 +1,29 @@
+# Entorno: linux-real/tu-root-no-es-root
+# Construilo desde la raíz del repo (el contexto es entornos/):
+#   podman build -t osl/tu-root-no-es-root -f entornos/linux-real/tu-root-no-es-root/Containerfile entornos
+#
+# sudo sin contraseña es parte del lab: muestra qué capabilities tiene el root
+# de un contenedor (11 con Podman, 14 con Docker) y pone una con setcap, que
+# necesita cap_setfcap. No se agrega ninguna capability al contenedor.
+FROM docker.io/library/debian:trixie-slim
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends less libcap2-bin procps python3 sudo \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --create-home --uid 1000 --shell /bin/bash vt \
+ && echo 'vt ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/vt \
+ && chmod 0440 /etc/sudoers.d/vt
+
+COPY _lib/lab-check /usr/local/bin/lab-check
+COPY _lib/lab-check.sh /usr/local/lib/osl/lab-check.sh
+COPY _lib/bienvenida.sh /etc/profile.d/osl.sh
+COPY linux-real/tu-root-no-es-root/check.sh /usr/local/lib/osl/check.sh
+COPY linux-real/tu-root-no-es-root/bienvenida.txt /usr/local/lib/osl/bienvenida.txt
+
+RUN chmod 0755 /usr/local/bin/lab-check
+
+ENV OSL_LAB=linux-real/tu-root-no-es-root
+USER vt
+WORKDIR /home/vt
+CMD ["bash", "-l"]
