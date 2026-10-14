@@ -1,0 +1,312 @@
+---
+title: "Contenedores sin magia: namespaces, cgroups y Podman rootless"
+description: "Un contenedor no es una máquina chica: es un proceso de tu Linux con otra vista del sistema. Encontralo con ps, compará sus namespaces con los tuyos, mirá por qué su socket no aparece en ss y ponele un techo de memoria."
+path: "linux-real"
+order: 11
+level: "intermediate"
+estimatedMinutes: 35
+prerequisites:
+  - "Podman 4 o más nuevo, rootless (con tu usuario), en un Linux con systemd y cgroup v2"
+  - "curl y ss (paquete iproute2) en tu máquina"
+  - "Haber hecho el lab Del proceso al socket"
+objectives:
+  - "Encontrar el proceso de un contenedor en tu máquina y su PID de los dos lados"
+  - "Comparar los namespaces del contenedor con los de tu shell en /proc/<pid>/ns"
+  - "Explicar por qué ss y VT Lens no ven el socket de un contenedor, y encontrarlo igual"
+  - "Ponerle un límite de memoria con cgroups y ver al kernel aplicarlo"
+  - "Explicar qué hace el user namespace de Podman rootless con el root del contenedor"
+evidence:
+  - "Tabla de namespaces de tu shell contra los del contenedor, marcando cuáles cambian"
+  - "ss -tlnp en tu máquina y adentro del net namespace del contenedor, con el dueño de cada socket"
+  - "La línea de /proc/<pid>/net/tcp del servidor, con el puerto pasado a decimal"
+  - "memory.max del contenedor limitado y la salida 137 del que se pasó"
+  - "Writeup de tres líneas: qué es un contenedor visto desde el kernel"
+commands:
+  - "podman inspect -f '{{.State.Pid}}' osl-ns"
+  - "podman top osl-ns pid hpid args"
+  - "readlink /proc/$PID/ns/net"
+  - "cat /proc/$WEB/net/tcp"
+  - "podman unshare nsenter -t $WEB -n ss -tlnp"
+  - "podman run --rm --memory 64m docker.io/library/debian:trixie-slim cat /sys/fs/cgroup/memory.max"
+challenge: "Con osl-web corriendo, encontrá en /proc/<pid>/net/tcp6 o tcp la línea de cada socket que escucha (estado 0A) y pasá su puerto de hex a decimal. Después levantá un contenedor con --network none y mostrá con cat /proc/net/dev adentro qué interfaces ve. Explicá en dos líneas por qué ss en tu máquina muestra a pasta en el 8088 y nunca a python."
+nextLabs:
+  - "ciberseguridad/docker-socket-to-host"
+  - "devsecops-agentes/docker-image-hardening"
+tags:
+  - "linux"
+  - "contenedores"
+  - "namespaces"
+  - "cgroups"
+  - "podman"
+published: 2026-10-14
+resources:
+  - type: "repo"
+    title: "VT Lens: net_poller.rs"
+    url: "https://github.com/ValentinTorassa/VT-Lens/blob/cce9ea179631d8bf9235e88b11e20ca10dc409af/src/capture/net_poller.rs#L54-L59"
+    note: "Las cuatro rutas de /proc/net que lee VT Lens: por qué no ve los sockets de un contenedor."
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import Quiz from "../../../components/Quiz.astro";
+
+Levantás un contenedor con un servidor en el puerto 80, `curl` te contesta y `ss -tlnp` en tu máquina no muestra nada en el 80. VT Lens tampoco. El servidor no está escondido ni en otra máquina: es un proceso más de tu Linux. Lo que cambia es lo que ese proceso ve, y desde dónde lo mirás vos.
+
+<Callout type="concepto">
+  Un contenedor es un proceso común con tres cosas encima: **namespaces**
+  (qué ve: sus procesos, su red, su hostname, sus montajes), **cgroups**
+  (cuánto puede usar: memoria, CPU, procesos) y, con Podman rootless, un **user
+  namespace** (quién es: su root es tu usuario). No hay hipervisor ni kernel
+  propio. El kernel es el tuyo.
+</Callout>
+
+## El contenedor es un proceso
+
+<TerminalBlock title="tu máquina">
+
+```bash
+podman run -d --name osl-ns docker.io/library/debian:trixie-slim sleep 1000
+PID=$(podman inspect -f '{{.State.Pid}}' osl-ns)
+ps -o user,pid,cmd -p "$PID"
+podman top osl-ns pid hpid args
+```
+
+</TerminalBlock>
+
+```text
+USER         PID CMD
+vt       1247180 sleep 1000
+PID         HPID        COMMAND
+1           1247180     sleep 1000
+```
+
+El mismo `sleep` tiene dos PIDs: `1` adentro del contenedor y `1247180` en tu máquina (`HPID`, host PID). Es el mismo proceso visto desde dos **PID namespaces**. Y en la columna `USER` de `ps` está tu usuario (`vt` en este ejemplo), no root.
+
+## Namespaces: qué ve
+
+Cada proceso tiene sus namespaces en `/proc/<pid>/ns`. Dos procesos están en el mismo namespace si el número entre corchetes coincide:
+
+<TerminalBlock title="tu máquina">
+
+```bash
+for ns in cgroup ipc mnt net pid time user uts; do
+  printf '%-7s %-22s %s\n' "$ns" "$(readlink /proc/self/ns/$ns)" "$(readlink /proc/$PID/ns/$ns)"
+done
+```
+
+</TerminalBlock>
+
+```text
+cgroup  cgroup:[4026531835]    cgroup:[4026535504]
+ipc     ipc:[4026531839]       ipc:[4026535501]
+mnt     mnt:[4026531841]       mnt:[4026535499]
+net     net:[4026531840]       net:[4026535434]
+pid     pid:[4026531836]       pid:[4026535502]
+time    time:[4026531834]      time:[4026531834]
+user    user:[4026531837]      user:[4026535729]
+uts     uts:[4026531838]       uts:[4026535500]
+```
+
+Tus números van a ser otros. Lo que importa es la columna del medio contra la de la derecha: cambian todos menos `time`.
+
+```text
+pid      su propio árbol de procesos: el sleep es el PID 1
+net      sus interfaces, rutas y sockets
+mnt      su propio árbol de montajes: el / de la imagen
+uts      su hostname (podman exec osl-ns hostname da el ID del contenedor)
+ipc      su memoria compartida y colas de mensajes
+cgroup   ve su cgroup como si fuera la raíz
+user     sus UIDs: el root de adentro es tu usuario afuera
+time     el mismo reloj que vos
+```
+
+`lsns -p "$PID"` muestra lo mismo como tabla.
+
+## User namespace: el root del contenedor
+
+<TerminalBlock title="tu máquina">
+
+```bash
+podman exec osl-ns id
+cat /proc/$PID/uid_map
+```
+
+</TerminalBlock>
+
+```text
+uid=0(root) gid=0(root) groups=0(root)
+         0       1000          1
+         1     100000      65536
+```
+
+Adentro es `uid=0`. El `uid_map` dice qué es afuera: el UID `0` del contenedor es el `1000` de tu máquina (tu usuario), y los UIDs `1` en adelante caen en el rango que `/etc/subuid` reservó para vos. Por eso `ps` mostraba tu nombre. Si algo se escapa del contenedor como root, cae en tu usuario.
+
+<Callout type="error">
+  Con Docker rootful (el daemon como root, lo más común) el `uid_map` da
+  `0 0 4294967295`: el root del contenedor es el root de tu máquina, con menos
+  capabilities pero el mismo UID. Por eso montar el socket de Docker en un
+  contenedor equivale a darle root del host.
+</Callout>
+
+## Por qué el socket del contenedor "desaparece"
+
+Un servidor de juguete en el puerto 80 del contenedor, publicado en el 8088 de tu loopback:
+
+<TerminalBlock title="tu máquina">
+
+```bash
+podman run -d --name osl-web -p 127.0.0.1:8088:80 docker.io/library/python:3.13-slim python3 -m http.server 80
+sleep 2
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8088/
+ss -tlnp | grep -E ':(80|8088) '
+```
+
+</TerminalBlock>
+
+```text
+200
+LISTEN 0      128          127.0.0.1:8088       0.0.0.0:*    users:(("pasta.avx2",pid=1248247,fd=6))
+```
+
+El `sleep 2` le da tiempo a python de arrancar. Responde, pero en tu máquina nadie escucha en el 80. En el 8088 está `pasta` (en algunas máquinas `pasta.avx2`, o `rootlessport` si tu Podman usa slirp4netns): el proceso de Podman que recibe en tu red y reenvía al net namespace del contenedor. Python escucha en su propia red.
+
+`ss` lee la tabla de sockets del net namespace en el que corre, el tuyo. VT Lens hace lo mismo: lee `/proc/net/tcp`, `/proc/net/udp` y sus versiones IPv6 ([net_poller.rs](https://github.com/ValentinTorassa/VT-Lens/blob/cce9ea179631d8bf9235e88b11e20ca10dc409af/src/capture/net_poller.rs#L54-L59)), y `/proc/net` apunta a la red del proceso que lo lee:
+
+<TerminalBlock title="tu máquina">
+
+```bash
+readlink /proc/net
+WEB=$(podman inspect -f '{{.State.Pid}}' osl-web)
+grep ' 0A ' /proc/$WEB/net/tcp
+```
+
+</TerminalBlock>
+
+```text
+self/net
+   0: 00000000:0050 00000000:0000 0A 00000000:00000000 00:00000000 00000000  1000        0 5387937 1 000000005335d1b8 100 0 0 10 0
+```
+
+`/proc/$WEB/net/tcp` es la tabla del net namespace de otro proceso, el de python. `00000000:0050` es la dirección local en hex: `0.0.0.0` y el puerto `0x50`, que es `80`. `0A` es el estado `LISTEN`. La tabla siempre estuvo ahí; VT Lens y `ss` miraban la de tu red.
+
+Para usar `ss` adentro de esa red tenés que entrar a su namespace. Con `nsenter` solo, el kernel no te deja: el net namespace es del user namespace del contenedor. `podman unshare` te pone primero en ese user namespace:
+
+<TerminalBlock title="tu máquina">
+
+```bash
+nsenter -t "$WEB" -n ss -tln
+podman unshare nsenter -t "$WEB" -n ss -tlnp
+```
+
+</TerminalBlock>
+
+```text
+nsenter: reassociate to namespaces failed: Operation not permitted
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
+LISTEN 0      5            0.0.0.0:80        0.0.0.0:*    users:(("python3",pid=1248251,fd=3))
+```
+
+Ahí está python, en el 80, con el PID de tu máquina.
+
+## cgroups: cuánto puede usar
+
+Los namespaces deciden qué ve un proceso. Los **cgroups** deciden cuánto consume. Cada proceso pertenece a uno:
+
+<TerminalBlock title="tu máquina">
+
+```bash
+cat /proc/$PID/cgroup
+```
+
+</TerminalBlock>
+
+```text
+0::/user.slice/user-1000.slice/user@1000.service/user.slice/libpod-46c486340358a5466be4be58b65bd392f4380a722748b72e700f31be7faff2d5.scope/container
+```
+
+Es una carpeta en `/sys/fs/cgroup`, dentro de la de tu usuario. Los límites son archivos en esa carpeta. `--memory` escribe uno:
+
+<TerminalBlock title="tu máquina">
+
+```bash
+podman run --rm docker.io/library/debian:trixie-slim cat /sys/fs/cgroup/memory.max
+podman run --rm --memory 64m docker.io/library/debian:trixie-slim cat /sys/fs/cgroup/memory.max
+podman run --rm --memory 32m --memory-swap 32m docker.io/library/debian:trixie-slim \
+  bash -c 'x=$(head -c 64M /dev/zero | tr "\0" a); echo ${#x}'
+echo "salida: $?"
+```
+
+</TerminalBlock>
+
+```text
+max
+67108864
+salida: 137
+```
+
+Sin límite, `memory.max` es `max`. Con `--memory 64m` es `67108864` bytes. El tercero intenta guardar 64 MiB en una variable con un techo de 32 MiB, y el kernel lo mata: `137` es `128 + 9`, la señal `SIGKILL` del OOM killer. Adentro del contenedor, el cgroup namespace hace que `/sys/fs/cgroup` sea su propia carpeta, por eso lee `memory.max` sin saber dónde está. Si después aparece un archivo vacío llamado `oom` en la carpeta donde corriste el comando, lo dejó conmon, el proceso de Podman que vigila al contenedor, al ver el OOM. Podés borrarlo.
+
+<Callout type="nota">
+  En modo rootless, los límites necesitan que systemd le delegue los
+  controladores a tu usuario. Si `--memory` falla, mirá que
+  `cat /sys/fs/cgroup/user.slice/user-$(id -u).slice/user@$(id -u).service/cgroup.controllers`
+  incluya `memory`.
+</Callout>
+
+Al terminar, borrá solo lo tuyo, por nombre. `-t 0` no espera: `sleep` como PID 1 ignora el `SIGTERM` y Podman esperaría 10 segundos antes del `SIGKILL`.
+
+<TerminalBlock title="tu máquina">
+
+```bash
+podman rm -f -t 0 osl-ns osl-web
+```
+
+</TerminalBlock>
+
+## Quiz
+
+<Quiz
+  questions={[
+    {
+      q: "Un contenedor sirve en el puerto 80 y ss -tlnp en tu máquina no lo muestra. ¿Por qué?",
+      options: [
+        "Porque Podman cifra los sockets de los contenedores",
+        "Porque el socket está en el net namespace del contenedor y ss lee la tabla del tuyo",
+        "Porque el servidor corre en una máquina virtual",
+      ],
+      answer: 1,
+      explain:
+        "ss y VT Lens leen /proc/net/tcp, que es la tabla de su propio net namespace. La del contenedor está en /proc/<pid del contenedor>/net/tcp, o con nsenter.",
+    },
+    {
+      q: "En Podman rootless, ¿qué es en tu máquina el root de un contenedor?",
+      options: [
+        "El root de tu máquina, con menos capabilities",
+        "Tu propio usuario, según el uid_map del user namespace",
+        "Un usuario nuevo que crea Podman",
+      ],
+      answer: 1,
+      explain:
+        "El uid_map mapea el UID 0 del contenedor a tu UID. Con Docker rootful, en cambio, es 0 0 4294967295: el mismo root.",
+    },
+    {
+      q: "Un contenedor con --memory 32m sale con código 137. ¿Qué pasó?",
+      options: [
+        "El kernel lo mató con SIGKILL al pasarse del memory.max de su cgroup",
+        "Podman lo apagó porque tardó demasiado",
+        "La imagen no tenía bash",
+      ],
+      answer: 0,
+      explain:
+        "137 es 128 + 9: SIGKILL. El OOM killer actúa dentro del cgroup que superó su límite, no sobre toda la máquina.",
+    },
+  ]}
+/>
+
+<Callout type="evidencia">
+  Guardá la tabla de namespaces marcando cuáles cambian, la salida de `ss`
+  en tu máquina y con `podman unshare nsenter`, la línea `0A` de
+  `/proc/<pid>/net/tcp` con el puerto en decimal, y el `memory.max` con la
+  salida `137`. Cerrá con tres líneas propias: qué es un contenedor visto desde
+  el kernel.
+</Callout>
