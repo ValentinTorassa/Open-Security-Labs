@@ -8,6 +8,7 @@ estimatedMinutes: 20
 prerequisites:
   - "Una terminal Linux o WSL"
   - "Haber hecho el lab Moverte en la terminal"
+  - "nano y vi instalados (vienen por defecto en Ubuntu y WSL)"
 objectives:
   - "Hacer una copia de respaldo antes de editar"
   - "Editar, guardar y salir con nano"
@@ -21,7 +22,7 @@ commands:
   - "nano app.conf"
   - "vi app.conf"
   - "diff app.conf.bak app.conf"
-challenge: "En ~/lab-editar, restaurá la copia con cp app.conf.bak app.conf para empezar limpio. Después abrí app.conf con vi, cambiá puerto=8080 por puerto=9090, guardá y salí. Por último, guardá la salida de diff app.conf.bak app.conf en ~/evidencia-editar.txt."
+challenge: "En ~/lab-editar, restaurá la copia con cp app.conf.bak app.conf para empezar limpio. Después abrí app.conf con vi y cambiá log=/tmp/app.log por log=/tmp/app2.log: poné el cursor sobre el punto de app.log, apretá i, escribí 2, Esc, :wq y Enter. Por último, guardá la salida de diff app.conf.bak app.conf en ~/evidencia-editar.txt."
 nextLabs:
   - "linux-real/encontrar-archivos-y-texto"
   - "linux-real/permisos-usuarios-procesos"
@@ -70,6 +71,8 @@ modo=desarrollo
 log=/tmp/app.log
 ```
 
+`mkdir -p` crea la carpeta (y no falla si ya existe), `echo ... >` crea el archivo con la primera línea, `echo ... >>` agrega las siguientes y `cat` muestra el contenido.
+
 ## Primero, la copia de respaldo
 
 <TerminalBlock title="vt@labs:~/lab-editar">
@@ -99,18 +102,18 @@ nano app.conf
 
 </TerminalBlock>
 
-En la línea 3 del archivo vas a ver el texto `modo=desarrollo`: es una opción de la app de juguete. Bajá con las flechas hasta esa línea, borrá `desarrollo` con Backspace y escribí `produccion`, para que quede `modo=produccion`. Después andá a la última línea, apretá Enter y escribí `timeout=30`.
+En la línea 3 del archivo vas a ver el texto `modo=desarrollo`: es una opción de la app de juguete. Bajá con las flechas hasta esa línea y llevá el cursor al final con la tecla **Fin** (End). Borrá `desarrollo` con Backspace y escribí `produccion`, para que quede `modo=produccion`. Ojo: si apretás Backspace con el cursor al principio de la línea, la unís con la de arriba. Después andá al final de la última línea, apretá Enter y escribí `timeout=30`.
 
 Para guardar y salir:
 
 ```text
 Ctrl+O   guardar (te pide confirmar el nombre: apretá Enter)
 Ctrl+X   salir
-Ctrl+W   buscar texto
+Ctrl+W   buscar texto (en nano 8 o más nuevo, también Ctrl+F)
 Ctrl+K   cortar la línea entera
 ```
 
-Abajo de la pantalla, `^` significa Ctrl: `^O` es Ctrl+O. Si salís con cambios sin guardar, nano te pregunta si querés guardarlos.
+Abajo de la pantalla, `^` significa Ctrl: `^O` es Ctrl+O. Si salís con Ctrl+X y hay cambios sin guardar, nano te pregunta: `Y` los guarda, `N` los descarta y sale, y `Ctrl+C` cancela la salida y te deja en el archivo.
 
 ## Comprobá qué cambiaste con diff
 
@@ -138,6 +141,7 @@ diff app.conf.bak app.conf
 >      la línea como está ahora (app.conf)
 3c3    la línea 3 cambió (c = change)
 4a5    se agregó algo después de la línea 4 (a = add)
+2d1    se borró la línea 2 (d = delete)
 ```
 
 Si `diff` no muestra nada, los archivos son idénticos.
@@ -150,7 +154,7 @@ Si `diff` no muestra nada, los archivos son idénticos.
 
 ## Sobrevivir a vim
 
-Muchos sistemas abren `vim` (o `vi`) por defecto, por ejemplo cuando hacés `git commit`. Si nunca lo usaste, lo primero que pasa es que no sabés cómo salir. No necesitás aprender todo vim: con esto alcanza.
+`vi` está en casi cualquier Linux, así que tarde o temprano te lo vas a cruzar. Si nunca lo usaste, lo primero que pasa es que no sabés cómo salir. No necesitás aprender todo vim: con esto alcanza.
 
 <TerminalBlock title="vt@labs:~/lab-editar">
 
@@ -171,24 +175,35 @@ Esc      volver al modo normal
 :q!      salir sin guardar (desde el modo normal, y Enter)
 ```
 
-El flujo es: movete con las flechas, borrá con `x`, apretá `i` o `a` para escribir lo nuevo, `Esc`, `:wq` y Enter. Por ejemplo, para cambiar `puerto=8080` por `puerto=9090`: poné el cursor sobre el primer `8`, apretá `x` cuatro veces (queda `puerto=` y el cursor sobre el `=`), apretá `a`, escribí `9090`, `Esc`, `:wq` y Enter. Con `i` te quedaría `puerto9090=`, porque escribe antes del `=`.
+Para cambiar `puerto=8080` por `puerto=9090`:
+
+```text
+1. Con las flechas, poné el cursor sobre el primer 8.
+2. Apretá x cuatro veces: borra 8080 y queda puerto=
+   (el cursor queda sobre el =).
+3. Apretá a: entrás al modo inserción, después del =.
+4. Escribí 9090.
+5. Apretá Esc: volvés al modo normal.
+6. Escribí :wq y apretá Enter: con eso guardás y salís del archivo.
+```
+
+Usá `a` y no `i`: `i` escribe antes del cursor, y te quedaría `puerto9090=`.
 
 <Callout type="nota">
-  En muchas instalaciones, `vi` es una versión mínima de vim: al apretar `i`
-  no muestra `-- INSERT --` abajo, aunque sí entraste al modo inserción, y
-  Backspace no borra el texto que ya estaba en el archivo. Por eso conviene
-  borrar con `x` en modo normal. Si querés ver en qué modo estás, escribí
-  `:set showmode` y Enter apenas abras el archivo.
+  En algunos sistemas, `vi` es una versión mínima de vim que se porta
+  distinto. Si te pasa algo de esto, no rompiste nada:
 </Callout>
 
-<Callout type="comando">
-  Si no sabés en qué modo estás, apretá `Esc` dos veces: siempre te deja en
-  modo normal. Desde ahí, `:q!` y Enter te sacan sin guardar nada.
-</Callout>
+```text
+No aparece -- INSERT --       Igual entraste. Para verlo: :set showmode y Enter.
+Backspace no borra            Borrá con x en modo normal.
+Las flechas escriben letras   Apretá Esc antes de moverte.
+Esc ejecuta un : a medias     Para cancelarlo, usá Ctrl+C.
+```
 
 ## Archivos que no son tuyos
 
-Los archivos de configuración del sistema, como los de `/etc`, son de root. Si abrís uno con nano o vim como usuario normal, vas a poder leerlo, pero al guardar vas a ver un error de permisos, por ejemplo `Permission denied`.
+Los archivos de configuración del sistema, como los de `/etc`, son de root. Como usuario normal podés leer la mayoría, pero no guardarlos: nano avisa `Permission denied` al guardar, y vim abre el archivo marcado `[readonly]` y al guardar muestra `E45: 'readonly' option is set`. Algunos ni siquiera se pueden leer, como `/etc/shadow`.
 
 <Callout type="nota">
   Para editar un archivo del sistema hace falta `sudo`, y ahí un error sí puede
