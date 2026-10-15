@@ -1,0 +1,387 @@
+---
+title: "Anatomía de un .deb"
+description: "Antes de sudo apt install ./algo.deb, abrilo. Un .deb es un archivo ar con dos tar y scripts que corren como root. Desarmás el paquete de Ragnaros: su ficha, sus archivos, una regla de udev, una opción de modprobe.d, el postinst, y dpkg --verify para ver si alguien tocó lo instalado."
+path: "linux-real"
+order: 12
+level: "intermediate"
+estimatedMinutes: 30
+prerequisites:
+  - "Haber hecho el lab systemd y journalctl"
+  - "El entorno con Podman de este lab, o un Debian o Ubuntu con binutils (trae ar) y el .deb descargado"
+objectives:
+  - "Ver que un .deb es un archivo ar con debian-binary, control.tar y data.tar"
+  - "Leer la versión, las dependencias y los scripts de un paquete sin instalarlo"
+  - "Encontrar qué archivos instala y dónde, y leer una regla de udev y una opción de modprobe.d"
+  - "Leer el postinst antes de instalar, porque corre como root"
+  - "Detectar con dpkg --verify un archivo instalado que alguien modificó"
+evidence:
+  - "La salida de ar t y de dpkg-deb -I del paquete"
+  - "La regla de udev y la línea de modprobe.d extraídas sin instalar, con una frase sobre qué hace cada una"
+  - "El postinst con las líneas que corren como root marcadas"
+  - "dpkg --verify mostrando la regla modificada, y limpio después de reinstalar"
+  - "Writeup de tres líneas: qué mirarías antes de instalar un .deb que no viene de tu distro"
+commands:
+  - "ar t ragnaros_0.1.0-1_all.deb"
+  - "dpkg-deb -I ragnaros_0.1.0-1_all.deb"
+  - "dpkg -c ragnaros_0.1.0-1_all.deb"
+  - "dpkg-deb --fsys-tarfile ragnaros_0.1.0-1_all.deb | tar -xO ./usr/lib/udev/rules.d/70-ragnaros.rules"
+  - "dpkg-deb -e ragnaros_0.1.0-1_all.deb control"
+  - "sudo dpkg -i ragnaros_0.1.0-1_all.deb"
+  - "dpkg --verify ragnaros"
+challenge: "Sin instalar nada, encontrá en el .deb la unidad con la que systemd arranca ragnarosd como servicio de usuario, mostrala con dpkg-deb --fsys-tarfile y tar -xO, y decí qué comando corre. Después contá con dpkg -c cuántos archivos .py trae el paquete y explicá por qué Architecture dice all."
+nextLabs:
+  - "devsecops-agentes/sbom-basico"
+  - "ciberseguridad/por-que-chmod-777"
+tags:
+  - "linux"
+  - "paquetes"
+  - "dpkg"
+  - "udev"
+  - "supply-chain"
+published: 2026-10-14
+resources:
+  - type: "repo"
+    title: "VT-Ragnaros"
+    url: "https://github.com/ValentinTorassa/VT-Ragnaros"
+    note: "El driver del deck cuyo .deb desarma este lab (MIT), con el nfpm.yaml que lo arma."
+environment:
+  summary: "Debian con el .deb de Ragnaros v0.1.0 (verificado por SHA-256 al construir), sus dependencias, binutils y sudo descartable. lab-check revisa tus salidas de ar y dpkg-deb, la regla de udev, el postinst, el dpkg --verify con la regla tocada, y que el paquete quede instalado y sano."
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import Quiz from "../../../components/Quiz.astro";
+
+Un README te dice `sudo apt install ./ragnaros_0.1.0-1_all.deb` y lo copiás. Ese comando corre como root scripts que no leíste y deja archivos en tu disco que no sabés cuáles son. Antes de instalar, abrilo: un `.deb` no es una caja negra, y se desarma con herramientas que ya tenés.
+
+<Callout type="concepto">
+  Un `.deb` tiene tres partes: `debian-binary` (la versión del formato),
+  `control.tar` (la ficha del paquete y sus scripts) y `data.tar` (los archivos
+  tal como van a quedar en tu disco, desde `/`). `dpkg` desarma e instala esas
+  piezas; `apt` resuelve dependencias, baja los paquetes y se los pasa a
+  `dpkg`.
+</Callout>
+
+## El paquete
+
+En el entorno ya tenés `~/ragnaros_0.1.0-1_all.deb`, el paquete de la release v0.1.0 de [VT-Ragnaros](https://github.com/ValentinTorassa/VT-Ragnaros), un driver para un deck USB. Si lo hacés en tu máquina, bajalo y verificalo contra el SHA-256 que muestra la página de la release:
+
+<TerminalBlock title="tu máquina">
+
+```bash
+curl -fLO https://github.com/ValentinTorassa/VT-Ragnaros/releases/download/v0.1.0/ragnaros_0.1.0-1_all.deb
+echo "b02f9a7ace507cf50db51c6a853fab59c4638be7002c5d1f5986da66212d5ab2  ragnaros_0.1.0-1_all.deb" | sha256sum -c
+```
+
+</TerminalBlock>
+
+```text
+ragnaros_0.1.0-1_all.deb: OK
+```
+
+<Callout type="error">
+  En tu máquina, no lo instales si no tenés el deck. Su `postinst` regenera tu
+  initramfs y deja una opción para `usbhid`. Desarmarlo es seguro; instalarlo
+  hacelo en el entorno.
+</Callout>
+
+## Un .deb es un archivo ar
+
+`ar` es un formato de archivo de Unix más viejo que `tar`. Un `.deb` es uno con tres miembros:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+ar t ragnaros_0.1.0-1_all.deb
+ar p ragnaros_0.1.0-1_all.deb debian-binary
+```
+
+</TerminalBlock>
+
+```text
+debian-binary
+control.tar.gz
+data.tar.gz
+2.0
+```
+
+`2.0` es la versión del formato. La compresión cambia según quién arma el paquete: los de Debian suelen traer `.tar.xz`, los de Ubuntu `.tar.zst`, y este, armado con nfpm, `.tar.gz`. `dpkg` entiende los tres.
+
+## La ficha: control.tar
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+dpkg-deb -I ragnaros_0.1.0-1_all.deb
+```
+
+</TerminalBlock>
+
+```text
+ new Debian package, version 2.0.
+ size 770940 bytes: control archive=4420 bytes.
+     698 bytes,    14 lines      control
+   11456 bytes,   123 lines      md5sums
+     615 bytes,    18 lines   *  postinst             #!/bin/sh
+     264 bytes,    11 lines   *  postrm               #!/bin/sh
+     103 bytes,     6 lines   *  prerm                #!/bin/sh
+ Package: ragnaros
+ Version: 0.1.0-1
+ Section: utils
+ Priority: optional
+ Architecture: all
+ Maintainer: Valentin Torassa <valentintorassacolombero@gmail.com>
+ Installed-Size: 900
+ Depends: python3 (>= 3.9), python3-pil, python3-yaml, libusb-1.0-0, fonts-dejavu-core
+ Recommends: dbus-bin, playerctl, wireplumber, brightnessctl, libnotify-bin
+ Homepage: https://github.com/ValentinTorassa/VT-Ragnaros
+ Description: Linux driver and daemon for the Ragnaros (Redragon SS552) USB control deck
+  Paints icons and animated GIFs on the deck's ten LCD keys and four-panel
+  touch strip, and runs configurable commands on every key, knob and strip
+  input. Includes udev rules, the usbhid quirk and a systemd user unit.
+```
+
+Lo que importa de la ficha:
+
+```text
+Version: 0.1.0-1      versión del programa (0.1.0) y revisión del paquete (-1)
+Architecture: all     no trae binarios de una CPU: sirve en amd64, arm64 o la que sea
+Depends               sin estos, dpkg no lo configura; apt los instala antes
+Recommends            apt los instala por defecto; dpkg los ignora
+Installed-Size        en KiB, lo que ocupa instalado
+md5sums               un hash por archivo: dpkg --verify los usa después
+postinst, postrm,     scripts del paquete; el * dice que son ejecutables
+prerm
+```
+
+## Los archivos: data.tar
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+dpkg -c ragnaros_0.1.0-1_all.deb | wc -l
+dpkg -c ragnaros_0.1.0-1_all.deb | grep -v /dist-packages/
+```
+
+</TerminalBlock>
+
+```text
+146
+drwxr-xr-x root/root         0 2026-10-05 13:46 ./usr/
+drwxr-xr-x root/root         0 2026-10-05 13:46 ./usr/bin/
+-rwxr-xr-x root/root        82 2026-10-05 13:46 ./usr/bin/ragnarosd
+...
+-rw-r--r-- root/root       270 2026-10-05 13:46 ./usr/lib/modprobe.d/ragnaros-usbhid.conf
+-rw-r--r-- root/root       290 2026-10-05 13:46 ./usr/lib/systemd/user/ragnarosd.service
+-rw-r--r-- root/root       434 2026-10-05 13:46 ./usr/lib/udev/rules.d/70-ragnaros.rules
+-rw-r--r-- root/root      1073 2026-10-05 13:46 ./usr/share/doc/ragnaros/copyright
+```
+
+Son rutas desde `/`, con dueño `root/root` aunque el paquete lo haya armado un usuario común. Casi todo es Python en `/usr/lib/python3/dist-packages` (por eso `Architecture: all`). El resto son tres piezas de sistema, cada una en la carpeta donde la busca su programa:
+
+```text
+/usr/lib/udev/rules.d/    reglas que udev aplica cuando aparece un dispositivo
+/usr/lib/modprobe.d/      opciones que modprobe le pasa a un módulo al cargarlo
+/usr/lib/systemd/user/    unidades de systemd para la sesión de cada usuario
+```
+
+`/usr/lib` es del paquete. Si querés cambiar algo, el lugar es `/etc` con el mismo nombre de archivo (`/etc/udev/rules.d/70-ragnaros.rules`): udev, modprobe y systemd prefieren el de `/etc`, y el paquete nunca lo pisa.
+
+Podés leer cualquier archivo sin instalar nada:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+dpkg-deb --fsys-tarfile ragnaros_0.1.0-1_all.deb | tar -xO ./usr/lib/udev/rules.d/70-ragnaros.rules
+dpkg-deb --fsys-tarfile ragnaros_0.1.0-1_all.deb | tar -xO ./usr/lib/modprobe.d/ragnaros-usbhid.conf
+```
+
+</TerminalBlock>
+
+```text
+# Ragnaros deck (Redragon SS552, 0200:3001): let the logged-in user (uaccess)
+# and the plugdev group open it through libusb. Numbered below 73 so the
+# uaccess tag is seen by systemd-logind's seat rules.
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0200", ATTRS{idProduct}=="3001", GROUP="plugdev", MODE="0660", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTR{idVendor}=="0200", ATTR{idProduct}=="3001", GROUP="plugdev", MODE="0660", TAG+="uaccess"
+# HID_QUIRK_IGNORE for the Ragnaros deck: usbhid leaves it alone so the
+# daemon can claim both interfaces with libusb. Takes effect when usbhid
+# loads (reboot, or regenerate the initramfs first where usbhid lives there).
+options usbhid quirks=0x0200:0x3001:0x00000004
+```
+
+La regla de udev dice: cuando el kernel anuncia un dispositivo USB (o `hidraw`) con vendor `0200` y producto `3001`, creá su nodo en `/dev` con grupo `plugdev` y modo `0660`, y marcalo `uaccess` para que el usuario sentado en la máquina también pueda abrirlo. Sin esa regla, el nodo es de root y el daemon, que corre con tu usuario, no puede usarlo.
+
+La línea de `modprobe.d` dice: cuando cargues `usbhid`, pasale `quirks=0x0200:0x3001:0x00000004`. `0x4` es `HID_QUIRK_IGNORE`: `usbhid` deja ese dispositivo en paz y `libusb` lo puede tomar. Como `usbhid` suele cargarse desde el initramfs, la opción tiene que estar ahí adentro.
+
+## Los scripts corren como root
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+dpkg-deb -e ragnaros_0.1.0-1_all.deb control
+ls control
+cat control/postinst
+```
+
+</TerminalBlock>
+
+```text
+control  md5sums  postinst  postrm  prerm
+#!/bin/sh
+set -e
+if [ "$1" = "configure" ]; then
+  if command -v py3compile >/dev/null 2>&1; then
+    py3compile -p ragnaros || true
+  fi
+  if command -v udevadm >/dev/null 2>&1; then
+    udevadm control --reload-rules || true
+    udevadm trigger --subsystem-match=usb --attr-match=idVendor=0200 || true
+  fi
+  # usbhid loads from the initramfs: it has to carry the quirk
+  if command -v update-initramfs >/dev/null 2>&1; then
+    update-initramfs -u || true
+  fi
+  echo "ragnaros: reboot once so usbhid picks up the quirk, then as your user:"
+  echo "ragnaros:   systemctl --user enable --now ragnarosd"
+fi
+exit 0
+```
+
+`dpkg` corre `postinst configure` después de copiar los archivos. Este compila el Python a `.pyc`, le pide a udev que relea las reglas y vuelva a mirar el deck, regenera el initramfs (reescribe un archivo en `/boot`) y te avisa que reinicies. Todo como root y sin preguntarte. `prerm` y `postrm` corren al desinstalar.
+
+<Callout type="error">
+  Un `.deb` de una fuente que no conocés es código que corre como root antes de
+  que uses el programa. Antes de instalarlo, leé `preinst` y `postinst` (si
+  están) y mirá qué rutas trae `data.tar`. Un driver de escritorio no necesita
+  escribir en `/etc/sudoers.d` ni bajar nada de internet en su `postinst`.
+</Callout>
+
+## Instalalo en el entorno
+
+El entorno ya trae las dependencias, así que `dpkg` lo instala sin red:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+sudo dpkg -i ragnaros_0.1.0-1_all.deb
+dpkg -S /usr/lib/udev/rules.d/70-ragnaros.rules
+dpkg -L ragnaros | grep -E '^/usr/lib/(udev/rules.d|modprobe.d|systemd/user)/'
+```
+
+</TerminalBlock>
+
+```text
+Selecting previously unselected package ragnaros.
+(Reading database ... 6813 files and directories currently installed.)
+Preparing to unpack ragnaros_0.1.0-1_all.deb ...
+Unpacking ragnaros (0.1.0-1) ...
+Setting up ragnaros (0.1.0-1) ...
+ragnaros: reboot once so usbhid picks up the quirk, then as your user:
+ragnaros:   systemctl --user enable --now ragnarosd
+ragnaros: /usr/lib/udev/rules.d/70-ragnaros.rules
+/usr/lib/modprobe.d/ragnaros-usbhid.conf
+/usr/lib/systemd/user/ragnaros-gif-refresh.service
+/usr/lib/systemd/user/ragnaros-gif-refresh.timer
+/usr/lib/systemd/user/ragnarosd.service
+/usr/lib/udev/rules.d/70-ragnaros.rules
+```
+
+El contenedor no tiene udev ni `update-initramfs`: el `postinst` los busca con `command -v`, no los encuentra y sigue. Por eso solo ves sus dos `echo`. `dpkg -S` te dice de qué paquete es un archivo, y `dpkg -L` qué archivos instaló un paquete.
+
+## ¿Alguien tocó lo instalado?
+
+`dpkg` guardó el `md5sums` del paquete. `dpkg --verify` compara cada archivo instalado contra ese hash:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+dpkg --verify ragnaros
+sudo sed -i 's/MODE="0660"/MODE="0666"/' /usr/lib/udev/rules.d/70-ragnaros.rules
+dpkg --verify ragnaros
+```
+
+</TerminalBlock>
+
+```text
+missing     /usr/share/doc/ragnaros/README.md
+??5??????   /usr/lib/udev/rules.d/70-ragnaros.rules
+missing     /usr/share/doc/ragnaros/README.md
+```
+
+La primera corrida solo marca el README como `missing`: la imagen slim de Debian no instala documentación (`path-exclude` en `/etc/dpkg/dpkg.cfg.d/docker`). En tu máquina esa línea no aparece.
+
+La segunda agrega la regla: el `5` dice que su contenido ya no coincide con el MD5 del paquete (las demás columnas quedan en `?` porque `dpkg` hoy solo compara el MD5). Ese cambio no es inocente: con `0666`, cualquier usuario de la máquina puede hablarle al deck. `dpkg --verify` sale con `0` aunque encuentre diferencias, así que lo que cuenta es lo que imprime.
+
+Para volver al estado del paquete, reinstalalo:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+sudo dpkg -i ragnaros_0.1.0-1_all.deb
+dpkg --verify ragnaros
+```
+
+</TerminalBlock>
+
+```text
+(Reading database ... 6951 files and directories currently installed.)
+Preparing to unpack ragnaros_0.1.0-1_all.deb ...
+Unpacking ragnaros (0.1.0-1) over (0.1.0-1) ...
+Setting up ragnaros (0.1.0-1) ...
+ragnaros: reboot once so usbhid picks up the quirk, then as your user:
+ragnaros:   systemctl --user enable --now ragnarosd
+missing     /usr/share/doc/ragnaros/README.md
+```
+
+`dpkg` vuelve a desempaquetar encima (`over (0.1.0-1)`) y vuelve a correr el `postinst`. La regla quedó como vino.
+
+<Callout type="nota">
+  `sudo dpkg -r ragnaros` lo desinstala (corre `prerm` y `postrm`), pero queda
+  en estado `config-files` porque tiene `postrm`; `sudo dpkg -P ragnaros` lo
+  purga del todo. Para `lab-check`, dejalo instalado.
+</Callout>
+
+## Quiz
+
+<Quiz
+  questions={[
+    {
+      q: "¿Qué parte de un .deb trae los archivos que terminan en tu disco?",
+      options: ["debian-binary", "control.tar", "data.tar"],
+      answer: 2,
+      explain:
+        "data.tar trae el árbol de archivos desde /. control.tar trae la ficha, los md5sums y los scripts; debian-binary, la versión del formato.",
+    },
+    {
+      q: "Instalás un .deb con sudo apt install. ¿Con qué usuario corre su postinst?",
+      options: [
+        "Con tu usuario",
+        "Como root",
+        "Con un usuario sin privilegios que crea dpkg",
+      ],
+      answer: 1,
+      explain:
+        "dpkg corre los scripts del paquete como root. Por eso conviene leer preinst y postinst antes de instalar algo que no viene de tu distro.",
+    },
+    {
+      q: "dpkg --verify muestra ??5?????? al lado de una regla de udev. ¿Qué significa?",
+      options: [
+        "Que el archivo tiene permisos 5",
+        "Que su contenido no coincide con el MD5 que trajo el paquete",
+        "Que la regla tiene cinco líneas",
+      ],
+      answer: 1,
+      explain:
+        "El 5 es el chequeo de MD5 contra md5sums. Alguien (o algo) cambió ese archivo después de instalar. Los cambios legítimos van en /etc, no en /usr/lib.",
+    },
+  ]}
+/>
+
+<Callout type="evidencia">
+  Guardá en `~/evidencia` la salida de `ar t` y `dpkg-deb -I`, la regla de udev
+  y la línea de `modprobe.d` sacadas del `.deb`, el `postinst` con las líneas
+  que corren como root marcadas, y el `dpkg --verify` con la regla tocada.
+  Dejá el paquete reinstalado y cerrá con tres líneas propias: qué mirarías
+  antes de instalar un `.deb` que no viene de tu distro.
+</Callout>
