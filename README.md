@@ -45,6 +45,22 @@ LatAm, con un tono directo y técnico.
 | **Ciberseguridad Práctica** | Seguridad web, OWASP API, threat modeling, hardening, detección.              |
 | **DevSecOps y Agentes**     | CI/CD security, GitHub Actions, secret scanning, Docker, permisos de agentes. |
 
+## Repos relacionados
+
+Dos labs se apoyan en otros repos públicos. Siguen viviendo en su repo; acá
+quedan enlazados:
+
+- **[Linux-Study-Notes-VT](https://github.com/ValentinTorassa/Linux-Study-Notes-VT)**:
+  notas sobre el funcionamiento interno de Linux, tomadas estudiando para la
+  LFCA, en inglés (CC BY 4.0). El lab
+  [Del comando al kernel](https://securitylabs.valentorassa.com/labs/linux-real/del-comando-al-kernel/)
+  adapta y traduce su sección "01 · big picture".
+- **[PhantomLog](https://github.com/ValentinTorassa/PhantomLog)**: rastreador de
+  clics en Flask para simulaciones de phishing autorizadas (Apache-2.0). El lab
+  [Medir una simulación de phishing sin vigilar a nadie](https://securitylabs.valentorassa.com/labs/ciberseguridad/medir-simulacion-phishing/)
+  corre una versión de PhantomLog en su entorno con Podman, en
+  [`entornos/ciberseguridad/medir-simulacion-phishing/`](./entornos/ciberseguridad/medir-simulacion-phishing/).
+
 ---
 
 ## Correr en local
