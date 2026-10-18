@@ -4,7 +4,27 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "trailingSlash": true,
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.opensecuritylab.com.ar" }],
+      "destination": "https://securitylabs.valentorassa.com/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "opensecuritylab.com.ar" }],
+      "destination": "https://securitylabs.valentorassa.com/:path*",
+      "permanent": true
+    }
+  ],
   "headers": [
+    {
+      "source": "/labs/(.*).md",
+      "headers": [
+        { "key": "Content-Type", "value": "text/markdown; charset=utf-8" }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [

@@ -3,7 +3,10 @@ import { getCollection, render } from "astro:content";
 import type { GetStaticPaths } from "astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import LabLayout from "../../components/LabLayout.astro";
-import { SITE_URL } from "../../data/site";
+import { AUTHOR_JSONLD, LICENSE_URL, SITE_URL } from "../../data/site";
+import { getPath } from "../../data/paths";
+import { LEVEL_LABELS } from "../../data/levels";
+import { isoDate } from "../../data/labs";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
@@ -50,34 +53,81 @@ const { lab } = Astro.props;
 const { Content } = await render(lab);
 
 const site = Astro.site ?? new URL(SITE_URL);
-const labJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "TechArticle",
-  headline: lab.data.title,
-  description: lab.data.description,
-  inLanguage: "es-AR",
-  url: new URL(`/labs/${lab.id}/`, site).href,
-  image: new URL(`/og/${lab.id}.png`, site).href,
-  keywords: lab.data.tags.join(", "),
-  educationalLevel: lab.data.level,
-  timeRequired: `PT${lab.data.estimatedMinutes}M`,
-  ...(lab.data.published
-    ? { datePublished: lab.data.published.toISOString().slice(0, 10) }
-    : {}),
-  ...(lab.data.updated
-    ? { dateModified: lab.data.updated.toISOString().slice(0, 10) }
-    : {}),
-  author: {
-    "@type": "Person",
-    name: "Valentín Torassa Colombero",
-    url: "https://valentorassa.com",
+const path = getPath(lab.data.path);
+const labUrl = new URL(`/labs/${lab.id}/`, site).href;
+const routeUrl = path ? new URL(`/rutas/${path.slug}/`, site).href : undefined;
+// LearningResource (lo que es un lab) + TechArticle (para que siga siendo
+// elegible como artículo). Todo sale del frontmatter; nada se inventa.
+const labJsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": ["LearningResource", "TechArticle"],
+    "@id": `${labUrl}#lab`,
+    name: lab.data.title,
+    headline: lab.data.title,
+    description: lab.data.description,
+    inLanguage: "es",
+    url: labUrl,
+    image: new URL(`/og/${lab.id}.png`, site).href,
+    keywords: lab.data.tags.join(", "),
+    educationalLevel: LEVEL_LABELS[lab.data.level],
+    timeRequired: `PT${lab.data.estimatedMinutes}M`,
+    ...(lab.data.objectives.length > 0 ? { teaches: lab.data.objectives } : {}),
+    ...(lab.data.prerequisites.length > 0
+      ? { competencyRequired: lab.data.prerequisites }
+      : {}),
+    ...(lab.data.published
+      ? { datePublished: isoDate(lab.data.published) }
+      : {}),
+    ...(lab.data.updated ? { dateModified: isoDate(lab.data.updated) } : {}),
+    isAccessibleForFree: true,
+    license: LICENSE_URL,
+    author: AUTHOR_JSONLD,
+    publisher: {
+      "@type": "Organization",
+      name: "Open Security Labs",
+      url: site.href,
+    },
+    ...(path && routeUrl
+      ? {
+          isPartOf: {
+            "@type": "Course",
+            "@id": `${routeUrl}#course`,
+            name: path.title,
+            url: routeUrl,
+          },
+        }
+      : {}),
   },
-  publisher: {
-    "@type": "Organization",
-    name: "Open Security Labs",
-    url: site.href,
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Labs",
+        item: new URL("/labs/", site).href,
+      },
+      ...(path && routeUrl
+        ? [
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: path.title,
+              item: routeUrl,
+            },
+          ]
+        : []),
+      {
+        "@type": "ListItem",
+        position: path ? 3 : 2,
+        name: lab.data.title,
+        item: labUrl,
+      },
+    ],
   },
-};
+];
 ---
 
 <BaseLayout
@@ -86,6 +136,7 @@ const labJsonLd = {
   image={`/og/${lab.id}.png`}
   ogType="article"
   jsonLd={labJsonLd}
+  markdown={`/labs/${lab.id}.md`}
   width="prose"
 >
   <LabLayout lab={lab}>
