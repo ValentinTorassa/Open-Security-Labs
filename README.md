@@ -90,8 +90,15 @@ Abrí <http://localhost:4321>.
 | `npm run lab:env`   | Construye, abre y prueba los entornos con Podman de los labs (`list`, `build`, `run`, `smoke`).                                                                                                                  |
 
 El sitio es estático y se publica en **Vercel** (integración de Git del proyecto
-`vt-security-labs`, sin workflow de deploy propio). El `dist/` también sirve tal
+`open-security-labs`, sin workflow de deploy propio). El `dist/` también sirve tal
 cual en cualquier hosting estático.
+
+La URL canónica es `https://securitylabs.valentorassa.com`. En **Settings → Domains**
+del proyecto de Vercel, los dominios `opensecuritylab.com.ar`,
+`opensecuritylab.online` y `opensecuritylab.store` (con y sin `www`),
+`labs.valentorassa.com` y `vt-security-labs.vercel.app` redirigen con 308
+al dominio canónico. Vercel conserva ruta y parámetros. Esa configuración vive
+en el proyecto, no en `vercel.json`; verificála al migrar o recrear el deploy.
 
 ---
 
