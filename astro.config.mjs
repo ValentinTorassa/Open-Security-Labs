@@ -8,9 +8,17 @@ import tailwindcss from "@tailwindcss/vite";
 // Mapa "backend-arquitectura/api-http-base" -> fecha más reciente entre
 // `updated`/`published` de frontmatter, para alimentar <lastmod> del sitemap
 // sin depender de astro:content (no disponible todavía en config).
+// Las páginas que listan labs toman la fecha más reciente de los suyos: cada
+// ruta la de sus labs, y la home, /labs/ y /rutas/ la de todos.
 const labDates = new Map();
+const listingDates = new Map();
+const latest = (key, date) => {
+  if (!listingDates.has(key) || listingDates.get(key) < date)
+    listingDates.set(key, date);
+};
 for await (const file of glob("src/content/labs/**/*.mdx")) {
   const raw = readFileSync(file, "utf-8");
+  if (/^draft:\s*true/m.test(raw)) continue;
   const updated = raw.match(/^updated:\s*(\S+)/m)?.[1];
   const published = raw.match(/^published:\s*(\S+)/m)?.[1];
   const date = updated ?? published;
@@ -20,6 +28,9 @@ for await (const file of glob("src/content/labs/**/*.mdx")) {
     .replace(/^src\/content\/labs\//, "")
     .replace(/\.mdx$/, "");
   labDates.set(id, date);
+  const path = raw.match(/^path:\s*["']?([\w-]+)/m)?.[1];
+  if (path) latest(`/rutas/${path}/`, date);
+  for (const page of ["/", "/labs/", "/rutas/"]) latest(page, date);
 }
 
 // https://astro.build/config
@@ -34,7 +45,9 @@ export default defineConfig({
     sitemap({
       serialize(item) {
         const match = item.url.match(/\/labs\/([^/]+\/[^/]+)\/$/);
-        const date = match && labDates.get(match[1]);
+        const date = match
+          ? labDates.get(match[1])
+          : listingDates.get(new URL(item.url).pathname);
         return date ? { ...item, lastmod: date } : item;
       },
     }),

@@ -1,5 +1,5 @@
 ---
-type Level = "beginner" | "intermediate" | "advanced";
+import { LEVEL_LABELS, type Level } from "../data/levels";
 
 interface Props {
   level: Level;
@@ -8,9 +8,9 @@ interface Props {
 const { level } = Astro.props;
 
 const levels = {
-  beginner: { label: "Inicial", active: 1 },
-  intermediate: { label: "Intermedio", active: 2 },
-  advanced: { label: "Avanzado", active: 3 },
+  beginner: { label: LEVEL_LABELS.beginner, active: 1 },
+  intermediate: { label: LEVEL_LABELS.intermediate, active: 2 },
+  advanced: { label: LEVEL_LABELS.advanced, active: 3 },
 } satisfies Record<Level, { label: string; active: number }>;
 
 const meta = levels[level];

@@ -7,7 +7,7 @@ import Exam from "../../components/Exam.astro";
 import { paths } from "../../data/paths";
 import { pathExams } from "../../data/path-exams";
 import { sortLabs } from "../../data/labs";
-import { SITE_URL } from "../../data/site";
+import { AUTHOR_JSONLD, LICENSE_URL, SITE_URL } from "../../data/site";
 
 export const getStaticPaths = (async () => {
   return paths.map((path) => ({
@@ -32,6 +32,7 @@ const examStoreKey = `ruta:${path.slug}`;
 const firstLab = labs[0];
 const site = Astro.site ?? new URL(SITE_URL);
 const routeUrl = new URL(`/rutas/${path.slug}/`, site).href;
+const courseId = `${routeUrl}#course`;
 const routeJsonLd = [
   {
     "@context": "https://schema.org",
@@ -42,6 +43,34 @@ const routeJsonLd = [
     inLanguage: "es-AR",
     numberOfItems: labs.length,
     about: path.focus,
+    mainEntity: { "@id": courseId },
+  },
+  // La ruta como curso: sus labs, en el orden en que se hacen.
+  {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    "@id": courseId,
+    name: path.title,
+    description: path.description,
+    url: routeUrl,
+    inLanguage: "es",
+    isAccessibleForFree: true,
+    license: LICENSE_URL,
+    author: AUTHOR_JSONLD,
+    provider: {
+      "@type": "Organization",
+      name: "Open Security Labs",
+      url: site.href,
+    },
+    hasPart: labs.map((lab) => {
+      const labUrl = new URL(`/labs/${lab.id}/`, site).href;
+      return {
+        "@type": "LearningResource",
+        "@id": `${labUrl}#lab`,
+        name: lab.data.title,
+        url: labUrl,
+      };
+    }),
   },
   {
     "@context": "https://schema.org",
