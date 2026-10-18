@@ -9,7 +9,7 @@ import jetbrainsMonoLatinWoff2 from "@fontsource-variable/jetbrains-mono/files/j
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import CommandPalette from "../components/CommandPalette.astro";
-import { SITE_URL } from "../data/site";
+import { AUTHOR_JSONLD, SITE_URL } from "../data/site";
 
 interface Props {
   title: string;
@@ -20,8 +20,12 @@ interface Props {
   image?: string;
   /** Tipo Open Graph: `article` para contenido tipo lab. */
   ogType?: "website" | "article";
-  /** Structured data adicional (p. ej. TechArticle de un lab). */
+  /** Structured data adicional (p. ej. LearningResource de un lab). */
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Versión en markdown de la página (relativa al sitio), si existe. */
+  markdown?: string;
+  /** Páginas de error: no se indexan ni declaran una URL canónica. */
+  noindex?: boolean;
 }
 
 const {
@@ -31,6 +35,8 @@ const {
   image = "/og-default.png",
   ogType = "website",
   jsonLd: extraJsonLd,
+  markdown,
+  noindex = false,
 } = Astro.props;
 
 const fullTitle =
@@ -55,11 +61,7 @@ const jsonLd = {
   url: site.href,
   description,
   inLanguage: "es-AR",
-  author: {
-    "@type": "Person",
-    name: "Valentín Torassa Colombero",
-    url: "https://valentorassa.com",
-  },
+  author: AUTHOR_JSONLD,
 };
 
 const extraJsonLdItems = Array.isArray(extraJsonLd)
@@ -105,6 +107,7 @@ const extraJsonLdItems = Array.isArray(extraJsonLd)
 
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
     <meta name="theme-color" content="#07090a" />
     <script is:inline>
       // Sincroniza theme-color con el tema activo (el toggle emite vtsl:theme-change).
@@ -123,20 +126,29 @@ const extraJsonLdItems = Array.isArray(extraJsonLd)
         window.addEventListener("vtsl:theme-change", sync);
       })();
     </script>
-    <link rel="canonical" href={canonical.href} />
+    {!noindex && <link rel="canonical" href={canonical.href} />}
     <link
       rel="alternate"
       type="application/rss+xml"
       title="Open Security Labs"
       href={new URL("/rss.xml", site).href}
     />
+    {
+      markdown && (
+        <link
+          rel="alternate"
+          type="text/markdown"
+          href={new URL(markdown, site).href}
+        />
+      )
+    }
 
     <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content="Open Security Labs" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:locale" content="es_AR" />
-    <meta property="og:url" content={canonical.href} />
+    {!noindex && <meta property="og:url" content={canonical.href} />}
     <meta property="og:image" content={ogImage.href} />
     <meta property="og:image:alt" content={description} />
     <meta name="twitter:card" content="summary_large_image" />

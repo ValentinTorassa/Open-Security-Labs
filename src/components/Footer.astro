@@ -1,4 +1,6 @@
 ---
+import { AUTHOR_URL, BLOG_URL } from "../data/site";
+
 const year = new Date().getFullYear();
 
 const social = [
@@ -6,7 +8,8 @@ const social = [
   { href: "https://www.youtube.com/@vtcibersecurity", label: "YouTube" },
   { href: "https://github.com/ValentinTorassa", label: "GitHub" },
   { href: "https://www.linkedin.com/in/valetorassa/", label: "LinkedIn" },
-  { href: "https://valentorassa.com", label: "Web" },
+  { href: BLOG_URL, label: "Blog" },
+  { href: AUTHOR_URL, label: "Web" },
 ];
 
 const nav = [

@@ -38,6 +38,10 @@ const presentationChecklist = [
   },
 ];
 
+// La nota del blog que cuenta lo mismo que esta página.
+const BLOG_NOTE =
+  "https://vtsecurity.com.ar/articulo/que-cuenta-como-experiencia-en-ciberseguridad";
+
 const site = Astro.site ?? new URL(SITE_URL);
 const portfolioJsonLd = {
   "@context": "https://schema.org",
@@ -87,6 +91,14 @@ const portfolioJsonLd = {
             técnicas. Estos proyectos están pensados para demostrar criterio sin
             tocar datos reales ni sistemas de terceros.
           </p>
+          <a
+            href={BLOG_NOTE}
+            target="_blank"
+            rel="noopener"
+            class="text-term-green mt-4 inline-block font-mono text-sm hover:underline"
+          >
+            Leelo como nota en el blog →
+          </a>
         </div>
 
         <div
