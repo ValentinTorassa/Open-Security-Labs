@@ -1,9 +1,7 @@
 ---
 import Icon from "./Icon.astro";
 import type { IconName } from "../data/icons";
-
-type CalloutType =
-  "concepto" | "comando" | "error" | "evidencia" | "reto" | "nota";
+import { CALLOUT_LABELS, type CalloutType } from "../data/callouts";
 
 interface Props {
   type?: CalloutType;
@@ -17,42 +15,42 @@ const variants: Record<
   { label: string; icon: IconName; accent: string; border: string; bg: string }
 > = {
   concepto: {
-    label: "Concepto",
+    label: CALLOUT_LABELS.concepto,
     icon: "lightbulb",
     accent: "text-term-cyan",
     border: "border-term-cyan/30",
     bg: "bg-term-cyan/5",
   },
   comando: {
-    label: "Comando",
+    label: CALLOUT_LABELS.comando,
     icon: "terminal",
     accent: "text-term-green",
     border: "border-term-green/30",
     bg: "bg-term-green/5",
   },
   error: {
-    label: "Error común",
+    label: CALLOUT_LABELS.error,
     icon: "alert-triangle",
     accent: "text-term-red",
     border: "border-term-red/30",
     bg: "bg-term-red/5",
   },
   evidencia: {
-    label: "Evidencia",
+    label: CALLOUT_LABELS.evidencia,
     icon: "camera",
     accent: "text-term-violet",
     border: "border-term-violet/30",
     bg: "bg-term-violet/5",
   },
   reto: {
-    label: "Reto",
+    label: CALLOUT_LABELS.reto,
     icon: "flag",
     accent: "text-term-amber",
     border: "border-term-amber/30",
     bg: "bg-term-amber/5",
   },
   nota: {
-    label: "Nota",
+    label: CALLOUT_LABELS.nota,
     icon: "info",
     accent: "text-base-300",
     border: "border-base-600",

@@ -18,3 +18,22 @@ export function sortLabs(
       a.id.localeCompare(b.id),
   );
 }
+
+// Lugar de un lab dentro de su ruta, en el orden de sortLabs: posición,
+// total y los labs vecinos. Alimenta la navegación anterior/siguiente.
+export function routeNeighbors(
+  labs: CollectionEntry<"labs">[],
+  lab: CollectionEntry<"labs">,
+) {
+  const inRoute = sortLabs(labs.filter((l) => l.data.path === lab.data.path));
+  const index = inRoute.findIndex((l) => l.id === lab.id);
+  return {
+    position: index + 1,
+    total: inRoute.length,
+    prev: index > 0 ? inRoute[index - 1] : undefined,
+    next: index >= 0 ? inRoute[index + 1] : undefined,
+  };
+}
+
+// Fecha de frontmatter como YYYY-MM-DD (published/updated vienen como Date).
+export const isoDate = (date: Date) => date.toISOString().slice(0, 10);

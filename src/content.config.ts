@@ -61,6 +61,14 @@ const labs = defineCollection({
           ),
       )
       .default([]),
+    // Nota del blog (vtsecurity.com.ar) que cuenta lo mismo que el lab, en
+    // formato de lectura. Se muestra como "Leelo como nota en el blog".
+    nota: z
+      .url()
+      .refine((u) => u.startsWith("https://vtsecurity.com.ar/articulo/"), {
+        message: "nota va como https://vtsecurity.com.ar/articulo/<slug>",
+      })
+      .optional(),
     // Entorno listo para correr con Podman. Si está, existe
     // entornos/<id-del-lab>/ con Containerfile, README.md, check.sh y
     // solucion.sh (lo valida el build y `npm run lab:check`).

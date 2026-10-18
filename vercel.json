@@ -6,6 +6,12 @@
   "trailingSlash": true,
   "headers": [
     {
+      "source": "/labs/(.*).md",
+      "headers": [
+        { "key": "Content-Type", "value": "text/markdown; charset=utf-8" }
+      ]
+    },
+    {
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },

@@ -7,7 +7,12 @@ import { SITE_URL } from "../data/site";
 
 export async function GET(context: APIContext) {
   const labs = await getCollection("labs", ({ data }) => !data.draft);
-  const sorted = sortLabs(labs);
+  // Del más nuevo al más viejo por `published`. Los empates (labs del mismo
+  // día) quedan en el orden de las rutas; un lab sin fecha va al final.
+  const sorted = sortLabs(labs).sort(
+    (a, b) =>
+      (b.data.published?.getTime() ?? 0) - (a.data.published?.getTime() ?? 0),
+  );
 
   return rss({
     title: "Open Security Labs",
