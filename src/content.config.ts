@@ -69,6 +69,10 @@ const labs = defineCollection({
         message: "nota va como https://vtsecurity.com.ar/articulo/<slug>",
       })
       .optional(),
+    // Capítulo del libro «No podés defender lo que no entendés» que trata lo
+    // mismo que el lab (el capítulo lo cita). Se muestra como "Está en el
+    // capítulo N del libro" con el link a la lista de espera.
+    capituloLibro: z.number().int().min(1).max(12).optional(),
     // Entorno listo para correr con Podman. Si está, existe
     // entornos/<id-del-lab>/ con Containerfile, README.md, check.sh y
     // solucion.sh (lo valida el build y `npm run lab:check`).
