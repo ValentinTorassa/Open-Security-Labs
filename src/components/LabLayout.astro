@@ -18,6 +18,10 @@ const { lab } = Astro.props;
 const { data } = lab;
 const path = getPath(data.path);
 const accent = path?.accent ?? "#56d364";
+// Lista de espera del libro; el ref dice desde qué capítulo llegó cada alta.
+const libroUrl = data.capituloLibro
+  ? `https://vtsecurity.com.ar/libro?ref=labs-cap${data.capituloLibro}`
+  : null;
 
 // Anterior/siguiente dentro de la ruta, en el mismo orden que la página de
 // la ruta (sortLabs). Es automático: no depende de los nextLabs curados.
@@ -72,6 +76,20 @@ const route = routeNeighbors(allLabs, lab);
           style="color: var(--accent)"
         >
           Leelo como nota en el blog →
+        </a>
+      )
+    }
+    {
+      libroUrl && (
+        <a
+          href={libroUrl}
+          target="_blank"
+          rel="noopener"
+          class="mt-3 block font-mono text-sm hover:underline"
+          style="color: var(--accent)"
+        >
+          Está en el capítulo {data.capituloLibro} del libro «No podés defender
+          lo que no entendés»: sumate a la lista de espera →
         </a>
       )
     }
