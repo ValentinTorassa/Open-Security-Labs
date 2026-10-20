@@ -45,5 +45,8 @@
     "prettier-plugin-astro": "^0.14.1",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "postcss-selector-parser": "7.1.6"
   }
 }
