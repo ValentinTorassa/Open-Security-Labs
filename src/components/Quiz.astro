@@ -1,6 +1,8 @@
 ---
-// Motor único de preguntas. Dos modos:
+// Motor único de preguntas. Tres modos:
 //   - "instant": feedback inmediato al tocar cada opción (quiz dentro de un lab).
+//   - "step": como "instant", pero de a una pregunta por vez y con repaso al
+//     final. Sin JS se ven todas.
 //   - "graded": respondés todo y calificás al final, con puntaje y aprobado/no
 //     (examen de ruta o de certificación).
 // Client-side, sin backend. Para examen usá el wrapper Exam.astro.
@@ -9,7 +11,7 @@ import type { ExamQuestion } from "../data/questions";
 interface Props {
   questions: ExamQuestion[];
   title?: string;
-  mode?: "instant" | "graded";
+  mode?: "instant" | "graded" | "step";
   /** Solo en "graded": puntaje mínimo para aprobar (porcentaje). */
   passScore?: number;
   /** Solo en "graded": bajada opcional bajo el título. */
@@ -73,6 +75,13 @@ const accentText = mode === "graded" ? "text-term-green" : "text-term-cyan";
     }
   </header>
   {subtitle && <p class="text-base-400 mt-1 text-sm">{subtitle}</p>}
+  {
+    mode === "step" && (
+      <p class="text-base-400 mt-1 hidden font-mono text-xs" data-quiz-progress>
+        Pregunta 1 de {questions.length}
+      </p>
+    )
+  }
 
   <ol class="mt-4 space-y-6">
     {
@@ -138,6 +147,23 @@ const accentText = mode === "graded" ? "text-term-green" : "text-term-cyan";
       </div>
     )
   }
+  {
+    mode === "step" && (
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <button type="button" data-quiz-next class="btn-primary hidden">
+          Siguiente →
+        </button>
+        <button type="button" data-quiz-reset class="btn-ghost hidden">
+          Reintentar ↻
+        </button>
+        <p
+          class="font-mono text-sm font-semibold"
+          data-quiz-result
+          aria-live="polite"
+        />
+      </div>
+    )
+  }
 </section>
 
 <script>
@@ -180,13 +206,55 @@ const accentText = mode === "graded" ? "text-term-green" : "text-term-cyan";
         .querySelector<HTMLElement>("[data-explain]")
         ?.classList.remove("hidden");
 
+    // Marca lo elegido (-1 si no se eligió nada): bloquea las opciones, pinta
+    // la correcta y la elegida, y muestra la explicación. Devuelve si acertó.
+    const markAnswer = (question: HTMLElement, selected: number) => {
+      const answer = Number(question.dataset.answer);
+      question
+        .querySelectorAll<HTMLButtonElement>("[data-option]")
+        .forEach((b) => {
+          b.disabled = true;
+          const i = Number(b.dataset.index);
+          if (i === answer) markCorrect(b, "✓");
+          else if (i === selected) markWrong(b, "✕");
+        });
+      reveal(question);
+      return selected === answer;
+    };
+
+    // Deja la pregunta como recién cargada: opciones habilitadas y sin marcas,
+    // explicación oculta.
+    const clearQuestion = (question: HTMLElement) => {
+      question
+        .querySelectorAll<HTMLButtonElement>("[data-option]")
+        .forEach((b) => {
+          b.disabled = false;
+          b.setAttribute("aria-pressed", "false");
+          b.classList.remove(
+            "border-term-green",
+            "bg-term-green/10",
+            "border-term-red",
+            "bg-term-red/10",
+          );
+          b.classList.add("border-base-700", "bg-base-850/60");
+          const mark = b.querySelector<HTMLElement>("[data-mark]");
+          mark?.classList.remove("text-term-green", "text-term-red");
+          if (mark)
+            mark.textContent = String.fromCharCode(
+              97 + Number(b.dataset.index),
+            );
+        });
+      question
+        .querySelector<HTMLElement>("[data-explain]")
+        ?.classList.add("hidden");
+    };
+
     if (mode === "instant") {
       const scoreEl = quiz.querySelector<HTMLElement>("[data-quiz-score]");
       const total = Number(scoreEl?.dataset.total ?? 0);
       let correct = 0;
 
       questions.forEach((question) => {
-        const answer = Number(question.dataset.answer);
         const options =
           question.querySelectorAll<HTMLButtonElement>("[data-option]");
         let answered = false;
@@ -195,20 +263,93 @@ const accentText = mode === "graded" ? "text-term-green" : "text-term-cyan";
           btn.addEventListener("click", () => {
             if (answered) return;
             answered = true;
-            const idx = Number(btn.dataset.index);
-            if (idx === answer) correct += 1;
-            options.forEach((b) => {
-              b.disabled = true;
-              const i = Number(b.dataset.index);
-              if (i === answer) markCorrect(b, "✓");
-              else if (i === idx) markWrong(b, "✕");
-            });
-            reveal(question);
+            if (markAnswer(question, Number(btn.dataset.index))) correct += 1;
             if (scoreEl)
               scoreEl.textContent = `${correct} / ${total} correctas`;
           });
         });
       });
+      return;
+    }
+
+    if (mode === "step") {
+      const scoreEl = quiz.querySelector<HTMLElement>("[data-quiz-score]");
+      const progress = quiz.querySelector<HTMLElement>("[data-quiz-progress]");
+      const nextBtn = quiz.querySelector<HTMLButtonElement>("[data-quiz-next]");
+      const resetBtn =
+        quiz.querySelector<HTMLButtonElement>("[data-quiz-reset]");
+      const result = quiz.querySelector<HTMLElement>("[data-quiz-result]");
+      const total = questions.length;
+      let current = 0;
+      let correct = 0;
+
+      // Las preguntas se ocultan desde acá y no desde el HTML: sin JS se ven
+      // todas, como en "instant".
+      const show = (index: number) => {
+        questions.forEach((q, i) => q.classList.toggle("hidden", i !== index));
+        if (progress)
+          progress.textContent = `Pregunta ${index + 1} de ${total}`;
+      };
+
+      const start = () => {
+        current = 0;
+        correct = 0;
+        questions.forEach((q) => clearQuestion(q));
+        if (scoreEl) scoreEl.textContent = `0 / ${total} correctas`;
+        if (result) result.textContent = "";
+        progress?.classList.remove("hidden");
+        nextBtn?.classList.add("hidden");
+        resetBtn?.classList.add("hidden");
+        show(0);
+      };
+
+      // Repaso: todas las preguntas, ya marcadas y con su explicación.
+      const finish = () => {
+        questions.forEach((q) => q.classList.remove("hidden"));
+        progress?.classList.add("hidden");
+        resetBtn?.classList.remove("hidden");
+        if (result)
+          result.textContent = `Terminaste: ${correct} de ${total} correctas.`;
+        questions[0]?.focus();
+      };
+
+      questions.forEach((question) => {
+        // tabindex -1: se le puede dar foco desde el script sin sumarla al Tab.
+        question.tabIndex = -1;
+        question
+          .querySelectorAll<HTMLButtonElement>("[data-option]")
+          .forEach((btn) =>
+            btn.addEventListener("click", () => {
+              // markAnswer deshabilita las opciones: no se responde dos veces.
+              if (markAnswer(question, Number(btn.dataset.index))) correct += 1;
+              if (scoreEl)
+                scoreEl.textContent = `${correct} / ${total} correctas`;
+              if (nextBtn) {
+                nextBtn.textContent =
+                  current === total - 1 ? "Ver resultado" : "Siguiente →";
+                nextBtn.classList.remove("hidden");
+              }
+            }),
+          );
+      });
+
+      nextBtn?.addEventListener("click", () => {
+        nextBtn.classList.add("hidden");
+        if (current === total - 1) {
+          finish();
+          return;
+        }
+        current += 1;
+        show(current);
+        questions[current]?.focus();
+      });
+
+      resetBtn?.addEventListener("click", () => {
+        start();
+        questions[0]?.focus();
+      });
+
+      start();
       return;
     }
 
@@ -240,21 +381,11 @@ const accentText = mode === "graded" ? "text-term-green" : "text-term-cyan";
       if (graded) return;
       let correct = 0;
       questions.forEach((question) => {
-        const answer = Number(question.dataset.answer);
         const selected =
           question.dataset.selected !== undefined
             ? Number(question.dataset.selected)
             : -1;
-        if (selected === answer) correct += 1;
-        question
-          .querySelectorAll<HTMLButtonElement>("[data-option]")
-          .forEach((b) => {
-            b.disabled = true;
-            const i = Number(b.dataset.index);
-            if (i === answer) markCorrect(b, "✓");
-            else if (i === selected) markWrong(b, "✕");
-          });
-        reveal(question);
+        if (markAnswer(question, selected)) correct += 1;
       });
       graded = true;
       const score = Math.round((correct / questions.length) * 100);
@@ -277,28 +408,7 @@ const accentText = mode === "graded" ? "text-term-green" : "text-term-cyan";
       graded = false;
       questions.forEach((question) => {
         delete question.dataset.selected;
-        question
-          .querySelectorAll<HTMLButtonElement>("[data-option]")
-          .forEach((b) => {
-            b.disabled = false;
-            b.setAttribute("aria-pressed", "false");
-            b.classList.remove(
-              "border-term-green",
-              "bg-term-green/10",
-              "border-term-red",
-              "bg-term-red/10",
-            );
-            b.classList.add("border-base-700", "bg-base-850/60");
-            const mark = b.querySelector<HTMLElement>("[data-mark]");
-            mark?.classList.remove("text-term-green", "text-term-red");
-            if (mark)
-              mark.textContent = String.fromCharCode(
-                97 + Number(b.dataset.index),
-              );
-          });
-        question
-          .querySelector<HTMLElement>("[data-explain]")
-          ?.classList.add("hidden");
+        clearQuestion(question);
       });
       result?.classList.add("hidden");
       result?.classList.remove("text-term-green", "text-term-red");
