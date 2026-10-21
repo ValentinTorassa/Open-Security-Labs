@@ -1,0 +1,23 @@
+# Entorno: linux-real/grep-a-fondo
+# Construilo desde la raíz del repo (el contexto es entornos/):
+#   podman build -t osl/grep-a-fondo -f entornos/linux-real/grep-a-fondo/Containerfile entornos
+FROM docker.io/library/debian:trixie-slim
+
+RUN useradd --create-home --uid 1000 --shell /bin/bash vt
+
+COPY _lib/lab-check /usr/local/bin/lab-check
+COPY _lib/lab-check.sh /usr/local/lib/osl/lab-check.sh
+COPY _lib/bienvenida.sh /etc/profile.d/osl.sh
+COPY linux-real/grep-a-fondo/check.sh /usr/local/lib/osl/check.sh
+COPY linux-real/grep-a-fondo/bienvenida.txt /usr/local/lib/osl/bienvenida.txt
+COPY linux-real/grep-a-fondo/armar-logs.sh /usr/local/lib/osl/armar-logs.sh
+
+# ~/lab-grep: los logs de juguete del lab, ya armados.
+RUN chmod 0755 /usr/local/bin/lab-check \
+ && bash /usr/local/lib/osl/armar-logs.sh /home/vt/lab-grep \
+ && chown -R vt:vt /home/vt/lab-grep
+
+ENV OSL_LAB=linux-real/grep-a-fondo
+USER vt
+WORKDIR /home/vt
+CMD ["bash", "-l"]

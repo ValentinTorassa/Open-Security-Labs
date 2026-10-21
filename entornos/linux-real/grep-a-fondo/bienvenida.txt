@@ -1,0 +1,10 @@
+grep a fondo · entorno de Open Security Labs
+
+En ~/lab-grep ya están los logs del lab: logs/app.log, logs/worker.log
+y un notas.txt que no es un log. Podés saltear el paso de armarlos.
+
+Para lab-check, guardá en ~/evidencia/evidencia-grep.txt cada comando
+(con echo '$ comando') y su salida:
+  1. Un grep -c, un grep con contexto (-B, -A o -C) y un grep -o.
+  2. El reto: cuántas líneas ERROR o WARN tiene cada .log y qué
+     usuario aparece en más de esas líneas.

@@ -1,0 +1,487 @@
+---
+title: "grep a fondo: filtrar, contar, contexto y patrones"
+description: "Un servicio falló anoche y el log está lleno de ruido. Sacá lo que no importa, contá errores, mirá qué pasó antes de cada uno y extraé qué usuario aparece más, todo con grep."
+path: "linux-real"
+order: 13
+level: "intermediate"
+estimatedMinutes: 30
+prerequisites:
+  - "Una terminal Linux o WSL (GNU grep)"
+  - "Haber hecho el lab Encontrar archivos y texto"
+objectives:
+  - "Sacar el ruido de un log con -v"
+  - "Contar coincidencias con -c y listar archivos con -l"
+  - "Buscar la palabra exacta con -w"
+  - "Ver qué pasó antes y después de un error con -B, -A y -C"
+  - "Buscar varios patrones con -E y anclar con ^ y $"
+  - "Extraer lo que coincide con -o y contarlo con sort y uniq"
+  - "Recorrer carpetas buscando solo en ciertos archivos con --include"
+evidence:
+  - "Comandos y salidas de grep -c, -B y -o guardados en ~/evidencia/evidencia-grep.txt"
+  - "Writeup corto: cuántos errores hubo, qué pasó antes de cada uno y qué usuario aparece más"
+commands:
+  - 'grep -v "DEBUG" logs/app.log'
+  - 'grep -c "ERROR" logs/*.log'
+  - 'grep -iw "error" logs/worker.log'
+  - 'grep -B 1 "ERROR" logs/app.log'
+  - 'grep -E "ERROR|WARN" logs/app.log'
+  - 'grep "ERROR" logs/*.log | grep -o "user_[0-9]*" | sort | uniq -c'
+  - 'grep -r --include="*.log" "ERROR" .'
+challenge: "En ~/lab-grep, contá con un solo comando cuántas líneas ERROR o WARN tiene cada .log y averiguá qué usuario aparece en más de esas líneas. Guardá los comandos y las salidas en ~/evidencia/evidencia-grep.txt."
+nextLabs:
+  - "linux-real/systemd-y-journalctl"
+  - "devsecops-agentes/secret-scanning-token-al-repo"
+tags:
+  - "linux"
+  - "grep"
+  - "logs"
+  - "shell"
+contributor: "knighthw"
+published: 2026-10-21
+environment:
+  summary: "Los logs de juguete de ~/lab-grep ya armados. lab-check revisa tus grep -c, de contexto y -o, y el resultado del reto."
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import Quiz from "../../../components/Quiz.astro";
+
+Un servicio falló anoche. Tenés los logs, pero casi todo es ruido: healthchecks, mensajes de debug, logins normales. En el lab de find y grep buscabas una palabra. Ahora necesitás preguntas más finas: **cuántos errores hubo, en qué archivos, qué pasó justo antes de cada uno y a qué usuario le pasó más.**
+
+<Callout type="concepto">
+  grep lee línea por línea y se queda con las que coinciden. Con sus opciones
+  cambiás qué hace con esas líneas: invertirlas, contarlas, mostrar las de
+  alrededor o quedarte solo con el pedazo que coincide.
+</Callout>
+
+## Armá los logs de práctica
+
+Todo el lab pasa en `~/lab-grep`, con logs de juguete. En un servidor real serían cientos de líneas; acá son pocas para que puedas comprobar cada salida a ojo.
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+mkdir -p ~/lab-grep/logs
+cd ~/lab-grep
+
+cat > logs/app.log << 'EOF'
+2026-10-20 03:00:01 INFO  api: servidor iniciado en el puerto 8080
+2026-10-20 03:00:05 DEBUG api: healthcheck ok
+2026-10-20 03:01:12 INFO  api: login de user_42
+2026-10-20 03:01:13 WARN  api: consulta lenta (2300 ms) de user_42
+2026-10-20 03:01:14 ERROR api: timeout al conectar con la base, user_42
+2026-10-20 03:01:20 DEBUG api: healthcheck ok
+2026-10-20 03:02:02 INFO  api: login de user_7
+2026-10-20 03:02:03 ERROR api: timeout al conectar con la base, user_7
+2026-10-20 03:02:09 INFO  api: reintento exitoso de user_7
+2026-10-20 03:03:00 DEBUG api: healthcheck ok
+EOF
+
+cat > logs/worker.log << 'EOF'
+2026-10-20 03:00:02 INFO  worker: arranca la cola de tareas
+2026-10-20 03:01:30 DEBUG worker: sin tareas pendientes
+2026-10-20 03:01:45 WARN  worker: la tarea 118 tarda más de lo esperado
+2026-10-20 03:01:50 ERROR worker: falló la tarea 118 de user_42
+2026-10-20 03:02:30 INFO  worker: reporte de errores enviado
+2026-10-20 03:02:40 DEBUG worker: sin tareas pendientes
+EOF
+
+echo "ERROR de prueba: no es un log, ignorar" > notas.txt
+```
+
+</TerminalBlock>
+
+`cat > archivo << 'EOF'` escribe en el archivo todo lo que pegues hasta la línea `EOF`. Las comillas en `'EOF'` hacen que el shell no toque el texto. Pegá cada bloque completo, desde `cat` hasta `EOF`.
+
+Tu carpeta quedó así:
+
+```text
+lab-grep/
+├─ logs/
+│  ├─ app.log      (10 líneas)
+│  └─ worker.log   (6 líneas)
+└─ notas.txt       (no es un log, pero dice ERROR)
+```
+
+## Sacar el ruido: -v
+
+<TerminalBlock title="vt@labs:~/lab-grep">
+
+```bash
+grep -v "DEBUG" logs/app.log
+```
+
+</TerminalBlock>
+
+```text
+2026-10-20 03:00:01 INFO  api: servidor iniciado en el puerto 8080
+2026-10-20 03:01:12 INFO  api: login de user_42
+2026-10-20 03:01:13 WARN  api: consulta lenta (2300 ms) de user_42
+2026-10-20 03:01:14 ERROR api: timeout al conectar con la base, user_42
+2026-10-20 03:02:02 INFO  api: login de user_7
+2026-10-20 03:02:03 ERROR api: timeout al conectar con la base, user_7
+2026-10-20 03:02:09 INFO  api: reintento exitoso de user_7
+```
+
+`-v` invierte la búsqueda: muestra las líneas que **no** coinciden. Las tres líneas de `healthcheck ok` desaparecieron y quedaron 7 de 10.
+
+## Contar y listar: -c y -l
+
+<TerminalBlock title="vt@labs:~/lab-grep">
+
+```bash
+grep -c "ERROR" logs/*.log
+grep -l "ERROR" logs/*.log notas.txt
+```
+
+</TerminalBlock>
+
+```text
+logs/app.log:2
+logs/worker.log:1
+```
+
+```text
+logs/app.log
+logs/worker.log
+notas.txt
+```
+
+- `-c` cuenta las líneas que coinciden en cada archivo, sin mostrarlas. Con un solo archivo devuelve solo el número.
+- `-l` muestra solo el nombre de los archivos que tienen al menos una coincidencia.
+
+<Callout type="nota">
+  `-c` cuenta **líneas**, no apariciones. Si una línea dice `ERROR` dos veces,
+  suma 1. Para contar apariciones vas a usar `-o`, más abajo.
+</Callout>
+
+## La palabra exacta: -w
+
+<TerminalBlock title="vt@labs:~/lab-grep">
+
+```bash
+grep -i "error" logs/worker.log
+grep -iw "error" logs/worker.log
+```
+
+</TerminalBlock>
+
+```text
+2026-10-20 03:01:50 ERROR worker: falló la tarea 118 de user_42
+2026-10-20 03:02:30 INFO  worker: reporte de errores enviado
+```
+
+```text
+2026-10-20 03:01:50 ERROR worker: falló la tarea 118 de user_42
+```
+
+Sin `-w`, `error` también coincide adentro de `errores`, y la línea del reporte se cuela como si fuera un error. Con `-w`, grep pide que el patrón sea una palabra entera: que no tenga letras, números ni `_` pegados antes o después.
+
+## Qué pasó antes y después: -B, -A y -C
+
+Encontrar el error es la mitad. La otra mitad es ver qué pasó justo antes.
+
+<TerminalBlock title="vt@labs:~/lab-grep">
+
+```bash
+grep -B 1 "ERROR" logs/app.log
+```
+
+</TerminalBlock>
+
+```text
+2026-10-20 03:01:13 WARN  api: consulta lenta (2300 ms) de user_42
+2026-10-20 03:01:14 ERROR api: timeout al conectar con la base, user_42
+--
+2026-10-20 03:02:02 INFO  api: login de user_7
+2026-10-20 03:02:03 ERROR api: timeout al conectar con la base, user_7
+```
+
+Antes del primer timeout hubo una consulta lenta: es una pista de que la base ya venía mal. El `--` separa grupos que no están pegados en el archivo.
+
+```text
+-B 2    2 líneas antes (Before)
+-A 2    2 líneas después (After)
+-C 2    2 líneas antes y 2 después (Context)
+```
+
+Si sumás `-n`, grep marca con `:` la línea que coincide y con `-` las de contexto:
+
+<TerminalBlock title="vt@labs:~/lab-grep">
+
+```bash
+grep -n -C 1 "ERROR" logs/app.log
+```
+
+</TerminalBlock>
+
+```text
+4-2026-10-20 03:01:13 WARN  api: consulta lenta (2300 ms) de user_42
+5:2026-10-20 03:01:14 ERROR api: timeout al conectar con la base, user_42
+6-2026-10-20 03:01:20 DEBUG api: healthcheck ok
+7-2026-10-20 03:02:02 INFO  api: login de user_7
+8:2026-10-20 03:02:03 ERROR api: timeout al conectar con la base, user_7
+9-2026-10-20 03:02:09 INFO  api: reintento exitoso de user_7
+```
+
+Acá no aparece `--`: con una línea de contexto de cada lado, los dos grupos se tocan (6 y 7 son seguidas) y grep los junta.
+
+## Varios patrones y anclas: -E, ^ y $
+
+<TerminalBlock title="vt@labs:~/lab-grep">
+
+```bash
+grep -E "ERROR|WARN" logs/app.log
+```
+
+</TerminalBlock>
+
+```text
+2026-10-20 03:01:13 WARN  api: consulta lenta (2300 ms) de user_42
+2026-10-20 03:01:14 ERROR api: timeout al conectar con la base, user_42
+2026-10-20 03:02:03 ERROR api: timeout al conectar con la base, user_7
+```
+
+`-E` activa las expresiones regulares extendidas, donde `|` significa "o": líneas con `ERROR` o con `WARN`.
+
+<Callout type="error">
+  Sin `-E`, `grep "ERROR|WARN"` busca el texto literal `ERROR|WARN`, que no
+  está en ninguna línea: no devuelve nada y no avisa. Si un patrón con `|` no
+  encuentra nada, lo primero es revisar que tenga `-E`.
+</Callout>
+
+Dos símbolos más para anclar el patrón:
+
+```text
+^    principio de la línea
+$    final de la línea
+```
+
+<TerminalBlock title="vt@labs:~/lab-grep">
+
+```bash
+# Lo que pasó en el minuto 03:02
+grep "^2026-10-20 03:02" logs/app.log
+
+# Líneas que terminan en user_42
+grep "user_42$" logs/*.log
+```
+
+</TerminalBlock>
+
+```text
+2026-10-20 03:02:02 INFO  api: login de user_7
+2026-10-20 03:02:03 ERROR api: timeout al conectar con la base, user_7
+2026-10-20 03:02:09 INFO  api: reintento exitoso de user_7
+```
+
+```text
+logs/app.log:2026-10-20 03:01:12 INFO  api: login de user_42
+logs/app.log:2026-10-20 03:01:13 WARN  api: consulta lenta (2300 ms) de user_42
+logs/app.log:2026-10-20 03:01:14 ERROR api: timeout al conectar con la base, user_42
+logs/worker.log:2026-10-20 03:01:50 ERROR worker: falló la tarea 118 de user_42
+```
+
+Con `^`, la fecha y la hora tienen que estar al principio de la línea: así filtrás una ventana de tiempo sin que coincida un número que aparece en el medio del mensaje.
+
+## Extraer y contar: -o con sort y uniq
+
+¿A qué usuario le fallaron más cosas? Hay que quedarse con las líneas `ERROR` y, de cada una, solo con el usuario.
+
+<TerminalBlock title="vt@labs:~/lab-grep">
+
+```bash
+grep "ERROR" logs/*.log | grep -o "user_[0-9]*"
+```
+
+</TerminalBlock>
+
+```text
+user_42
+user_7
+user_42
+```
+
+- El `|` (pipe) le pasa la salida del primer grep al segundo: el segundo ya no lee archivos, lee las líneas `ERROR`.
+- `-o` muestra solo el pedazo que coincide, no la línea entera. Si una línea tiene dos coincidencias, salen las dos.
+- `user_[0-9]*` es `user_` seguido de cualquier cantidad de dígitos: `[0-9]` es un dígito y `*` repite lo anterior.
+
+Ahora, a contarlos:
+
+<TerminalBlock title="vt@labs:~/lab-grep">
+
+```bash
+grep "ERROR" logs/*.log | grep -o "user_[0-9]*" | sort | uniq -c | sort -rn
+```
+
+</TerminalBlock>
+
+```text
+      2 user_42
+      1 user_7
+```
+
+```text
+sort       ordena, para que los repetidos queden juntos
+uniq -c    junta los repetidos seguidos y cuenta cuántos hay
+sort -rn   ordena por número (-n), de mayor a menor (-r)
+```
+
+`uniq` solo junta líneas iguales **seguidas**. Por eso va siempre después de `sort`.
+
+<Callout type="comando">
+  Poné el patrón entre comillas. Sin comillas, el shell puede interpretar
+  `user_[0-9]*` como un patrón de nombres de archivo y reemplazarlo antes de
+  que grep lo vea.
+</Callout>
+
+## Buscar en carpetas, solo en ciertos archivos: --include
+
+<TerminalBlock title="vt@labs:~/lab-grep">
+
+```bash
+grep -r "ERROR" .
+grep -r --include="*.log" "ERROR" .
+```
+
+</TerminalBlock>
+
+```text
+./logs/worker.log:2026-10-20 03:01:50 ERROR worker: falló la tarea 118 de user_42
+./logs/app.log:2026-10-20 03:01:14 ERROR api: timeout al conectar con la base, user_42
+./logs/app.log:2026-10-20 03:02:03 ERROR api: timeout al conectar con la base, user_7
+./notas.txt:ERROR de prueba: no es un log, ignorar
+```
+
+```text
+./logs/worker.log:2026-10-20 03:01:50 ERROR worker: falló la tarea 118 de user_42
+./logs/app.log:2026-10-20 03:01:14 ERROR api: timeout al conectar con la base, user_42
+./logs/app.log:2026-10-20 03:02:03 ERROR api: timeout al conectar con la base, user_7
+```
+
+`-r` recorre todas las carpetas y mete en la búsqueda a `notas.txt`, que no es un log. `--include="*.log"` limita la búsqueda a los archivos que terminan en `.log`. El orden de los archivos puede variar en tu máquina.
+
+## Quiz
+
+<Quiz
+  mode="step"
+  questions={[
+    {
+      q: "¿Cómo ves un log sin las líneas DEBUG?",
+      options: [
+        'grep "DEBUG" app.log',
+        'grep -v "DEBUG" app.log',
+        'grep -c "DEBUG" app.log',
+      ],
+      answer: 1,
+      explain:
+        "-v invierte la búsqueda: muestra las líneas que no coinciden. Sin -v ves solo las DEBUG, y -c las cuenta.",
+    },
+    {
+      q: 'Una línea dice ERROR dos veces. ¿Cuánto suma para grep -c "ERROR"?',
+      options: ["0", "1", "2"],
+      answer: 1,
+      explain:
+        "-c cuenta líneas, no apariciones. Para contar apariciones, usá grep -o y contá las líneas de la salida.",
+    },
+    {
+      q: "¿Qué muestra las 2 líneas anteriores a cada ERROR?",
+      options: [
+        'grep -A 2 "ERROR" app.log',
+        'grep -B 2 "ERROR" app.log',
+        'grep -E 2 "ERROR" app.log',
+      ],
+      answer: 1,
+      explain:
+        "B = before (antes). -A muestra las de después (after), y -E no es de contexto: activa las expresiones regulares extendidas.",
+    },
+    {
+      q: "¿Qué opción muestra solo los nombres de los archivos que tienen la palabra?",
+      options: ["-c", "-o", "-l"],
+      answer: 2,
+      explain:
+        "-l lista los archivos con al menos una coincidencia. -c cuenta las líneas de cada archivo y -o muestra el pedazo que coincide.",
+    },
+    {
+      q: 'grep -i "error" también encuentra la línea "reporte de errores enviado". ¿Cómo la sacás?',
+      options: [
+        'grep -iw "error"',
+        'grep -iv "error"',
+        'grep -ic "error"',
+      ],
+      answer: 0,
+      explain:
+        "-w pide la palabra entera: error adentro de errores ya no cuenta. -v te mostraría todo lo demás y -c solo cuenta.",
+    },
+    {
+      q: "¿Cómo buscás las líneas que tienen ERROR o WARN?",
+      options: [
+        'grep "ERROR|WARN" app.log',
+        'grep -E "ERROR|WARN" app.log',
+        'grep -w "ERROR|WARN" app.log',
+      ],
+      answer: 1,
+      explain:
+        "Con -E, | significa \"o\". Sin -E, grep busca el texto literal ERROR|WARN y no encuentra nada.",
+    },
+    {
+      q: "¿Qué patrón encuentra solo las líneas que empiezan con 2026-10-20 03:02?",
+      options: [
+        '"^2026-10-20 03:02"',
+        '"2026-10-20 03:02$"',
+        '"2026-10-20 03:02"',
+      ],
+      answer: 0,
+      explain:
+        "^ ancla al principio de la línea y $ al final. Sin ancla, también coincide si la fecha aparece en el medio del mensaje.",
+    },
+    {
+      q: 'Una línea dice "falló la tarea 118 de user_42". ¿Qué muestra grep -o "user_[0-9]*"?',
+      options: ["La línea entera", "user_42", "1"],
+      answer: 1,
+      explain:
+        "-o muestra solo el pedazo que coincide, no la línea completa. El 1 sería la salida de -c.",
+    },
+    {
+      q: "¿Por qué va sort antes de uniq -c?",
+      options: [
+        "Porque uniq solo junta las líneas iguales que están seguidas",
+        "Porque uniq no funciona sin ordenar alfabéticamente la salida",
+        "Porque sort es el que cuenta las repeticiones",
+      ],
+      answer: 0,
+      explain:
+        "uniq compara cada línea con la anterior. Sin sort, dos user_42 separados por otro usuario se cuentan por separado.",
+    },
+    {
+      q: 'Con grep -r --include="*.log" "ERROR" ., ¿dónde busca grep?',
+      options: [
+        "En todos los archivos menos los .log",
+        "Solo en los .log de la carpeta actual, sin entrar a subcarpetas",
+        "Solo en los .log de la carpeta actual y sus subcarpetas",
+      ],
+      answer: 2,
+      explain:
+        "-r recorre las subcarpetas y --include limita la búsqueda a los archivos que terminan en .log. Por eso notas.txt no aparece.",
+    },
+  ]}
+/>
+
+<Callout type="evidencia">
+  Guardá los comandos y sus salidas en `~/evidencia/evidencia-grep.txt`, fuera
+  de `~/lab-grep`, para que no aparezca en tus propias búsquedas. Sumá dos o
+  tres líneas propias: cuántos errores hubo, qué pasó antes de cada uno y qué
+  usuario aparece más.
+</Callout>
+
+<TerminalBlock title="vt@labs:~/lab-grep">
+
+```bash
+mkdir -p ~/evidencia
+echo '$ grep -c "ERROR" logs/*.log' >> ~/evidencia/evidencia-grep.txt
+grep -c "ERROR" logs/*.log >> ~/evidencia/evidencia-grep.txt
+```
+
+</TerminalBlock>
+
+El `echo` guarda el comando y la línea siguiente guarda su salida. Repetilo con cada comando que quieras dejar como evidencia.
