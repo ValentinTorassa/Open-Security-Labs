@@ -188,15 +188,56 @@ async function permissions() {
 const ENV_FILES = ["Containerfile", "README.md", "check.sh", "solucion.sh"];
 
 /**
+ * Los ids de la tabla «Labs sin entorno, y por qué» de entornos/README.md. En
+ * cada fila el primer id lleva la ruta (`ruta/slug`) y los siguientes la heredan.
+ */
+function labsWithoutEnvironmentTable() {
+  const readme = readFileSync(join(ROOT, "entornos", "README.md"), "utf8");
+  const section =
+    readme.split(/^## Labs sin entorno.*$/m)[1]?.split(/^## /m)[0] ?? "";
+  const ids = new Set();
+  for (const line of section.split("\n")) {
+    if (!line.startsWith("| `")) continue;
+    let path = "";
+    for (const [, token] of line.split("|")[1].matchAll(/`([^`]+)`/g)) {
+      if (token.includes("/")) [path] = token.split("/");
+      ids.add(token.includes("/") ? token : `${path}/${token}`);
+    }
+  }
+  return ids;
+}
+
+/**
  * Convención de entornos (sin motor de contenedores, corre en CI): cada lab
- * con `environment` tiene su carpeta completa, cada carpeta tiene su lab, y
- * los Containerfile usan imágenes con registro explícito, el lab-check común
- * y un usuario sin privilegios.
+ * con `environment` tiene su carpeta completa, cada carpeta tiene su lab, los
+ * Containerfile usan imágenes con registro explícito, el lab-check común y un
+ * usuario sin privilegios, y cada lab publicado sin `environment` tiene su
+ * motivo en la tabla «Labs sin entorno» de entornos/README.md.
  */
 async function environments() {
   const labs = labsWithEnvironment();
   const declared = new Set(labs.map((l) => l.id));
   const problems = [];
+  const allLabs = labsForRoutes();
+  const allIds = new Set(allLabs.map((l) => l.id));
+  const table = labsWithoutEnvironmentTable();
+  const withoutEnvironment = allLabs.filter(
+    (lab) => !lab.draft && !declared.has(lab.id),
+  );
+  for (const { id } of withoutEnvironment) {
+    if (!table.has(id)) {
+      problems.push(
+        `${id}: no tiene environment ni fila en «Labs sin entorno» (entornos/README.md)`,
+      );
+    }
+  }
+  for (const id of table) {
+    if (declared.has(id)) {
+      problems.push(`${id}: tiene environment y sigue en «Labs sin entorno»`);
+    } else if (!allIds.has(id)) {
+      problems.push(`«Labs sin entorno» nombra ${id}, que no es un lab`);
+    }
+  }
   const base = join(ROOT, "entornos");
   const dirs = readdirSync(base, { withFileTypes: true })
     .filter((d) => d.isDirectory() && !d.name.startsWith("_"))
@@ -262,7 +303,7 @@ async function environments() {
     return;
   }
   console.log(
-    `Entornos: ${labs.length} labs con Containerfile, README, check y solución de referencia; bases con registro explícito y usuario sin privilegios`,
+    `Entornos: ${labs.length} labs con Containerfile, README, check y solución de referencia; bases con registro explícito y usuario sin privilegios; ${withoutEnvironment.length} sin entorno, todos con su motivo en entornos/README.md`,
   );
 }
 
