@@ -1,0 +1,12 @@
+find a fondo · entorno de Open Security Labs
+
+En ~/lab-find ya está la carpeta de práctica del lab: logs/, notas/,
+viejo/ (grande.bin de 2 MB y respaldo.txt, con fecha de hace 30 días)
+y el enlace enlace-tareas. Podés saltear el paso de armarla.
+
+Para lab-check, guardá en ~/evidencia/evidencia-find.txt cada comando
+(con echo '$ comando') y su salida:
+  1. Un find por tamaño (-size), uno por fecha (-mtime o -newer) y uno
+     por tipo (-type).
+  2. El reto: un solo find con -size y -mtime que encuentre los archivos
+     de más de 1 MB y más de 7 días, y los muestre con -exec ls -lh.
