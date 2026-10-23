@@ -15,14 +15,17 @@ objectives:
   - "Entrar, editar y salir de vim con lo mínimo"
   - "Comprobar con diff qué cambió y volver atrás si algo salió mal"
 evidence:
-  - "Archivo ~/evidencia-editar.txt con la salida de diff entre la copia y el archivo editado"
-  - "Writeup corto: qué cambiaste, con qué editor y cómo lo comprobaste"
+  - "Archivo ~/evidencia/editar.diff con la salida de diff entre la copia y el archivo editado"
+  - "Writeup en ~/evidencia/writeup.md: qué cambiaste, con qué editor y cómo lo comprobaste"
 commands:
   - "cp app.conf app.conf.bak"
   - "nano app.conf"
   - "vi app.conf"
   - "diff app.conf.bak app.conf"
-challenge: "En ~/lab-editar, restaurá la copia con cp app.conf.bak app.conf para empezar limpio. Después abrí app.conf con vi y cambiá log=/tmp/app.log por log=/tmp/app2.log: poné el cursor sobre el punto de app.log, apretá i, escribí 2, Esc, :wq y Enter. Por último, guardá la salida de diff app.conf.bak app.conf en ~/evidencia-editar.txt."
+challenge: "En ~/lab-editar, restaurá la copia con cp app.conf.bak app.conf para empezar limpio. Después abrí app.conf con vi y cambiá log=/tmp/app.log por log=/tmp/app2.log: poné el cursor sobre el punto de app.log, apretá i, escribí 2, Esc, :wq y Enter. Por último, guardá la salida de diff app.conf.bak app.conf en ~/evidencia/editar.diff y contá en ~/evidencia/writeup.md qué cambiaste, con qué editor y cómo lo comprobaste."
+environment:
+  summary: "Debian con nano, vi y una configuración de juguete. lab-check revisa el respaldo, el cambio exacto del reto, el diff y tu writeup."
+  mode: "shell"
 nextLabs:
   - "linux-real/encontrar-archivos-y-texto"
   - "linux-real/permisos-usuarios-procesos"
@@ -219,8 +222,16 @@ Los archivos de configuración del sistema, como los de `/etc`, son de root. Com
 <TerminalBlock title="vt@labs:~/lab-editar">
 
 ```bash
-diff app.conf.bak app.conf > ~/evidencia-editar.txt
-cat ~/evidencia-editar.txt
+mkdir -p ~/evidencia
+diff app.conf.bak app.conf > ~/evidencia/editar.diff
+cat ~/evidencia/editar.diff
 ```
 
 </TerminalBlock>
+
+`diff` devuelve código 1 cuando encuentra diferencias: en este caso es lo
+esperado. Código 0 significa que no cambió nada y 2 indica un error al comparar.
+
+En `~/evidencia/writeup.md`, contá qué línea cambiaste, qué editor usaste y cómo
+leíste el `diff`. Si usás el entorno del lab, terminá con `lab-check`: revisa
+los archivos y guarda su resultado junto a tu evidencia.
