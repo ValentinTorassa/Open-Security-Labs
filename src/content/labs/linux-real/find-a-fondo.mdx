@@ -6,7 +6,7 @@ order: 7
 level: "intermediate"
 estimatedMinutes: 30
 prerequisites:
-  - "Una terminal Linux o WSL (touch -d y head -c 2M son de GNU)"
+  - "Una terminal Linux o WSL (touch -d y head -c 2M son de GNU), o el entorno del lab con Podman o Docker"
   - "Haber hecho el lab Encontrar archivos y texto"
 objectives:
   - "Filtrar archivos por tamaño con -size y por fecha con -mtime"
@@ -15,7 +15,7 @@ objectives:
   - "Combinar condiciones con -o y paréntesis, y negarlas con -not"
   - "Ejecutar un comando sobre cada resultado con -exec"
 evidence:
-  - "Salidas de find por tamaño, fecha y tipo guardadas en ~/evidencia.txt"
+  - "Comandos y salidas de find por tamaño, fecha y tipo guardados en ~/evidencia/evidencia-find.txt"
   - "Writeup corto: qué archivo ocupaba más, cuáles cambiaron y con qué comando lo encontraste"
 commands:
   - "find . -type f -size +1M"
@@ -25,7 +25,7 @@ commands:
   - 'find . -type f \( -name "*.log" -o -name "*.txt" \)'
   - 'find . -type f -not -name "*.log"'
   - 'find . -name "*.log" -exec wc -l {} +'
-challenge: "En ~/lab-find, encontrá con un solo comando find los archivos de más de 1 MB modificados hace más de 7 días y mostrá su tamaño con -exec ls -lh. Guardá el comando y la salida en ~/evidencia.txt, fuera de la carpeta de práctica."
+challenge: "En ~/lab-find, encontrá con un solo comando find los archivos de más de 1 MB modificados hace más de 7 días y mostrá su tamaño con -exec ls -lh. Guardá el comando y la salida en ~/evidencia/evidencia-find.txt, fuera de la carpeta de práctica."
 nextLabs:
   - "linux-real/grep-a-fondo"
   - "linux-real/systemd-y-journalctl"
@@ -35,6 +35,9 @@ tags:
   - "shell"
 contributor: "knighthw"
 published: 2026-10-01
+environment:
+  summary: "La carpeta de práctica de ~/lab-find ya armada, con tamaños y fechas de GNU. lab-check revisa tus find por tamaño, fecha y tipo, y el resultado del reto."
+  mode: "shell"
 ---
 
 import Callout from "../../../components/Callout.astro";
@@ -51,7 +54,7 @@ Un servidor se quedó sin espacio después de un deploy, o algo dejó de andar a
 
 ## Armá la carpeta de práctica
 
-Todo el lab pasa en `~/lab-find`. No vas a buscar en tu sistema real.
+Todo el lab pasa en `~/lab-find`. No vas a buscar en tu sistema real. Si usás el entorno del lab, la carpeta ya está armada y podés saltear este bloque.
 
 <TerminalBlock title="vt@labs:~">
 
@@ -149,7 +152,8 @@ find . -type f -mtime -1
 <Callout type="nota">
   Si retomás el lab otro día, `-mtime -1` te va a devolver vacío: los archivos
   ya tienen más de 24 horas. Volvé a correr el bloque de la carpeta de práctica
-  y se actualizan.
+  y se actualizan. En el entorno del lab, abrí un contenedor nuevo: la carpeta
+  se arma cada vez que arranca.
 </Callout>
 
 ## Tipo y atributos
@@ -341,8 +345,20 @@ El `;` va con `\` por la misma razón que los paréntesis: para el shell, `;` se
 />
 
 <Callout type="evidencia">
-  Guardá las salidas en `~/evidencia.txt`, fuera de `~/lab-find`, para que no
-  aparezca en tus propias búsquedas: por ejemplo `find . -type f -size +1M >>
-  ~/evidencia.txt`. Sumá dos o tres líneas propias: qué archivo ocupaba más,
-  cuáles cambiaron y con qué comando lo encontraste.
+  Guardá los comandos y sus salidas en `~/evidencia/evidencia-find.txt`, fuera
+  de `~/lab-find`, para que no aparezca en tus propias búsquedas. Sumá dos o
+  tres líneas propias: qué archivo ocupaba más, cuáles cambiaron y con qué
+  comando lo encontraste.
 </Callout>
+
+<TerminalBlock title="vt@labs:~/lab-find">
+
+```bash
+mkdir -p ~/evidencia
+echo '$ find . -type f -size +1M' >> ~/evidencia/evidencia-find.txt
+find . -type f -size +1M >> ~/evidencia/evidencia-find.txt
+```
+
+</TerminalBlock>
+
+El `echo` guarda el comando y la línea siguiente guarda su salida. Repetilo con cada comando que quieras dejar como evidencia. Si usás el entorno del lab, terminá con `lab-check`: revisa tu evidencia y guarda su resultado junto a ella.
