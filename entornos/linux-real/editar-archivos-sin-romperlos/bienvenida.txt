@@ -1,0 +1,10 @@
+Editar archivos en la terminal sin romperlos
+
+En ~/lab-editar/app.conf tenés la configuración de juguete del lab.
+Creá el respaldo antes de editar. nano y vi están instalados; no necesitás sudo.
+
+Probá las ediciones de la lección y restaurá el respaldo antes del reto final:
+cambiar solo log=/tmp/app.log por log=/tmp/app2.log.
+
+Guardá el diff en ~/evidencia/editar.diff y tu explicación en
+~/evidencia/writeup.md. Después corré lab-check.

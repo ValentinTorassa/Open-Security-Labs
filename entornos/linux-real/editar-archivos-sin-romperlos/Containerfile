@@ -1,0 +1,24 @@
+# Contexto de build: entornos/
+FROM docker.io/library/debian:trixie-slim
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends nano vim-tiny diffutils \
+ && apt-get clean \
+ && useradd --create-home --uid 1000 --shell /bin/bash vt
+
+COPY _lib/lab-check /usr/local/bin/lab-check
+COPY _lib/lab-check.sh /usr/local/lib/osl/lab-check.sh
+COPY _lib/bienvenida.sh /etc/profile.d/osl.sh
+COPY linux-real/editar-archivos-sin-romperlos/check.sh /usr/local/lib/osl/check.sh
+COPY linux-real/editar-archivos-sin-romperlos/bienvenida.txt /usr/local/lib/osl/bienvenida.txt
+COPY linux-real/editar-archivos-sin-romperlos/app.conf /usr/local/share/osl/app.conf.inicial
+
+RUN chmod 0755 /usr/local/bin/lab-check \
+ && install -d -o vt -g vt /home/vt/lab-editar \
+ && install -m 0644 -o vt -g vt /usr/local/share/osl/app.conf.inicial /home/vt/lab-editar/app.conf
+
+ENV OSL_LAB=linux-real/editar-archivos-sin-romperlos
+USER vt
+WORKDIR /home/vt
+CMD ["bash", "-l"]
