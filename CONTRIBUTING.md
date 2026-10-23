@@ -70,6 +70,9 @@ servicio que falla), sumale un entorno en `entornos/<ruta>/<slug>/` y el campo
 `lab-check` revisa la evidencia. Convención, reglas y cómo probarlo:
 [`entornos/README.md`](./entornos/README.md).
 
+Si el lab no lleva entorno, sumalo con su motivo a la tabla «Labs sin entorno»
+de ese README: `npm run lab:check` falla si un lab no está en ninguno de los dos.
+
 ### Lecciones quirúrgicas
 
 Preferí labs **cortos y enfocados** (un concepto, 10-15 min) por sobre labs
