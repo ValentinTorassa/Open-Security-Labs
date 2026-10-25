@@ -1,0 +1,24 @@
+# Entorno: linux-real/find-a-fondo
+# Construilo desde la raíz del repo (el contexto es entornos/):
+#   podman build -t osl/find-a-fondo -f entornos/linux-real/find-a-fondo/Containerfile entornos
+FROM docker.io/library/debian:trixie-slim
+
+RUN useradd --create-home --uid 1000 --shell /bin/bash vt
+
+COPY _lib/lab-check /usr/local/bin/lab-check
+COPY _lib/lab-check.sh /usr/local/lib/osl/lab-check.sh
+COPY _lib/bienvenida.sh /etc/profile.d/osl.sh
+COPY linux-real/find-a-fondo/check.sh /usr/local/lib/osl/check.sh
+COPY linux-real/find-a-fondo/bienvenida.txt /usr/local/lib/osl/bienvenida.txt
+COPY linux-real/find-a-fondo/armar-lab-find.sh /usr/local/lib/osl/armar-lab-find.sh
+COPY linux-real/find-a-fondo/arranque.sh /usr/local/lib/osl/arranque.sh
+
+# ~/lab-find se arma al arrancar (arranque.sh), no acá: las fechas son
+# relativas a cuando abrís el entorno, como en la página.
+RUN chmod 0755 /usr/local/bin/lab-check /usr/local/lib/osl/arranque.sh
+
+ENV OSL_LAB=linux-real/find-a-fondo
+USER vt
+WORKDIR /home/vt
+ENTRYPOINT ["/usr/local/lib/osl/arranque.sh"]
+CMD ["bash", "-l"]
