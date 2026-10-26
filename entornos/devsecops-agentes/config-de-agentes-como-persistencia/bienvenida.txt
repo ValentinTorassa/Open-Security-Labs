@@ -1,0 +1,20 @@
+config del agente como persistencia · entorno de Open Security Labs
+
+En ~/persistencia ya está el repo de juguete del lab con los tres puntos de
+persistencia plantados, igual que en la página: un hook SessionStart en
+.claude/settings.json, una task folderOpen en .vscode/tasks.json y
+core.fsmonitor en el git config. El "payload" es de juguete: solo agrega una
+línea con la fecha a .ci/PWNED-marker.txt. Podés saltear el paso de plantarlos.
+
+Acá no hay agente ni editor que confíe en la carpeta: el entorno es para
+encontrar y sacar los tres puntos, no para dispararlos.
+
+Para lab-check, guardá en ~/evidencia/evidencia-persistencia.txt cada comando
+(con echo '$ comando') y su salida:
+  1. El find/grep que encuentra los tres puntos, el git config de
+     core.fsmonitor con la marca que deja un git status, y el
+     git -c core.fsmonitor=false status sin marca.
+  2. El reto: sumá una segunda task folderOpen (cuarto punto, otro label) y
+     encontrá las dos de una vez con un solo comando.
+Después dejá el repo limpio: sin hooks, sin tasks folderOpen y con
+core.fsmonitor vacío.
