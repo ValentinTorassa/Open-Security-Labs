@@ -1,0 +1,29 @@
+# Entorno: devsecops-agentes/config-de-agentes-como-persistencia
+# Construilo desde la raíz del repo (el contexto es entornos/):
+#   podman build -t osl/config-de-agentes-como-persistencia -f entornos/devsecops-agentes/config-de-agentes-como-persistencia/Containerfile entornos
+FROM docker.io/library/debian:trixie-slim
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends git \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN useradd --create-home --uid 1000 --shell /bin/bash vt
+
+COPY _lib/lab-check /usr/local/bin/lab-check
+COPY _lib/lab-check.sh /usr/local/lib/osl/lab-check.sh
+COPY _lib/bienvenida.sh /etc/profile.d/osl.sh
+COPY devsecops-agentes/config-de-agentes-como-persistencia/check.sh /usr/local/lib/osl/check.sh
+COPY devsecops-agentes/config-de-agentes-como-persistencia/bienvenida.txt /usr/local/lib/osl/bienvenida.txt
+COPY devsecops-agentes/config-de-agentes-como-persistencia/armar-persistencia.sh /usr/local/lib/osl/armar-persistencia.sh
+
+# ~/persistencia: el repo de juguete con los tres puntos de persistencia ya
+# plantados (hook SessionStart, task folderOpen y core.fsmonitor). El payload
+# es de juguete: solo escribe una marca local, no sale a la red.
+RUN chmod 0755 /usr/local/bin/lab-check \
+ && bash /usr/local/lib/osl/armar-persistencia.sh /home/vt/persistencia \
+ && chown -R vt:vt /home/vt/persistencia
+
+ENV OSL_LAB=devsecops-agentes/config-de-agentes-como-persistencia
+USER vt
+WORKDIR /home/vt
+CMD ["bash", "-l"]
