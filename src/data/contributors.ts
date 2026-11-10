@@ -48,8 +48,8 @@ export const contributors: Contributor[] = [
   {
     github: "knighthw",
     name: "Sebastian Rivas",
-    role: "Autor de lab",
-    commits: 1,
+    role: "Labs y entornos de Linux Real",
+    commits: 7,
   },
 ];
 
