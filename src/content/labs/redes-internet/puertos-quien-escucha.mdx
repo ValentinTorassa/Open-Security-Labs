@@ -1,0 +1,301 @@
+---
+title: "Puertos: quién escucha y quién se conecta"
+description: "Tenés un servicio corriendo y no sabés en qué puerto quedó ni quién lo abrió. Encontralo con ss, distinguí LISTEN de ESTABLISHED y entendé por qué escuchar en 0.0.0.0 no es lo mismo que en 127.0.0.1."
+path: "redes-internet"
+order: 6
+level: "beginner"
+estimatedMinutes: 15
+prerequisites:
+  - "Una terminal Linux o WSL con ss, curl y python3 (ss no viene en macOS)"
+  - "Haber hecho el lab TLS sin magia"
+objectives:
+  - "Encontrar qué proceso escucha en un puerto con ss -tulpn"
+  - "Distinguir un socket en LISTEN de una conexión ESTABLISHED"
+  - "Explicar por qué escuchar en 127.0.0.1 no es lo mismo que en 0.0.0.0"
+evidence:
+  - "Comando y salida de ss -tulpn con el proceso y el puerto del server de juguete, en ~/evidencia/evidencia-puertos.txt"
+  - "Writeup de 3 líneas en ~/evidencia/writeup-puertos.md: diferencia entre escuchar en 127.0.0.1 y en 0.0.0.0"
+commands:
+  - "python3 -m http.server 8000 --bind 127.0.0.1"
+  - "ss -tulpn"
+  - "ss -tn state established"
+  - "curl -v http://127.0.0.1:8000/"
+challenge: "En ~/lab-puertos, levantá el server en el puerto 9090 escuchando solo en loopback. Con un solo comando ss, mostrá qué proceso lo abrió y su PID, y guardá el comando y la salida en ~/evidencia/evidencia-puertos.txt. En tu writeup, contá qué dirección habría mostrado ss si lo levantabas sin --bind y por qué eso importa."
+nextLabs:
+  - "cloud-produccion/vpc-security-groups"
+  - "linux-real/proceso-socket-evidencia-demo"
+tags:
+  - "redes"
+  - "puertos"
+  - "ss"
+  - "tcp"
+contributor: "knighthw"
+published: 2026-11-21
+---
+
+import Callout from "../../../components/Callout.astro";
+import TerminalBlock from "../../../components/TerminalBlock.astro";
+import Quiz from "../../../components/Quiz.astro";
+
+Levantaste un servicio para probar algo y ahora no sabés en qué puerto quedó, si sigue vivo o quién lo abrió. O al revés: hay algo escuchando en tu máquina y no te acordás de haberlo prendido. Antes de abrir un firewall o matar procesos al azar, hacé la pregunta básica: **¿quién escucha, dónde, y quién se está conectando?**
+
+<Callout type="concepto">
+  Un puerto no es magia: es un número donde un proceso escucha. La IP lleva la
+  conexión hasta tu máquina y el puerto la lleva hasta un proceso. Del otro lado,
+  quien se conecta usa su propio puerto, uno alto que elige el sistema.
+</Callout>
+
+## Levantá un servidor de juguete
+
+Todo el lab pasa en tu máquina y en loopback: no se toca nada de afuera. Abrí una terminal y dejá corriendo un server HTTP que ya viene con Python:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+mkdir -p ~/lab-puertos
+cd ~/lab-puertos
+echo "hola desde el lab" > index.html
+python3 -m http.server 8000 --bind 127.0.0.1
+```
+
+</TerminalBlock>
+
+La terminal queda ocupada: el server está atendiendo. `8000` es el puerto y `--bind 127.0.0.1` dice en qué dirección escucha. Lo de `--bind` es el centro del lab y lo vemos más abajo.
+
+<Callout type="error">
+  `http.server` sirve **la carpeta donde lo corrés**. Por eso el lab lo levanta
+  en `~/lab-puertos`, que solo tiene un `index.html` de juguete. Nunca lo
+  levantes parado en tu home.
+</Callout>
+
+## Quién escucha: `ss -tulpn`
+
+Abrí **otra terminal** y preguntale al sistema qué sockets están escuchando:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+ss -tulpn
+```
+
+</TerminalBlock>
+
+Vas a ver varias líneas, una por cada servicio que escucha en tu máquina. Buscá la del puerto 8000:
+
+```text
+Netid State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+tcp   LISTEN 0      5          127.0.0.1:8000      0.0.0.0:*    users:(("python3",pid=14358,fd=3))
+```
+
+Las letras de `-tulpn` son cinco filtros y formatos:
+
+```text
+-t   sockets TCP
+-u   sockets UDP
+-l   solo los que están escuchando (LISTEN)
+-p   qué proceso tiene cada socket
+-n   números: 8000 en vez de un nombre de servicio, IPs en vez de hostnames
+```
+
+Y la línea se lee así:
+
+- **State `LISTEN`**: un proceso está esperando conexiones.
+- **Local Address:Port `127.0.0.1:8000`**: dónde escucha. Esta columna responde "en qué puerto quedó".
+- **Peer Address:Port `0.0.0.0:*`**: del otro lado todavía no hay nadie. En un socket que escucha, esto no es un cliente.
+- **Process `users:(("python3",pid=14358,fd=3))`**: quién lo abrió. El PID cambia en tu máquina; `fd=3` es el descriptor de archivo del socket dentro del proceso.
+
+Si solo te interesa un puerto, `ss` lo filtra solo, sin `grep`:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+ss -tlpn 'sport = :8000'
+```
+
+</TerminalBlock>
+
+```text
+State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+LISTEN 0      5          127.0.0.1:8000      0.0.0.0:*    users:(("python3",pid=14358,fd=3))
+```
+
+<Callout type="nota">
+  Sin `sudo`, `-p` solo muestra el proceso de los sockets que son tuyos. Los
+  servicios de root o de otros usuarios aparecen con la columna Process vacía.
+  Para este lab no hace falta `sudo`: el server lo levantaste vos.
+</Callout>
+
+## Quién se conecta: `curl -v` y ESTABLISHED
+
+Conectate al server y mirá la conversación:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+curl -v http://127.0.0.1:8000/
+```
+
+</TerminalBlock>
+
+Recortada a lo que importa:
+
+```text
+*   Trying 127.0.0.1:8000...
+* Connected to 127.0.0.1 (127.0.0.1) port 8000
+> GET / HTTP/1.1
+> Host: 127.0.0.1:8000
+< HTTP/1.0 200 OK
+< Server: SimpleHTTP/0.6 Python/3.12.3
+```
+
+`Connected to ... port 8000` confirma que había alguien escuchando. Las líneas con `>` son lo que mandó curl y las de `<`, lo que respondió el server.
+
+El problema es que curl abre, pide, recibe y cierra en milisegundos: cuando corrés `ss`, la conexión ya no existe. Para verla abierta, bash puede conectarse por TCP y dejar la conexión abierta en el descriptor 3:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+exec 3<>/dev/tcp/127.0.0.1/8000
+ss -tn state established '( sport = :8000 or dport = :8000 )'
+exec 3>&-
+```
+
+</TerminalBlock>
+
+```text
+Recv-Q Send-Q Local Address:Port  Peer Address:Port Process
+0      0          127.0.0.1:37992    127.0.0.1:8000
+0      0          127.0.0.1:8000     127.0.0.1:37992
+```
+
+El primer `exec` abre la conexión, `ss` la muestra y el segundo `exec` la cierra. Son **dos líneas para una sola conexión**, una por cada extremo:
+
+- `127.0.0.1:37992 → 127.0.0.1:8000` es tu shell, el cliente, con un puerto alto que eligió el sistema.
+- `127.0.0.1:8000 → 127.0.0.1:37992` es el server, del lado del puerto que escucha.
+
+Las dos aparecen porque cliente y server están en tu misma máquina. Si te conectaras a un servidor remoto, verías solo tu extremo.
+
+<Callout type="nota">
+  `/dev/tcp` no es un archivo real: es una función de bash. En zsh no anda; si
+  tu terminal usa zsh, corré `bash` antes. Y si después de un curl ves la
+  conexión en estado `TIME-WAIT`, es la conexión recién cerrada: el sistema la
+  guarda unos segundos para que no se mezclen paquetes viejos con una nueva.
+</Callout>
+
+## 127.0.0.1 no es lo mismo que 0.0.0.0
+
+La dirección del `--bind` decide **desde dónde te pueden hablar**. Comprobalo con otra dirección de loopback. `127.0.0.2` también es tu máquina, pero el server no escucha ahí:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+curl http://127.0.0.2:8000/
+```
+
+</TerminalBlock>
+
+```text
+curl: (7) Failed to connect to 127.0.0.2 port 8000 after 0 ms: Couldn't connect to server
+```
+
+Si ni siquiera otra dirección de tu propia máquina llega, tampoco llega nadie de tu red. Esa es la idea de escuchar en loopback.
+
+| Escucha en   | Quién se puede conectar                                                  |
+| ------------ | ------------------------------------------------------------------------ |
+| `127.0.0.1`  | Solo procesos de tu misma máquina                                        |
+| `0.0.0.0`    | Cualquiera que llegue a alguna IP de tu máquina: tu wifi, una VPN, etc.  |
+
+`0.0.0.0` en un socket que escucha significa "todas mis direcciones". Y es lo que pasa si te olvidás del `--bind`: así se ve `python3 -m http.server 8000` sin esa opción.
+
+```text
+State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+LISTEN 0      5            0.0.0.0:8000      0.0.0.0:*    users:(("python3",pid=14384,fd=3))
+```
+
+<Callout type="error">
+  No lo hagas para probar: con `0.0.0.0`, cualquiera en tu misma red puede pedir
+  la carpeta que estás sirviendo. Un server de desarrollo en `0.0.0.0` en el
+  wifi de un bar sirve esa carpeta a todo el bar. Según el programa, también
+  podés ver `*:8000` o `[::]:8000`: significan lo mismo, todas las direcciones.
+</Callout>
+
+Cada puerto que escucha en todas las direcciones es parte de la superficie de exposición de tu máquina. Por eso la pregunta defensiva no es solo "¿qué puertos hay abiertos?", sino **"¿cuáles escuchan fuera de loopback, y lo necesitan?"**. La columna Local Address de `ss -tulpn` te lo responde.
+
+## Apagalo y comprobá
+
+Volvé a la primera terminal y apretá `Ctrl+C`. Después, en la segunda:
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+ss -tln 'sport = :8000'
+curl http://127.0.0.1:8000/
+```
+
+</TerminalBlock>
+
+`ss` muestra solo el encabezado, porque ya no hay nadie escuchando, y curl falla con `Couldn't connect to server`. Sin proceso que escuche, el puerto no es más que un número.
+
+## Quiz
+
+<Quiz
+  mode="step"
+  questions={[
+    {
+      q: "En ss -tulpn, ¿qué columna te dice en qué dirección y puerto escucha un proceso?",
+      options: ["Peer Address:Port", "Local Address:Port", "Process"],
+      answer: 1,
+      explain:
+        "Local Address:Port es tu extremo: dónde escucha el proceso. Peer es el otro extremo, y en un socket en LISTEN todavía no hay nadie.",
+    },
+    {
+      q: "¿Qué indica el estado LISTEN?",
+      options: [
+        "Que hay un cliente conectado ahora",
+        "Que un proceso espera conexiones en ese puerto",
+        "Que la conexión se está cerrando",
+      ],
+      answer: 1,
+      explain:
+        "LISTEN es esperar. Una conexión abierta entre dos extremos es ESTABLISHED, y una recién cerrada es TIME-WAIT.",
+    },
+    {
+      q: "Un server escucha en 127.0.0.1:8000. ¿Quién se puede conectar?",
+      options: [
+        "Cualquiera en tu misma red",
+        "Solo procesos de tu misma máquina",
+        "Cualquiera en internet",
+      ],
+      answer: 1,
+      explain:
+        "Loopback solo es alcanzable desde la misma máquina. Ni siquiera 127.0.0.2 llega, porque el server escucha solo en 127.0.0.1.",
+    },
+    {
+      q: "Corrés python3 -m http.server 8000 sin --bind. ¿Qué te muestra ss?",
+      options: ["127.0.0.1:8000", "0.0.0.0:8000", "Nada, no arranca"],
+      answer: 1,
+      explain:
+        "Sin --bind escucha en todas las direcciones. Por eso conviene pasar --bind 127.0.0.1 siempre que pruebes algo en local.",
+    },
+  ]}
+/>
+
+<Callout type="evidencia">
+  Guardá el comando y la salida de `ss` en `~/evidencia/evidencia-puertos.txt`,
+  con el server prendido. Filtrá por el puerto: así la evidencia muestra tu server
+  de juguete y no la lista de servicios de tu máquina. En
+  `~/evidencia/writeup-puertos.md`, contá en tres líneas qué diferencia hay
+  entre escuchar en 127.0.0.1 y en 0.0.0.0.
+</Callout>
+
+<TerminalBlock title="vt@labs:~">
+
+```bash
+mkdir -p ~/evidencia
+echo "$ ss -tulpn 'sport = :8000'" >> ~/evidencia/evidencia-puertos.txt
+ss -tulpn 'sport = :8000' >> ~/evidencia/evidencia-puertos.txt
+```
+
+</TerminalBlock>
+
+El `echo` guarda el comando y la línea siguiente guarda su salida. Repetilo con el comando del reto.
