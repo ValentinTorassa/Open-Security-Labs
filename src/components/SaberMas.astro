@@ -1,0 +1,32 @@
+---
+// Profundiza en algo que no es el tema central del lab, cerrado por defecto.
+// Con <details> nativo anda sin JS y el teclado y los lectores de pantalla lo
+// manejan solos. Adentro no va nada que haga falta para seguir el ejercicio.
+import Icon from "./Icon.astro";
+
+interface Props {
+  // Qué hay adentro: se muestra como «Saber más: <title>».
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<details class="group border-base-600 bg-base-800/40 my-6 rounded-lg border">
+  <summary
+    class="text-base-300 flex cursor-pointer list-none items-center gap-2 rounded-lg px-4 py-3.5 font-mono text-xs font-semibold tracking-wider uppercase [&::-webkit-details-marker]:hidden"
+  >
+    <Icon
+      name="arrow-right"
+      size={15}
+      strokeWidth={2.25}
+      class="shrink-0 transition-transform group-open:rotate-90 motion-reduce:transition-none"
+    />
+    <span>Saber más: <span class="normal-case">{title}</span></span>
+  </summary>
+  <div
+    class="text-base-200 border-base-600 border-t px-4 py-3.5 text-sm leading-relaxed [&>:first-child]:mt-0 [&>:last-child]:mb-0"
+  >
+    <slot />
+  </div>
+</details>
