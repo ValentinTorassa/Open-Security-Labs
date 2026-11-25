@@ -248,6 +248,13 @@ function renderElement(el: Element, webUrl: string): string {
         (el.attrs.title as string | undefined) ?? CALLOUT_LABELS[type];
       return quote(`**${label}**\n\n${inner()}`);
     }
+    // En la página arranca cerrado; en markdown va completo.
+    case "SaberMas": {
+      const title = el.attrs.title as string | undefined;
+      if (!title) throw new Error(`línea ${el.line}: <SaberMas> sin title`);
+      const body = inner().replace(/\n{3,}/g, "\n\n");
+      return quote(`**Saber más: ${title}**\n\n${body}`);
+    }
     case "TerminalBlock": {
       const title = el.attrs.title as string | undefined;
       return title && title !== DEFAULT_TERMINAL_TITLE

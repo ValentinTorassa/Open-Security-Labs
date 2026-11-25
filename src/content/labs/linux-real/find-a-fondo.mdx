@@ -43,6 +43,7 @@ environment:
 import Callout from "../../../components/Callout.astro";
 import TerminalBlock from "../../../components/TerminalBlock.astro";
 import Quiz from "../../../components/Quiz.astro";
+import SaberMas from "../../../components/SaberMas.astro";
 
 Un servidor se quedó sin espacio después de un deploy, o algo dejó de andar ayer y nadie sabe qué cambió. En el lab anterior buscabas por nombre. Ahora necesitás preguntas más finas: **qué pesa mucho, qué cambió hace poco, qué tipo de archivo es y qué hago con lo que encontré.**
 
@@ -307,6 +308,112 @@ El `;` va con `\` por la misma razón que los paréntesis: para el shell, `;` se
   `mv`), corré el mismo `find` sin el `-exec` y revisá la lista: es exactamente
   a lo que le vas a aplicar el comando.
 </Callout>
+
+<SaberMas title="-exec como filtro, -ok, -execdir y nombres con espacios">
+
+**1. Usar `-exec` como filtro.** Primero mirá qué hace `grep -q`. La `q` es de _quiet_ (silencioso): busca el texto pero no muestra nada. Solo avisa si lo encontró, con su código de salida, que ves con `echo $?`:
+
+<TerminalBlock title="vt@labs:~/lab-find">
+
+```bash
+grep -q "Clave" logs/login.log; echo $?
+grep -q "Clave" logs/app.log; echo $?
+```
+
+</TerminalBlock>
+
+```text
+0
+1
+```
+
+`0` quiere decir "lo encontré" y `1`, "no lo encontré". find usa ese código como una condición más: si es `0`, el archivo pasa y sigue al `-print`, que muestra su nombre.
+
+<TerminalBlock title="vt@labs:~/lab-find">
+
+```bash
+find . -name "*.log" -exec grep -q "Clave" {} \; -print
+```
+
+</TerminalBlock>
+
+```text
+./logs/login.log
+```
+
+Solo aparece `login.log`, porque es el único que dice "Clave". Para esto hace falta `\;`: con `+`, find no mira el resultado de cada archivo.
+
+**2. `-ok`: que te pregunte antes.** Es igual a `-exec ... \;`, pero antes de cada archivo te muestra el comando y espera tu respuesta. Escribí `y` y Enter para correrlo, o `n` para saltearlo:
+
+<TerminalBlock title="vt@labs:~/lab-find">
+
+```bash
+find . -name "tareas.txt" -ok echo encontré {} \;
+```
+
+</TerminalBlock>
+
+```text
+< echo ... ./notas/tareas.txt > ? y
+encontré ./notas/tareas.txt
+```
+
+Usalo cuando el comando borra o cambia archivos: ves cada uno antes de que pase.
+
+**3. `-execdir`: correr el comando adentro de la carpeta del archivo.** Con `-exec`, el `{}` es la ruta desde donde lanzaste find (`./logs/app.log`). Con `-execdir`, find entra a la carpeta de cada archivo, y el `{}` es solo el nombre:
+
+<TerminalBlock title="vt@labs:~/lab-find">
+
+```bash
+find . -name "*.log" -execdir echo {} \;
+```
+
+</TerminalBlock>
+
+```text
+./login.log
+./app.log
+```
+
+**4. Nombres con espacios.** `-exec` le pasa cada nombre completo al comando. Un `for` sobre la salida de find lo corta en cada espacio. Probalo con un archivo de juguete, y la última línea lo borra:
+
+<TerminalBlock title="vt@labs:~/lab-find">
+
+```bash
+touch "notas/mi nota.txt"
+find . -name "mi *" -exec ls {} +
+for f in $(find . -name "mi *"); do ls "$f"; done
+rm "notas/mi nota.txt"
+```
+
+</TerminalBlock>
+
+```text
+./notas/mi nota.txt
+ls: cannot access './notas/mi': No such file or directory
+ls: cannot access 'nota.txt': No such file or directory
+```
+
+La primera línea es el `find`: encontró el archivo. Las otras dos son el `for`: partió el nombre en `./notas/mi` y `nota.txt`, y `ls` no encontró ninguno de los dos.
+
+**5. Dónde va el `{}`.** Con `+`, siempre al final, justo antes del `+`. Con `\;` puede ir en cualquier lado, incluso dos veces:
+
+<TerminalBlock title="vt@labs:~/lab-find">
+
+```bash
+find . -name "*.log" -exec echo copiaría {} a {}.bak \;
+```
+
+</TerminalBlock>
+
+```text
+copiaría ./logs/login.log a ./logs/login.log.bak
+copiaría ./logs/app.log a ./logs/app.log.bak
+```
+
+En estos ejemplos el orden de los archivos puede variar en tu máquina.
+
+</SaberMas>
 
 ## Quiz
 

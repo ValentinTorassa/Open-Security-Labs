@@ -58,6 +58,7 @@ npm run dev
 | `<Mermaid code={\`...\`} caption="..." />`                                             | Diagrama Mermaid (flowchart, sequence, etc.). Pasá el grafo como string.                |
 | `<Quiz questions={[...]} />`                                                           | Mini-juego de opción múltiple con feedback. Array de `{ q, options, answer, explain }`. |
 | `<PermissionsGame />`                                                                  | Juego interactivo de permisos rwx → octal.                                              |
+| `<SaberMas title="...">`                                                               | Profundización plegada. Solo lo que no hace falta para el ejercicio.                    |
 
 La evidencia, el reto, los prerequisitos, los objetivos y los labs siguientes se
 renderizan automáticamente desde el frontmatter; no los repitas en el cuerpo.
